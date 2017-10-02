@@ -1,0 +1,60 @@
+
+
+########## DATA
+data_dir: "datasets/synthetic/leo_will_small/"
+prefix: "generated"
+train_suffix: ".train"
+dev_suffix: ".dev"
+test_suffix: ".test"
+
+sos: "<s>"
+eos: "</s>"
+unk: "<unk>"
+
+# should be in left-right order
+data_spec:
+  - name: "text-input"
+    type: "text"
+
+  - name: "continuous_1"
+    type: "continuous"
+    reverse_gradients: False
+
+  - name: "continuous_2"
+    type: "continuous"
+    reverse_gradients: True
+
+  - name: "categorical_1"
+    type: "categorical"
+    reverse_gradients: False
+
+  - name: "categorical_2"
+    type: "categorical"
+    reverse_gradients: True
+
+
+########## MODELING
+seed: 1
+working_dir: "test_run"
+
+# points to a 1-per-line file of tokens, or null (use all words)
+vocab: null 
+
+# all of these will be run
+model_spec:
+  - type: "neural"
+    params:
+#      TODO
+
+  - type: "mixed-regression"
+    params:
+      # TODO
+
+  - type: "l1-regression"
+    params:
+      # TODO
+
+  - type: "l2-regression"
+    params:
+      # TODO
+

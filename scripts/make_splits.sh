@@ -2,10 +2,11 @@
 
 
 FILE=$1
+FILENAME=$(basename ${FILE})
 
-# test/dev examples
-TEST=3
-DEV=10
+
+TEST=8
+DEV=8
 BOTH=$((DEV+TEST))
 
 
@@ -13,9 +14,9 @@ echo 'shuffling corpus..'
 paste ${FILE} | gshuf > corpus.shuf
 
 echo 'splitting...'
-tail -n +${BOTH} corpus.shuf > train
-head -n ${DEV} corpus.shuf > dev
-head -n ${BOTH} corpus.shuf | tail -n +${TEST} > test
+tail -n +${BOTH} corpus.shuf > ${FILENAME}.train
+head -n ${DEV} corpus.shuf > ${FILENAME}.dev
+head -n ${BOTH} corpus.shuf | tail -n +${TEST} > ${FILENAME}.test
 
 echo 'cleaning up...'
 rm corpus.shuf
