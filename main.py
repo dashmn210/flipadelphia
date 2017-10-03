@@ -40,6 +40,8 @@ if __name__ == '__main__':
 
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
     set_seed(config.seed)
+    if not os.path.exists(config.working_dir):
+        os.makedirs(config.working_dir)
 
     # use config to preprocess data
     d = Dataset(config)
