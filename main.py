@@ -43,39 +43,38 @@ if __name__ == '__main__':
 
     # use config to preprocess data
     d = Dataset(config)
-    # if inference
-        # restore all models in the spec from working_dir
-    # elif training
-        # train all models in spec
 
-    # for each model in spec
-        # inference on dataset
+    if args.train:
+        for model in config.model_spec:
+            model_dir = os.path.join(config.working_dir, model['type'])
+            os.mkdirs(model_dir)
+            # TODO -- instantiate model
+            model.train(d)
+            model.save(model_dir)
 
-        # evaluate
-            # categorical-specific
-                # AUC
-                # ROC curve
-                # average feature correlation with this (cramer's V) 
-            # continuous-specific
-                # accuracy
-                # MSE
-                # residual plot
-                # average feature correlation (point-biserial)
-            # model-specific
-                # conditional/marginal R^2
-                # loss
-                # attention dump? 
-                # etc etc
+    if args.inference:
+        for model in config.model_spec:
+            # TODO -- instantiate model
+            model_dir = os.path.join(config.working_dir, model['type'])
+            model.load(model_dir)
+            predictions = model.inference(d, model_dir, dev=False)
 
-    # clean up temp files?
-#   cleanup(d)
+            # TODO evaluate 
+                # categorical-specific
+                    # AUC
+                    # ROC curve
+                    # average feature correlation with this (cramer's V) 
+                # continuous-specific
+                    # accuracy
+                    # MSE
+                    # residual plot
+                    # average feature correlation (point-biserial)
+                # model-specific ( model.report() )
+                    # conditional/marginal R^2
+                    # loss
+                    # attention dump? 
+                    # etc etc
 
-
-
-# use args to preprocess data
-    # possibly cut by column into sperate files
-    # check vocab
-    # get vocab size
-    # possibly rm out-of-vocab tokens
-
-
+    # TODO
+    utils.cleanup(d.data_by_variable)  # pointers to all cut files
+    utils.cleanup(predictions)  # pointers to all predictions files

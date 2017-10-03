@@ -1,11 +1,11 @@
 
-
 class Model(object):
     """ superclass for all models 
     """
     def __init__(self, config):
         self.config = config
         self.report = None
+
 
     def save(self, dir):
         """ saves a representation of the model into a directory
@@ -26,9 +26,9 @@ class Model(object):
         raise NotImplementedError
 
 
-    def inference(self, dataset, dev=True):
+    def inference(self, dataset, model_dir, dev=True):
         """ run inference on the dev/test set, save all predictions to 
-                per-variable files, and return pointers to those files
+                per-variable files in model_dir, and return pointers to those files
             saves model-specific metrics (loss, attentional scores, etc) 
                 into self.report
         """
