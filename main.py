@@ -45,17 +45,17 @@ if __name__ == '__main__':
     d = Dataset(config)
 
     if args.train:
-        for model in config.model_spec:
-            model_dir = os.path.join(config.working_dir, model['type'])
+        for model_description in config.model_spec:
+            model_dir = os.path.join(config.working_dir, model_description['type'])
             os.mkdirs(model_dir)
             # TODO -- instantiate model
             model.train(d)
             model.save(model_dir)
 
     if args.inference:
-        for model in config.model_spec:
+        for model_description in config.model_spec:
             # TODO -- instantiate model
-            model_dir = os.path.join(config.working_dir, model['type'])
+            model_dir = os.path.join(config.working_dir, model_description['type'])
             model.load(model_dir)
             predictions = model.inference(d, model_dir, dev=False)
 

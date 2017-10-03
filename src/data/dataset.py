@@ -10,7 +10,8 @@ class Dataset(object):
 
 
     def _cut_data(self):
-        """ break a dataset tsv into one file per variable
+        """ break a dataset tsv into one file per variable and return pointers
+                to each file
         """
         c = self.config
         data_prefix = os.path.join(c.data_dir, c.prefix)
@@ -41,3 +42,4 @@ class Dataset(object):
         """ TODO make tf iterators for each of the files into
                 self.data-by_variable
         """
+        pass
