@@ -29,8 +29,8 @@ class Model(object):
     def inference(self, dataset, model_dir, dev=True):
         """ run inference on the dev/test set, save all predictions to 
                 per-variable files in model_dir, and return pointers to those files
-            saves model-specific metrics (loss, attentional scores, etc) 
-                into self.report
+            saves model-specific metrics/artifacts (loss, attentional scores, etc) 
+                into self.report (also possible writes to a file in model_dir)
         """
         raise NotImplementedError
 
