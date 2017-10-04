@@ -1,7 +1,7 @@
 import sys
 sys.path.append('../..')
 
-from src.models.dummies.tf_utils import TFModelWrapper
+from src.models.neural.tf_utils import TFModelWrapper
 
 
 MODEL_CLASSES = {

@@ -45,6 +45,7 @@ model_spec:
   - type: "neural"
     params:
       batch_size: 4
+      num_train_steps: 10000
 #      TODO
 
   - type: "mixed-regression"

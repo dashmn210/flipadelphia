@@ -10,7 +10,7 @@ import tensorflow as tf
 from src.data.dataset import Dataset
 import src.msc.constants as constants
 
-import src.models.dummies.tf_dummy as tf_dummy
+import src.models.neural.tf_dummy as tf_dummy
 
 
 def process_command_line():
@@ -58,6 +58,7 @@ if __name__ == '__main__':
                 config=config, 
                 params=model_description['params'],
                 model_builder_class=tf_dummy.TFDummy)
+
             model.train(d, model_dir)
             model.save(model_dir)
 

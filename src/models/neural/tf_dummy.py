@@ -38,6 +38,7 @@ class TFDummy:
         self.dataset = dataset
 
         self.global_step = tf.Variable(0, trainable=False)
+        self.fake_step = 0
 
         self.vars = []
         for variable in self.config.data_spec:
@@ -46,7 +47,8 @@ class TFDummy:
 
     def train(self, sess):
         ops = self.vars
-        return sess.run(ops)
+        self.fake_step += self.params['batch_size']
+        return sess.run(ops), self.fake_step
 
 
 

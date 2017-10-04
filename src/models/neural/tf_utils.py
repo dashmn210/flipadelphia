@@ -10,27 +10,6 @@ from src.models.abstract_model import Model
 
 
 
-def create_or_load_model(model, model_dir, session, name):
-    latest_ckpt = tf.train.latest_checkpoint(model_dir)
-
-    if latest_ckpt:
-        start_time = time.time()
-        model.saver.restore(session, ckpt)
-        session.run(tf.tables_initializer())
-        print "INFO: loaded %s model parameters from %s, time %.2fs" % \
-            (name, ckpt, time.time() - start_time)
-    else:
-        start_time = time.time()
-        session.run(tf.global_variables_initializer())
-        session.run(tf.tables_initializer())
-        print "INFO: created %s model with fresh parameters, time %.2fs" % \
-                        (name, time.time() - start_time)
-
-    global_step = model.global_step.eval(session=session)
-    return model, global_step        
-
-
-
 
 class TFModelWrapper(Model):
     """ fake model to test out iterators etc
@@ -41,29 +20,55 @@ class TFModelWrapper(Model):
         self.model_builder = model_builder_class
 
     def save(self, model_dir):
+        # TODO!!!!!
         pass
 
 
     def load(self, model_dir, dataset, target_split):
+        model, global_step, sess = self.create_or_load_model(
+            model_dir, dataset, target_split)
+        return model
+
+
+    def create_or_load_model(self, model_dir, dataset, target_split):
+        latest_ckpt = tf.train.latest_checkpoint(model_dir)
+
         model = self.model_builder.build_model_graph(
             self.config, self.params, dataset, target_split)
         sess = tf.Session(graph=model.graph)
+
         with model.graph.as_default():
-            loaded_model, global_step = create_or_load_model(
-                model.model, model_dir, sess, target_split)
-        return loaded_model, global_step, sess       
+            if latest_ckpt:
+                start_time = time.time()
+                model.saver.restore(sess, ckpt)
+                sess.run(tf.tables_initializer())
+                print "INFO: loaded %s model parameters from %s, time %.2fs" % \
+                    (target_split, ckpt, time.time() - start_time)
+            else:
+                start_time = time.time()
+                sess.run(tf.global_variables_initializer())
+                sess.run(tf.tables_initializer())
+                print "INFO: created %s model with fresh parameters, time %.2fs" % \
+                                (target_split, time.time() - start_time)
+
+        global_step = model.model.global_step.eval(session=sess)
+        return model, global_step, sess      
 
 
     def train(self, dataset, model_dir):
-        loaded_model, global_step, sess = self.load(
+        loaded_model, global_step, sess = self.create_or_load_model(
             model_dir, dataset, self.config.train_suffix)
 
-        sess.run(loaded_model.iter['initializer'])
+        sess.run(loaded_model.model.iter['initializer'])
 
-        for _ in range(3):
-            print loaded_model.train(sess)
-            print '\n\n\n\n'
-            # TODO -- VERIFY!!!
+        while global_step < self.params['num_train_steps']:
+            start_time = time.time()
+            try:
+                step_result, global_step = loaded_model.model.train(sess)
+                print global_step
+            except tf.errors.OutOfRangeError:
+                sess.run(loaded_model.model.iter['initializer'])
+
 
 
     def inference(self, dataset, model_dir, dev=True):
