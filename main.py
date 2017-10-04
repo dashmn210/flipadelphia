@@ -10,6 +10,9 @@ import tensorflow as tf
 from src.data.dataset import Dataset
 import src.msc.constants as constants
 
+import src.models.dummies.tf_dummy as tf_dummy
+
+
 def process_command_line():
     parser = argparse.ArgumentParser(description='usage')
     parser.add_argument('--config', dest='config', type=str, default='config.yaml', 
@@ -52,7 +55,9 @@ if __name__ == '__main__':
             if not os.path.exists(model_dir):
                 os.makedirs(model_dir)
             model = constants.MODEL_CLASSES[model_description['type']](
-                config=config, params=model_description['params'])
+                config=config, 
+                params=model_description['params'],
+                model_builder_class=tf_dummy.TFDummy)
             model.train(d, model_dir)
             model.save(model_dir)
 

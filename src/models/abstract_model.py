@@ -13,7 +13,7 @@ class Model(object):
         raise NotImplementedError
 
 
-    def load(self, dir):
+    def load(self, dir, dataset):
         """ restores a representation of the model from dir
         """
         raise NotImplementedError
