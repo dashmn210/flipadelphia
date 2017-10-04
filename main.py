@@ -53,7 +53,7 @@ if __name__ == '__main__':
                 os.makedirs(model_dir)
             model = constants.MODEL_CLASSES[model_description['type']](
                 config=config, params=model_description['params'])
-            model.train(d)
+            model.train(d, model_dir)
             model.save(model_dir)
 
     if args.inference:
