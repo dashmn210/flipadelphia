@@ -11,7 +11,7 @@ from src.data.dataset import Dataset
 import src.msc.constants as constants
 
 import src.models.neural.tf_dummy as tf_dummy
-
+import src.models.neural.tf_flipper as tf_flipper
 
 def process_command_line():
     parser = argparse.ArgumentParser(description='usage')
@@ -57,7 +57,7 @@ if __name__ == '__main__':
             model = constants.MODEL_CLASSES[model_description['type']](
                 config=config, 
                 params=model_description['params'],
-                model_builder_class=tf_dummy.TFDummy)
+                model_builder_class=tf_flipper.Flipper)#tf_dummy.TFDummy)
 
             model.train(d, model_dir)
             model.save(model_dir)

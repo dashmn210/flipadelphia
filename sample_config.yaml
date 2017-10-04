@@ -46,6 +46,10 @@ model_spec:
     params:
       batch_size: 4
       num_train_steps: 10000
+      learning_rate: 0.001
+      embedding_size: 128
+      encoder_layers: 2
+      encoder_units: 128
 #      TODO
 
   - type: "mixed-regression"

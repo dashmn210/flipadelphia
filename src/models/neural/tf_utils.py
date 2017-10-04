@@ -10,6 +10,16 @@ from src.models.abstract_model import Model
 
 
 
+def add_summary(summary_writer, global_step, name, value):
+  """Add a new summary to the current summary_writer.
+  Useful to log things that are not part of the training graph, e.g., name=BLEU.
+  """
+  summary = tf.Summary(value=[tf.Summary.Value(tag=name, simple_value=value)])
+  summary_writer.add_summary(summary, global_step)
+
+
+
+
 
 class TFModelWrapper(Model):
     """ fake model to test out iterators etc
@@ -58,6 +68,8 @@ class TFModelWrapper(Model):
     def train(self, dataset, model_dir):
         loaded_model, global_step, sess = self.create_or_load_model(
             model_dir, dataset, self.config.train_suffix)
+        summary_writer = tf.summary.FileWriter(
+            os.path.join(model_dir, "train_log"), loaded_model.graph)
 
         sess.run(loaded_model.model.iter['initializer'])
 
@@ -65,7 +77,7 @@ class TFModelWrapper(Model):
             start_time = time.time()
             try:
                 step_result, global_step = loaded_model.model.train(sess)
-                print global_step
+                # write summaries
             except tf.errors.OutOfRangeError:
                 sess.run(loaded_model.model.iter['initializer'])
 
