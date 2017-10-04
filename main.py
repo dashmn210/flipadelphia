@@ -8,7 +8,7 @@ import numpy as np
 import tensorflow as tf
 
 from src.data.dataset import Dataset
-
+import src.msc.constants as constants
 
 def process_command_line():
     parser = argparse.ArgumentParser(description='usage')
@@ -49,8 +49,10 @@ if __name__ == '__main__':
     if args.train:
         for model_description in config.model_spec:
             model_dir = os.path.join(config.working_dir, model_description['type'])
-            os.mkdirs(model_dir)
-            # TODO -- instantiate model
+            if not os.path.exists(model_dir):
+                os.makedirs(model_dir)
+            model = constants.MODEL_CLASSES[model_description['type']](
+                config=config, params=model_description['params'])
             model.train(d)
             model.save(model_dir)
 

@@ -44,6 +44,7 @@ vocab: null
 model_spec:
   - type: "neural"
     params:
+      batch_size: 4
 #      TODO
 
   - type: "mixed-regression"

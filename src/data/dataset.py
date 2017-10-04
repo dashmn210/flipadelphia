@@ -39,7 +39,7 @@ class Dataset(object):
 
 
         # TEST - rm when done
-        self.make_tf_iterators(self.config.train_suffix)
+#        self.make_tf_iterators(self.config.train_suffix)
 
     def _classes(self, filename):
         """ returns the unique entries in a one-per-line file
@@ -98,20 +98,26 @@ class Dataset(object):
                 os.system('rm %s' % filepath)
 
 
+
     def make_tf_iterators(self, split):
-        """ 
-            split = one of config.{train/dev/test}_suffix
+        """ split = one of config.{train/dev/test}_suffix
+
+            returns a dictionary mapping each variable
+                to a tf iterator's placeholder, along with
+                the special key 'initializer' which maps to 
+                the initializer for this iterator
         """
 
         vocab_table = lookup_ops.index_table_from_file(
             self.vocab, default_value=UNK_ID)
+        eos_id = tf.cast(
+            vocab_table.lookup(tf.constant(self.config.eos)),
+            tf.int32)
+        neural_params = next( (
+            m for m in self.config.model_spec if m['type'] == 'neural' ))['params']
 
 
         def text_dataset(file):
-            eos_id = tf.cast(
-                vocab_table.lookup(tf.constant(self.config.eos)),
-                tf.int32)
-
             dataset = tf.contrib.data.TextLineDataset(file)
             # break sentences into tokens
             dataset = dataset.map(lambda txt: tf.string_split([txt]).values)
@@ -120,13 +126,48 @@ class Dataset(object):
                 vocab_table.lookup(txt), tf.int32))
             # add lengths
             dataset = dataset.map(lambda txt: (txt, tf.size(txt)))
+            return dataset
 
+        def continuous_dataset(file):
+            dataset = tf.contrib.data.TextLineDataset(file)
+            dataset = dataset.map(lambda x: tf.string_to_number(x))            
+            return dataset
+
+        def categorical_dataset(file, variable_name):
+            dataset = tf.contrib.data.TextLineDataset(file)
+            classes_ids = self.class_to_id_map[variable_name]
+            class_lookup_table = tf.contrib.lookup.HashTable(
+                tf.contrib.lookup.KeyValueTensorInitializer(
+                    keys=classes_ids.keys(),
+                    values=classes_ids.values(),
+                    key_dtype=tf.string,
+                    value_dtype=tf.int32), -1)
+            dataset = dataset.map(lambda x: class_lookup_table.lookup(x))
             return dataset
 
 
-        # TODO --- OTHER DATASETS -- HOW TO INDEX FOR CATEGORICAL??
-# see https://www.tensorflow.org/api_docs/python/tf/contrib/lookup/KeyValueTensorInitializer
-# https://www.tensorflow.org/api_docs/python/tf/contrib/lookup/HashTable
+        def batch_up(datset):
+            # first element is (text, text len), followed by all other vars
+            num_variables = len(self.config.data_spec)
+            padded_shapes = tuple(
+                [(tf.TensorShape([None]), tf.TensorShape([]))] + [
+                tf.TensorShape([]) for _ in range(num_variables - 1)])
+
+            # pad text with eos, otherwise 0 (means unused)
+            padding_values = [(eos_id, 0)]
+            # but hast to be 0.0 for tf.float32 (aka scalars) and 0 for tf.int32
+            # (aka categorical)
+            for var in self.config.data_spec[1:]:
+                if var['type'] == 'categorical':
+                    padding_values.append(0)
+                else:
+                    padding_values.append(0.0)
+            padding_values = tuple(padding_values)
+
+            return datset.padded_batch(
+                neural_params['batch_size'],
+                padded_shapes=padded_shapes,
+                padding_values=padding_values)
 
         datasets = []
         for variable in self.config.data_spec:
@@ -136,12 +177,21 @@ class Dataset(object):
             elif variable['type'] == 'continuous':
                 dataset = continuous_dataset(data_file)
             else:
-                dataset = categorical_dataset(data_file)
-            print dataset
+                dataset = categorical_dataset(data_file, variable['name'])
             datasets.append(dataset)
 
-        print datasets
+        dataset = tf.contrib.data.Dataset.zip(tuple(datasets))
+        dataset = batch_up(dataset)
 
+        out = {}
+        iterator = dataset.make_initializable_iterator()
+        data_spec = self.config.data_spec
+        placeholders = iterator.get_next()        
+        for i, (placeholder, variable) in enumerate(zip(placeholders, data_spec)):
+            out[variable['name']] = placeholder
+        out['initializer'] = iterator.initializer
+
+        return out
 
 
 
