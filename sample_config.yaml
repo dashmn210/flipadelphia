@@ -50,6 +50,12 @@ model_spec:
       embedding_size: 128
       encoder_layers: 2
       encoder_units: 128
+      attn_layers: 4
+      attn_units: 128
+      classifier_layers: 1
+      classifier_units: 128
+      continuous_layers: 1
+      continuous_units: 128
 #      TODO
 
   - type: "mixed-regression"

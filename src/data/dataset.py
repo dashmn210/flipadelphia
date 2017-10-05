@@ -47,6 +47,9 @@ class Dataset(object):
         """
         return Counter(word_tokenize(open(filename).read())).keys()
 
+    def num_classes(self, varname):
+        return len(self.class_to_id_map[varname])
+
 
     def _check_vocab(self, vocab_file):
         assert os.path.exists(vocab_file), "The vocab file %s does not exist" % vocab_file
