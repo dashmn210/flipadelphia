@@ -224,6 +224,13 @@ class Flipper:
         self.source_embedded = source_embedded
 
         with tf.variable_scope('encoder'):
+            cell = self.build_rnn_cells()
+            # hidden_states, _ = tf.nn.dynamic_rnn(
+            #     cell,
+            #     source_embedded,
+            #     dtype=tf.float32,
+            #     sequence_length=source_len)
+
             cells_fw = self.build_rnn_cells(layers=self.params['encoder_layers'])
             cells_bw = self.build_rnn_cells(layers=self.params['encoder_layers'])
             bi_outputs, bi_states = tf.nn.bidirectional_dynamic_rnn(
@@ -237,8 +244,9 @@ class Flipper:
     def build_rnn_cells(self, layers=1):
         def single_cell():
             cell = tf.contrib.rnn.BasicLSTMCell(self.params['encoder_units'])
-            cell = tf.contrib.rnn.DropoutWrapper(
-                cell=cell, input_keep_prob=(1.0 - self.dropout))
+            # TODO -- fix this!!!!
+            # cell = tf.contrib.rnn.DropoutWrapper(
+            #     cell=cell, input_keep_prob=(1.0 - self.dropout))
             return cell
 
         cells = [single_cell() for _ in range(layers)]

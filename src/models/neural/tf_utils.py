@@ -64,9 +64,7 @@ class TFModelWrapper(Model):
         print "INFO: trainable variables:"
         values = sess.run(model.model.trainable_variable_names)
         for name, value in zip(model.model.trainable_variable_names, values):
-            print '\tVariable: ',  name
-            print '\tShape: ', value.shape
-
+            print '\tVariable: %s   ----    Shape: %s' %  (name, value.shape)
 
         global_step = model.model.global_step.eval(session=sess)
         return model, global_step, sess      
