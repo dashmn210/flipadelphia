@@ -164,12 +164,14 @@ class Flipper:
             num_outputs=num_outputs,
             activation_fn=tf.nn.relu,
             scope='layer_0')
+        x = tf.nn.dropout(x, (1 - self.dropout))
         for layer in range(layers - 1):
             x = tf.contrib.layers.fully_connected(
                 inputs=x,
                 num_outputs=num_outputs,
                 activation_fn=tf.nn.relu,
                 scope='layer_%d' % (layer + 1))
+            x = tf.nn.dropout(x, (1 - self.dropout))
         return x
 
 
@@ -209,8 +211,16 @@ class Flipper:
 
 
     def train(self, sess):
-        ops = [self.hidden_states, self.source_embedded, self.source_encoding, self.step_output, self.input, self.global_step, self.train_step]
-        return sess.run(ops, feed_dict={self.dropout: 1.0})
+        ops = [
+            self.loss,
+            self.hidden_states,
+            self.source_embedded,
+            self.source_encoding,
+            self.step_output,
+            self.input,
+            self.global_step,
+            self.train_step]
+        return sess.run(ops, feed_dict={self.dropout: 0.2})
 
 
     def encode(self, source_and_len):
@@ -225,12 +235,6 @@ class Flipper:
 
         with tf.variable_scope('encoder'):
             cell = self.build_rnn_cells()
-            # hidden_states, _ = tf.nn.dynamic_rnn(
-            #     cell,
-            #     source_embedded,
-            #     dtype=tf.float32,
-            #     sequence_length=source_len)
-
             cells_fw = self.build_rnn_cells(layers=self.params['encoder_layers'])
             cells_bw = self.build_rnn_cells(layers=self.params['encoder_layers'])
             bi_outputs, bi_states = tf.nn.bidirectional_dynamic_rnn(
@@ -245,8 +249,8 @@ class Flipper:
         def single_cell():
             cell = tf.contrib.rnn.BasicLSTMCell(self.params['encoder_units'])
             # TODO -- fix this!!!!
-            # cell = tf.contrib.rnn.DropoutWrapper(
-            #     cell=cell, input_keep_prob=(1.0 - self.dropout))
+            cell = tf.contrib.rnn.DropoutWrapper(
+                cell=cell, input_keep_prob=(1.0 - self.dropout))
             return cell
 
         cells = [single_cell() for _ in range(layers)]

@@ -1,8 +1,8 @@
 
 
 ########## DATA
-data_dir: "datasets/synthetic/leo_will_small/"
-prefix: "generated"
+data_dir: "datasets/synthetic/leo_will_verysmall/"
+prefix: "10_examples"
 train_suffix: ".train"
 dev_suffix: ".dev"
 test_suffix: ".test"
@@ -15,23 +15,22 @@ unk: "<unk>"
 data_spec:
   - name: "text-input"
     type: "text"
-    max_seq_len: 50
 
-  - name: "continuous_1"
-    type: "continuous"
-    reverse_gradients: False
+  # - name: "continuous_1"
+  #   type: "continuous"
+  #   reverse_gradients: False
 
-  - name: "continuous_2"
-    type: "continuous"
-    reverse_gradients: True
+  # - name: "continuous_2"
+  #   type: "continuous"
+  #   reverse_gradients: False
 
-  - name: "categorical_1"
-    type: "categorical"
-    reverse_gradients: False
-
+  # - name: "categorical_1"
+  #   type: "categorical"
+  #   reverse_gradients: False
+# TODO FIGURE OUT HOW TO ADD/RM VARS PAINLESSLY
   - name: "categorical_2"
     type: "categorical"
-    reverse_gradients: True
+    reverse_gradients: False
 
 
 ########## MODELING
@@ -45,18 +44,18 @@ vocab: null
 model_spec:
   - type: "neural"
     params:
-      batch_size: 1
+      batch_size: 16
       num_train_steps: 10000
       learning_rate: 0.001
-      embedding_size: 8
+      embedding_size: 16
       encoder_layers: 1
-      encoder_units: 8
+      encoder_units: 16
       attn_layers: 1
-      attn_units: 8
+      attn_units: 16
       classifier_layers: 1
-      classifier_units: 8
+      classifier_units: 16
       regressor_layers: 1
-      regressor_units: 8
+      regressor_units: 16
       gradient_clip: 5.0
 #      TODO
 

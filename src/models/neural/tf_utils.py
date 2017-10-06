@@ -48,6 +48,8 @@ class TFModelWrapper(Model):
         sess = tf.Session(graph=model.graph)
 
         with model.graph.as_default():
+            tf.set_random_seed(self.config.seed)
+
             if latest_ckpt:
                 start_time = time.time()
                 model.saver.restore(sess, ckpt)
@@ -81,17 +83,18 @@ class TFModelWrapper(Model):
         while global_step < self.params['num_train_steps']:
             start_time = time.time()
             try:
-                hidden_states, embeddings, encoding, step_result, step_input, global_step, _ = loaded_model.model.train(sess)
+                total_loss, hidden_states, embeddings, encoding, step_result, step_input, global_step, _ = loaded_model.model.train(sess)
+                print 'loss: ', total_loss
                 print 'input'
                 print step_input
-                print 'embeddings'
-                print embeddings
-                print 'hidden_states'
-                print hidden_states
-                print 'encoding'
-                print encoding
+                # print 'embeddings'
+                # print embeddings
+                # print 'hidden_states'
+                # print hidden_states
+                # print 'encoding'
+                # print encoding
                 print 'step_result'
-                print step_result; quit()
+                print step_result
                 # write summaries
             except tf.errors.OutOfRangeError:
                 sess.run(loaded_model.model.iter['initializer'])

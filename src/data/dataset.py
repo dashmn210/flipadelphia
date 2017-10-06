@@ -81,7 +81,7 @@ class Dataset(object):
         variable_paths = defaultdict(dict)
         for split_suffix in [c.train_suffix, c.dev_suffix, c.test_suffix]:
             file = data_prefix + split_suffix
-            assert os.path.exists(file), 'Split %s doesnt exist'
+            assert os.path.exists(file), 'Split %s doesnt exist' % file
 
             for i, variable in enumerate(c.data_spec):
                 variable_path = data_prefix + '.' + variable['name'] + split_suffix
