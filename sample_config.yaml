@@ -30,7 +30,7 @@ data_spec:
 
   - name: "categorical_1"
     type: "categorical"
-    reverse_gradients: False
+    reverse_gradients: True
     skip: False
     weight: 1
 

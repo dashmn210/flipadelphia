@@ -89,9 +89,9 @@ class TFModelWrapper(Model):
                     if variable['skip']:
                         continue
 
-                    print 'input: '
+                    print 'input on %s: ' % variable['name']
                     print step_input[variable['name']]
-                    print 'output: '
+                    print 'output: (loss: %f)' % step_result[variable['name']]['loss']
                     print step_result[variable['name']]['pred']
                 print 
                 print
