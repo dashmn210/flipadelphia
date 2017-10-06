@@ -61,12 +61,16 @@ class Flipper:
         source_encoding = self.encode(self.iter[source_name])
         self.source_encoding = source_encoding
 
-        self.input = []
+        self.step_input = {}
         for variable in self.config.data_spec:
-            self.input.append(iterators[variable['name']])
+            self.step_input[variable['name']] = iterators[variable['name']]
 
+        self.loss = 0
         self.step_output = defaultdict(dict)
         for variable in self.config.data_spec[1:]:
+            if variable['skip']:
+                continue
+
             with tf.variable_scope(variable['name'] + '_prediction_head'):
                 if variable['type'] == 'categorical':
                     preds, loss, attn_scores = self.classifier(
@@ -89,9 +93,10 @@ class Flipper:
             self.step_output[variable['name']]['pred'] = preds
             self.step_output[variable['name']]['attn'] = attn_scores
 
-        self.loss = sum(var_output['loss'] for var_output in self.step_output.values())
+            self.loss += (loss * variable['weight'])
+
         self.train_step = tf.contrib.layers.optimize_loss(
-            loss=loss,
+            loss=self.loss,
             global_step=self.global_step,
             learning_rate=self.learning_rate,
             clip_gradients=self.params['gradient_clip'],
@@ -217,7 +222,7 @@ class Flipper:
             self.source_embedded,
             self.source_encoding,
             self.step_output,
-            self.input,
+            self.step_input,
             self.global_step,
             self.train_step]
         return sess.run(ops, feed_dict={self.dropout: 0.2})

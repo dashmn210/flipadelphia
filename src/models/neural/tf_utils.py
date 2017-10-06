@@ -85,16 +85,26 @@ class TFModelWrapper(Model):
             try:
                 total_loss, hidden_states, embeddings, encoding, step_result, step_input, global_step, _ = loaded_model.model.train(sess)
                 print 'loss: ', total_loss
-                print 'input'
-                print step_input
+                for variable in self.config.data_spec[1:]:
+                    if variable['skip']:
+                        continue
+
+                    print 'input: '
+                    print step_input[variable['name']]
+                    print 'output: '
+                    print step_result[variable['name']]['pred']
+                print 
+                print
+                # print 'input'
+                # print step_input
                 # print 'embeddings'
                 # print embeddings
                 # print 'hidden_states'
                 # print hidden_states
                 # print 'encoding'
                 # print encoding
-                print 'step_result'
-                print step_result
+                # print 'step_result'
+                # print step_result
                 # write summaries
             except tf.errors.OutOfRangeError:
                 sess.run(loaded_model.model.iter['initializer'])
