@@ -2,8 +2,9 @@ import sys
 sys.path.append('../..')
 import os
 import time
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 import tensorflow as tf
+from tensorflow.python.framework import function
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 from src.models.abstract_model import Model
@@ -58,22 +59,74 @@ class Flipper:
 
         source_name = self.config.data_spec[0]['name']
         source_encoding = self.encode(self.iter[source_name])
+        self.source_encoding = source_encoding
 
+        self.input = []
+        for variable in self.config.data_spec:
+            self.input.append(iterators[variable['name']])
+
+        self.step_output = defaultdict(dict)
         for variable in self.config.data_spec[1:]:
             with tf.variable_scope(variable['name'] + '_prediction_head'):
                 if variable['type'] == 'categorical':
-                    logits, loss, attn_scores = self.classifier(
+                    preds, loss, attn_scores = self.classifier(
                         varname=variable['name'],
                         flip=variable['reverse_gradients'],
                         labels=self.iter[variable['name']],
                         source_encoding=source_encoding,
                         num_classes=self.dataset.num_classes(variable['name']))
-                    # TODO -- check this!!!
                 elif variable['type'] == 'continuous':
-                    pass
+                    preds, loss, attn_scores = self.regressor(
+                        varname=variable['name'],
+                        flip=variable['reverse_gradients'],
+                        labels=self.iter[variable['name']],
+                        source_encoding=source_encoding)
                 else:
                     raise Exception('ERROR: unknown type %s for variable %s' % (
                         variable['type'], variable['name']))
+
+            self.step_output[variable['name']]['loss'] = loss
+            self.step_output[variable['name']]['pred'] = preds
+            self.step_output[variable['name']]['attn'] = attn_scores
+
+        self.loss = sum(var_output['loss'] for var_output in self.step_output.values())
+        self.train_step = tf.contrib.layers.optimize_loss(
+            loss=loss,
+            global_step=self.global_step,
+            learning_rate=self.learning_rate,
+            clip_gradients=self.params['gradient_clip'],
+            optimizer='Adam',
+            summaries=["loss", "gradient_norm"])
+
+        self.trainable_variable_names = [v.name for v in tf.trainable_variables()]
+
+
+
+
+    def regressor(self, varname, flip, labels, source_encoding):
+        if flip:
+            encoding_shape = source_encoding.get_shape()
+            source_encoding = reverse_grad(source_encoding)
+            source_encoding.set_shape(encoding_shape)
+
+        with tf.variable_scope('attention'):
+            attn_scores, attn_context = self.attention(source_encoding)            
+
+        x = self.fc_tube(
+            inputs=attn_context, 
+            num_outputs=self.params['regressor_units'], 
+            layers=self.params['regressor_layers'])
+        preds = tf.contrib.layers.fully_connected(
+            inputs=x,
+            num_outputs=1,
+            activation_fn=None,
+            scope='%s_preds' % varname)
+        preds = tf.squeeze(preds)
+
+        losses = tf.nn.l2_loss(preds - labels)
+        mean_loss = tf.reduce_mean(losses)
+
+        return preds, mean_loss, attn_scores
 
 
     def classifier(self, varname, flip, labels, source_encoding, num_classes):
@@ -136,10 +189,10 @@ class Flipper:
         # Replace all scores for padded inputs with tf.float32.min
         source_name = self.config.data_spec[0]['name']
         _, source_lens = self.iter[source_name]
-        num_scores = tf.shape(scores)[1]
+#        num_scores = tf.shape(scores)[1]
         scores_mask = tf.sequence_mask(
             lengths=tf.to_int32(source_lens),
-            maxlen=tf.to_int32(num_scores),
+            maxlen=tf.to_int32(tf.reduce_max(source_lens)),
             dtype=tf.float32)
         scores = scores * scores_mask + ((1.0 - scores_mask) * tf.float32.min)
 
@@ -156,9 +209,8 @@ class Flipper:
 
 
     def train(self, sess):
-        ops = self.vars + [self.dropout]
-        self.fake_step += self.params['batch_size']
-        return sess.run(ops, feed_dict={self.dropout: 1.0}), self.fake_step
+        ops = [self.hidden_states, self.source_embedded, self.source_encoding, self.step_output, self.input, self.global_step, self.train_step]
+        return sess.run(ops, feed_dict={self.dropout: 1.0})
 
 
     def encode(self, source_and_len):
@@ -169,6 +221,7 @@ class Flipper:
                 name='E',
                 shape=[self.dataset.vocab_size, self.params['embedding_size']])
             source_embedded = tf.nn.embedding_lookup(E, source)
+        self.source_embedded = source_embedded
 
         with tf.variable_scope('encoder'):
             cells_fw = self.build_rnn_cells(layers=self.params['encoder_layers'])
@@ -177,7 +230,7 @@ class Flipper:
                 cells_fw, cells_bw, source_embedded,
                 dtype=tf.float32, sequence_length=source_len)
             hidden_states = tf.concat(bi_outputs, -1)
-
+        self.hidden_states = hidden_states
         return hidden_states
 
 
@@ -191,11 +244,4 @@ class Flipper:
         cells = [single_cell() for _ in range(layers)]
         multicell = tf.contrib.rnn.MultiRNNCell(cells)
         return multicell
-
-
-
-
-
-
-
 

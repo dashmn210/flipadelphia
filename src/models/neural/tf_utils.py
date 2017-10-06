@@ -61,6 +61,13 @@ class TFModelWrapper(Model):
                 print "INFO: created %s model with fresh parameters, time %.2fs" % \
                                 (target_split, time.time() - start_time)
 
+        print "INFO: trainable variables:"
+        values = sess.run(model.model.trainable_variable_names)
+        for name, value in zip(model.model.trainable_variable_names, values):
+            print '\tVariable: ',  name
+            print '\tShape: ', value.shape
+
+
         global_step = model.model.global_step.eval(session=sess)
         return model, global_step, sess      
 
@@ -76,7 +83,17 @@ class TFModelWrapper(Model):
         while global_step < self.params['num_train_steps']:
             start_time = time.time()
             try:
-                step_result, global_step = loaded_model.model.train(sess)
+                hidden_states, embeddings, encoding, step_result, step_input, global_step, _ = loaded_model.model.train(sess)
+                print 'input'
+                print step_input
+                print 'embeddings'
+                print embeddings
+                print 'hidden_states'
+                print hidden_states
+                print 'encoding'
+                print encoding
+                print 'step_result'
+                print step_result; quit()
                 # write summaries
             except tf.errors.OutOfRangeError:
                 sess.run(loaded_model.model.iter['initializer'])

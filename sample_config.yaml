@@ -15,6 +15,7 @@ unk: "<unk>"
 data_spec:
   - name: "text-input"
     type: "text"
+    max_seq_len: 50
 
   - name: "continuous_1"
     type: "continuous"
@@ -44,18 +45,19 @@ vocab: null
 model_spec:
   - type: "neural"
     params:
-      batch_size: 4
+      batch_size: 1
       num_train_steps: 10000
       learning_rate: 0.001
-      embedding_size: 128
-      encoder_layers: 2
-      encoder_units: 128
-      attn_layers: 4
-      attn_units: 128
+      embedding_size: 8
+      encoder_layers: 1
+      encoder_units: 8
+      attn_layers: 1
+      attn_units: 8
       classifier_layers: 1
-      classifier_units: 128
-      continuous_layers: 1
-      continuous_units: 128
+      classifier_units: 8
+      regressor_layers: 1
+      regressor_units: 8
+      gradient_clip: 5.0
 #      TODO
 
   - type: "mixed-regression"
