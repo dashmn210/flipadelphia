@@ -1,10 +1,18 @@
+import sys
+sys.path.append('../..')
 
-class Model(object):
-    """ superclass for all models 
-    """
-    def __init__(self, config):
+
+
+
+
+
+
+class Mixed:
+
+    def __init__(self, config, params):
         self.config = config
-        self.report = None
+        self.params = params
+
 
 
     def save(self, dir):
@@ -14,16 +22,18 @@ class Model(object):
 
 
     def load(self, dataset, model_dir):
-        """ restores a representation of the model from dir
+        """ creates or loads a model
         """
-        raise NotImplementedError
+        
 
 
     def train(self, dataset, model_dir):
         """ trains the model using a src.data.dataset.Dataset
             saves model-specific metrics (loss, etc) into self.report
         """
-        raise NotImplementedError
+        model = self.load(dataset, model)
+        if not model: 
+            model = self.create(dataset, model_dir)
 
 
     def inference(self, dataset, model_dir, dev=True):
@@ -40,3 +50,7 @@ class Model(object):
                 executed whether that be training, testing, etc
         """
         raise NotImplementedError
+
+
+
+

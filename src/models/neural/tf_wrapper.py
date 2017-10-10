@@ -7,7 +7,7 @@ import tensorflow as tf
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 from src.models.abstract_model import Model
-
+import src.models.neural.tf_flipper as tf_flipper
 
 
 def add_summary(summary_writer, global_step, name, value):
@@ -24,26 +24,27 @@ def add_summary(summary_writer, global_step, name, value):
 class TFModelWrapper(Model):
     """ fake model to test out iterators etc
     """
-    def __init__(self, config, params, model_builder_class):
+    def __init__(self, config, params):
         self.config = config
         self.params = params
-        self.model_builder = model_builder_class
 
     def save(self, model_dir):
         # TODO!!!!!
         pass
 
 
-    def load(self, model_dir, dataset, target_split):
+    def load(self, dataset, model_dir, target_split):
         model, global_step, sess = self.create_or_load_model(
             model_dir, dataset, target_split)
         return model
 
 
     def create_or_load_model(self, model_dir, dataset, target_split):
+        """ not refactored into self.load() because of shared code paths
+        """
         latest_ckpt = tf.train.latest_checkpoint(model_dir)
 
-        model = self.model_builder.build_model_graph(
+        model = tf_flipper.Flipper.build_model_graph(
             self.config, self.params, dataset, target_split)
         sess = tf.Session(graph=model.graph)
 

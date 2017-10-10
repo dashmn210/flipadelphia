@@ -1,3 +1,7 @@
+"""
+
+
+"""
 import yaml
 import os
 import argparse
@@ -51,20 +55,24 @@ if __name__ == '__main__':
 
     if args.train:
         for model_description in config.model_spec:
+            if model_description.get('skip', False):
+                continue
+
             model_dir = os.path.join(config.working_dir, model_description['type'])
             if not os.path.exists(model_dir):
                 os.makedirs(model_dir)
             model = constants.MODEL_CLASSES[model_description['type']](
                 config=config, 
-                params=model_description['params'],
-                model_builder_class=tf_flipper.Flipper)#tf_dummy.TFDummy)
+                params=model_description['params'])
 
             model.train(d, model_dir)
             model.save(model_dir)
 
     if args.inference:
         for model_description in config.model_spec:
-            # TODO -- instantiate model
+            if model_description.get('skip', False):
+                continue
+
             model_dir = os.path.join(config.working_dir, model_description['type'])
             model.load(model_dir)
             predictions = model.inference(d, model_dir, dev=False)

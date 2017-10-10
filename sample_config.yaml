@@ -51,6 +51,7 @@ vocab: null
 # all of these will be run
 model_spec:
   - type: "neural"
+    skip: True
     params:
       batch_size: 16
       num_train_steps: 10000
@@ -68,6 +69,7 @@ model_spec:
 #      TODO
 
   - type: "mixed-regression"
+    skip: False
     params:
       # TODO
 
