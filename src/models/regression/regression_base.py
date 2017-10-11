@@ -24,7 +24,7 @@ rModel = namedtuple('rModel',
     ('model', 'r_model_name', 'r_df_name', 'ovr'))
 
 
-class MixedWrapper:
+class Regression:
 
     def __init__(self, config, params):
         self.config = config
@@ -45,30 +45,30 @@ class MixedWrapper:
         pass
 
 
-    def _fit_mixed_regression(self, split, dataset, target, ignored_vars, confounds):
-        r_df_name = 'df_' + target['name']
-        r_model_name = 'model_' + target['name']
+    def _fit(self, cmd, df, target_var, ignored_vars, confound_vars, name=''):
+        """ cmd is a valid R fitting command, with unfilled %s's for
+                the formula and data parts
+            df is a pandas df with *all* variables (target + ignored + confounds) as cols
+            target_var is the thing we want to predict
+            ignored_vars is a list of variables we want to ignore
+            confound_vars is a list of variables we want to control
+            name is an optional suffix for the r environment
+        """
+        r_df_name = 'df_' + target_var['name'] + ('_%s' % name if name else '')
+        r_model_name = 'model_' + target_var['name'] + ('_%s' % name if name else '')
 
-        df = dataset.to_pd_df(split)
         rpy2.robjects.globalenv[r_df_name] = pandas2ri.pandas2ri(df)
-
-        cmd = "lmer(%s, data=%s, REML=FALSE)" 
-        # start with all features
-        formula = target['name'] + ' ~ .'
-        # now add in random effect intercepts
-        formula += ''.join(' + (1|%s)' % confound['name'] for confound in confounds)
-        # now remove off-target features and confound features (they were in the '.')
-        formula += ''.join(' - %s' % var['name'] for var in ignored_vars + confounds)
-
-        # fit the model, tell R about the result, and return it
+        formula = '%s ~ %s %s' % (
+            target_var['name'],
+            ''.join(' + (1|%s)' % confound['name'] for confound in confound_vars),
+            ''.join(' - %s' % var['name'] for var in ignored_vars + confound_vars))
         res = r(cmd % (formula, r_df_name))
         rpy2.robjects.globalenv[r_model_name] = res
-        rModel(
+        return rModel(
             model=res,
             r_model_name=r_model_name,
             r_df_name=r_df_name,
             ovr=False)
-
 
 
     def _reorient(self, df, col_name, selected_level):
