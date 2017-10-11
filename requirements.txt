@@ -4,3 +4,4 @@ pyyaml
 tensorflow
 jupyter
 rpy2==2.4.3
+pandas

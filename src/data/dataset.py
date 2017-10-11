@@ -1,7 +1,7 @@
 import os
 from collections import defaultdict, Counter
 from nltk.tokenize import word_tokenize
-
+import pandas as pd
 from tensorflow.python.ops import lookup_ops
 import tensorflow as tf
 
@@ -27,9 +27,11 @@ class Dataset(object):
             self.vocab = self._gen_vocab(train_text_file)
         else:
             self.vocab = self.config.vocab
+        self.features = set(v.strip() for v in open(self.vocab))
         self.vocab_size = self._check_vocab(self.vocab)
 
         # class_to_id_map: {variable name: {'class': index}  }  for each categorical variable
+        # (for tensorflow)
         self.class_to_id_map = defaultdict(dict)
         for variable in self.config.data_spec[1:]:
             if variable['type'] == "categorical":
@@ -37,9 +39,32 @@ class Dataset(object):
                 for i, level in enumerate(self._classes(var_filename)):
                     self.class_to_id_map[variable['name']][level] = i
 
+    def to_pd_df(self, split):
+        """ convert a data split to a pandas df using bag-of-words text featurizatoin
+        """
+        # {variable_name: [values per example] }
+        # note that we're breaking each text feature into its own "variable"
+        data = defaultdict(list)
 
-        # TEST - rm when done
-#        self.make_tf_iterators(self.config.train_suffix)
+        data_files = self.data_files[split]
+
+        # start with the input text features
+        input_variable_name = self.config.data_spec[0]['name']
+        for input_ex in open(data_files[input_variable_name]):
+            input_words = set(input_ex.split())
+            for feature in self.features:
+                data[feature].append(1 if feature in input_words else 0)
+
+        # now do all the other variables
+        for variable in self.config.data_spec[1:]:
+            var_name = variable['name']
+            for x in open(data_files[var_name]):
+                x = x.strip()
+                data[var_name].append(
+                    str(x) if variable['type'] == 'categorical' else float(x))
+
+        return pd.DataFrame.from_dict(data)
+
 
     def _classes(self, filename):
         """ returns the unique entries in a one-per-line file

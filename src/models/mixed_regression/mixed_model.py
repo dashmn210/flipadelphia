@@ -1,7 +1,7 @@
 import sys
 sys.path.append('../..')
 
-
+from collections import defaultdict
 
 
 
@@ -12,7 +12,7 @@ class Mixed:
     def __init__(self, config, params):
         self.config = config
         self.params = params
-
+        self.models = {}
 
 
     def save(self, dir):
@@ -24,16 +24,25 @@ class Mixed:
     def load(self, dataset, model_dir):
         """ creates or loads a model
         """
-        
+        pass
+
 
 
     def train(self, dataset, model_dir):
         """ trains the model using a src.data.dataset.Dataset
             saves model-specific metrics (loss, etc) into self.report
         """
-        model = self.load(dataset, model)
-        if not model: 
-            model = self.create(dataset, model_dir)
+        train_split = self.config.train_suffix
+        df = dataset.to_pd_df(train_split)
+        print df
+        quit() # TODO FROM HERE
+
+
+
+
+
+
+
 
 
     def inference(self, dataset, model_dir, dev=True):
