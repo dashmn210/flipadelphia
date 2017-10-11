@@ -1,5 +1,6 @@
 """
-
+TODO -- automatically divvy up data for continuous
+         confounds and mixed regression?
 
 """
 import yaml

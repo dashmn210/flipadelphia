@@ -39,6 +39,7 @@ class Dataset(object):
                 for i, level in enumerate(self._classes(var_filename)):
                     self.class_to_id_map[variable['name']][level] = i
 
+
     def to_pd_df(self, split):
         """ convert a data split to a pandas df using bag-of-words text featurizatoin
         """
