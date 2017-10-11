@@ -75,14 +75,14 @@ class Flipper:
                 if variable['type'] == 'categorical':
                     preds, loss, attn_scores = self.classifier(
                         varname=variable['name'],
-                        flip=variable['reverse_gradients'],
+                        flip=variable['control'],
                         labels=self.iter[variable['name']],
                         source_encoding=source_encoding,
                         num_classes=self.dataset.num_classes(variable['name']))
                 elif variable['type'] == 'continuous':
                     preds, loss, attn_scores = self.regressor(
                         varname=variable['name'],
-                        flip=variable['reverse_gradients'],
+                        flip=variable['control'],
                         labels=self.iter[variable['name']],
                         source_encoding=source_encoding)
                 else:

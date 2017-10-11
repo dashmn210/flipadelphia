@@ -58,6 +58,9 @@ class Dataset(object):
 
         # now do all the other variables
         for variable in self.config.data_spec[1:]:
+            if variable.get('skip', False):
+                continue
+
             var_name = variable['name']
             for x in open(data_files[var_name]):
                 x = x.strip()
