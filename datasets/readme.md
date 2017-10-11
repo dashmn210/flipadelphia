@@ -10,7 +10,7 @@
 ## **NEWS/REDDIT**
 * **idea**: post title, predict upvotes while controling for subreddit
 * **progress**: 
-  * emailed Will
+  * spoke to will. the data is on the infoLAB machines, he will work to get us access (10/10)
 * **papers**: 
 
 
@@ -45,7 +45,7 @@
 ## **INTERNET COMMENTS**
 * **idea**: predict sentiment, control for topic/party?
 * **progress**:
-  * talked to rob. he is giving us the data as a JSON blob
+  * talked to rob. he is giving us the data as a JSON blob. ETA "a couple days" (10/10)
 * **papers**: 
   * robs lrec submission: [https://cs.stanford.edu/~rpryzant/msc/rtgender.pdf](https://cs.stanford.edu/~rpryzant/msc/rtgender.pdf)
 
