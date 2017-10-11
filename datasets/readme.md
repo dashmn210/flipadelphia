@@ -70,3 +70,9 @@
 * **papers**: 
   * [https://web.stanford.edu/~jurafsky/pubs/lrec2014_stocks.pdf](https://web.stanford.edu/~jurafsky/pubs/lrec2014_stocks.pdf)
 
+
+## **RECIDIVISM**
+* **idea**: feed in court hearing transcript —> predict parole decision. control race, ??
+* **progress**:
+  * emailed Vinod
+* **papers**: 
