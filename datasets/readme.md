@@ -18,6 +18,8 @@
 * **idea**: take course description, predict enrollement, control for professor, subject, etc
 * **progress**:
   * emailed carta
+    * got weird/cryptic response...i think they will want us to "join" them if we want their data
+    * they also said that AXESS/stanford catalog is public domain! Enrollement numbers are there
   * emailed dan reminder
 * **papers**: 
 
