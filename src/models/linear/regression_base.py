@@ -21,7 +21,7 @@ pandas2ri.activate()
 
 
 rModel = namedtuple('rModel', 
-    ('model', 'r_model_name', 'r_df_name', 'ovr'))
+    ('model', 'r_model_name', 'r_df_name'))
 
 
 class Regression:
@@ -63,15 +63,24 @@ class Regression:
             ''.join(' + (1|%s)' % confound['name'] for confound in confound_vars),
             ''.join(' - %s' % var['name'] for var in ignored_vars + confound_vars))
         res = r(cmd % (formula, r_df_name))
+        print '[regression_base]: fitting ', cmd % (formula, r_df_name)
         rpy2.robjects.globalenv[r_model_name] = res
         return rModel(
             model=res,
             r_model_name=r_model_name,
-            r_df_name=r_df_name,
-            ovr=False)
+            r_df_name=r_df_name)
 
 
-    def _reorient(self, df, col_name, selected_level):
+
+    def _fit_ovr(self, split, dataset, target, ignored_vars, confounds, model_fitting_fn):
+        models = {}
+        for level in dataset.class_to_id_map[target['name']].keys():
+            models[level] = model_fitting_fn(
+                split, dataset, target, ignored_vars, confounds, level=level)
+        return models
+
+
+    def _make_binary(self, df, col_name, selected_level):
         """ returns a copy of df where a categorical column (col_name)
              is set to 1 where examples are the selected_level and 0 otherwise
             TODO -- think of a better name for this
@@ -85,44 +94,6 @@ class Regression:
         out.loc[df[col_name] == selected_level, col_name] = 1
 
         return out
-
-
-    def _fit_mixed_classifier(self, df, target, ignored_vars, confounds, level=""):
-        r_df_name = 'df_%s_%s' % (target['name'], level)
-        r_model_name = 'model_%s_%s' % (target['name'], level)
-
-
-        rpy2.robjects.globalenv[r_df_name] = pandas2ri.pandas2ri(df)
-
-        cmd = "glmer(%s, family=binomial(link='logit'), data=%s, REML=FALSE)"
-        # start with all features
-        formula = target['name'] + ' ~ .'
-        # now add in random effect intercepts
-        formula += ''.join(' + (1|%s)' % confound['name'] for confound in confounds)
-        # now remove off-target features and confound features (they were in the '.')
-        formula += ''.join(' - %s' % var['name'] for var in ignored_vars + confounds)
-
-        # fit the model, tell R about the result, and return it
-        res = r(cmd % (formula, r_df_name))
-        print cmd % (formula, r_df_name)
-        rpy2.robjects.globalenv[r_model_name] = res
-        return rModel(
-            model=res,
-            r_model_name=r_model_name,
-            r_df_name=r_df_name,
-            ovr=True)
-
-
-    def _fit_mixed_ovr(self, split, dataset, target, ignored_vars, confounds):
-        models = {}
-        train_split = self.config.train_suffix
-        df = dataset.to_pd_df(train_split)
-        for level in df[target['name']].unique():
-            level_df = self._reorient(df, target['name'], level)
-            models[level] = self._fit_mixed_classifier(
-                df, target, ignored_vars, confounds, level=level)
-        print models
-
 
 
     def inference(self, dataset, model_dir, dev=True):
