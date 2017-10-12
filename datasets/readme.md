@@ -19,6 +19,8 @@
 * **progress**:
   * seems like crawling is our most likely bet. 
   * [example crawling script](https://github.com/rpryzant/flipadelphia/blob/master/datasets/course_catalog/Abhijeets_crawling_script.py)
+  * [example crawler 2](https://github.com/rpryzant/SubCrawl/blob/master/code_release/corpus_generation/subscene_crawler.py)
+  * [examples crawler 3](https://github.com/rpryzant/japanese_corpus/blob/master/crawlers/daddicts/d_addicts_crawler.ipynb)
 * **papers**: 
 
 
