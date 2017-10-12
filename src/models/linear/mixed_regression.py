@@ -2,22 +2,57 @@
 import regression_base
 from functools import partial
 
+from rpy2.robjects import r, pandas2ri
+import rpy2.robjects
+
+
 class MixedRegression(regression_base.Regression):
 
 
     def _fit_mixed_regression(self, split, dataset, target, ignored_vars, confounds):
+        r_df_name = 'df_' + target['name']
+        r_model_name = 'model_' + target['name']
+
         df = dataset.to_pd_df(split)
-        cmd = "lmer(%s, data=%s, REML=FALSE)" 
-        return self._fit(cmd, df, target, ignored_vars, confounds)
+        rpy2.robjects.globalenv[r_df_name] = pandas2ri.pandas2ri(df)
+
+        cmd = "lmer(%s, data=%s, REML=FALSE)"
+        formula = '%s ~ . %s %s' % (
+            target['name'],
+            ''.join(' + (1|%s)' % confound['name'] for confound in confounds),
+            ''.join(' - %s' % var['name'] for var in ignored_vars + confounds))
+        model = r(cmd % (formula, r_df_name))
+        rpy2.robjects.globalenv[r_model_name] = model
+
+        return regression_base.rModel(
+            model=model,
+            r_model_name=r_model_name,
+            r_df_name=r_df_name)
 
 
     def _fit_mixed_classifier(self, split, dataset, target, ignored_vars, confounds, level=''):
+        r_df_name = 'df_%s_%s' % (target['name'], level)
+        r_model_name = 'model_%s_%s' % (target['name'], level)
+
         df = dataset.to_pd_df(split)
         # otherwise the datset is assumed to be binary
         if level is not '':
             df = self._make_binary(df, target['name'], level)
+        rpy2.robjects.globalenv[r_df_name] = pandas2ri.pandas2ri(df)
+
         cmd = "glmer(%s, family=binomial(link='logit'), data=%s, REML=FALSE)"
-        return self._fit(cmd, df, target, ignored_vars, confounds, name=level)
+        formula = '%s ~ . %s %s' % (
+            target['name'],
+            ''.join(' + (1|%s)' % confound['name'] for confound in confounds),
+            ''.join(' - %s' % var['name'] for var in ignored_vars + confounds))
+
+        model = r(cmd % (formula, r_df_name))
+        rpy2.robjects.globalenv[r_model_name] = model
+
+        return regression_base.rModel(
+            model=model,
+            r_model_name=r_model_name,
+            r_df_name=r_df_name)
 
 
     def train(self, dataset, model_dir):

@@ -46,33 +46,6 @@ class Regression:
         pass
 
 
-    def _fit(self, cmd, df, target_var, ignored_vars, confound_vars, name=''):
-        """ cmd is a valid R fitting command, with unfilled %s's for
-                the formula and data parts
-            df is a pandas df with *all* variables (target + ignored + confounds) as cols
-            target_var is the thing we want to predict
-            ignored_vars is a list of variables we want to ignore
-            confound_vars is a list of variables we want to control
-            name is an optional suffix for the r environment
-        """
-        r_df_name = 'df_' + target_var['name'] + ('_%s' % name if name else '')
-        r_model_name = 'model_' + target_var['name'] + ('_%s' % name if name else '')
-
-        rpy2.robjects.globalenv[r_df_name] = pandas2ri.pandas2ri(df)
-        formula = '%s ~ .%s %s' % (
-            target_var['name'],
-            ''.join(' + (1|%s)' % confound['name'] for confound in confound_vars),
-            ''.join(' - %s' % var['name'] for var in ignored_vars + confound_vars))
-        print '[regression_base]: fitting ', cmd % (formula, r_df_name)
-        res = r(cmd % (formula, r_df_name))
-        rpy2.robjects.globalenv[r_model_name] = res
-        return rModel(
-            model=res,
-            r_model_name=r_model_name,
-            r_df_name=r_df_name)
-
-
-
     def _fit_ovr(self, split, dataset, target, ignored_vars, confounds, model_fitting_fn):
         models = {}
         for level in dataset.class_to_id_map[target['name']].keys():
@@ -95,6 +68,8 @@ class Regression:
         out.loc[df[col_name] == selected_level, col_name] = 1
 
         return out
+
+    
 
 
     def inference(self, dataset, model_dir, dev=True):
