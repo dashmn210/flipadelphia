@@ -17,10 +17,8 @@
 ## **COURSE DESCRIPTIONS**
 * **idea**: take course description, predict enrollement, control for professor, subject/dept, (school, reqs met)
 * **progress**:
-  * emailed carta
-    * got weird/cryptic response...i think they will want us to "join" them if we want their data
-    * they also said that AXESS/stanford catalog is public domain! Enrollement numbers are there
-  * emailed dan reminder
+  * seems like crawling is our most likely bet. 
+  * [example crawling script](https://github.com/rpryzant/flipadelphia/blob/master/datasets/course_catalog/Abhijeets_crawling_script.py)
 * **papers**: 
 
 
