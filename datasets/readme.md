@@ -27,8 +27,10 @@
 ## **FOOD/RESTURAUNTS**
 * **idea**: predict hygene independent of cuisine
 * **progress**:
+  * http://www3.cs.stonybrook.edu/~junkang/hygiene/ woot!!!!
 * **papers**: 
   * [https://aclweb.org/anthology/D/D13/D13-1150.pdf](https://aclweb.org/anthology/D/D13/D13-1150.pdf)
+  
 
 
 ## **MUSIC**
