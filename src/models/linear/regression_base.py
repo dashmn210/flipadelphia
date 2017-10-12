@@ -16,7 +16,8 @@ from rpy2.robjects import r, pandas2ri
 
 #r("options(warn=-1)").  # TODO -- figure out how to silence warnings like rank-deficient
 r("library('lme4')") 
-r("library(MuMIn)")
+r("library('MuMIn')")
+r("library('glmnet')")
 pandas2ri.activate()
 
 
@@ -58,12 +59,12 @@ class Regression:
         r_model_name = 'model_' + target_var['name'] + ('_%s' % name if name else '')
 
         rpy2.robjects.globalenv[r_df_name] = pandas2ri.pandas2ri(df)
-        formula = '%s ~ %s %s' % (
+        formula = '%s ~ .%s %s' % (
             target_var['name'],
             ''.join(' + (1|%s)' % confound['name'] for confound in confound_vars),
             ''.join(' - %s' % var['name'] for var in ignored_vars + confound_vars))
-        res = r(cmd % (formula, r_df_name))
         print '[regression_base]: fitting ', cmd % (formula, r_df_name)
+        res = r(cmd % (formula, r_df_name))
         rpy2.robjects.globalenv[r_model_name] = res
         return rModel(
             model=res,

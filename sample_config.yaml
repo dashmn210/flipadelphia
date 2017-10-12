@@ -69,15 +69,15 @@ model_spec:
 #      TODO
 
   - type: "mixed-regression"
+    skip: True
+    params:
+      # TODO
+
+  - type: "regression"
     skip: False
     params:
+      regularizor: 'l1'   # [l1, l2]
+      lambda: 0.0         # 0 turns it off
       # TODO
 
-  - type: "l1-regression"
-    params:
-      # TODO
-
-  - type: "l2-regression"
-    params:
-      # TODO
 
