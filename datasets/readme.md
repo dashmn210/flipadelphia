@@ -77,4 +77,6 @@
 * **idea**: feed in court hearing transcript —> predict parole decision. control race, ??
 * **progress**:
   * emailed Vinod
+  * vinod is going to get the data into the right format for us
+  * utterance, cop/innmate, race of innmate, parole decision, length of conversation, etc
 * **papers**: 
