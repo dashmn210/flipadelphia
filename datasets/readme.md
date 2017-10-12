@@ -17,18 +17,20 @@
 ## **COURSE DESCRIPTIONS**
 * **idea**: take course description, predict enrollement, control for professor, subject/dept, (school, reqs met)
 * **progress**:
-  * emailed carta
-    * got weird/cryptic response...i think they will want us to "join" them if we want their data
-    * they also said that AXESS/stanford catalog is public domain! Enrollement numbers are there
-  * emailed dan reminder
+  * seems like crawling is our most likely bet. 
+  * [example crawling script](https://github.com/rpryzant/flipadelphia/blob/master/datasets/course_catalog/Abhijeets_crawling_script.py)
+  * [example crawler 2](https://github.com/rpryzant/SubCrawl/blob/master/code_release/corpus_generation/subscene_crawler.py)
+  * [examples crawler 3](https://github.com/rpryzant/japanese_corpus/blob/master/crawlers/daddicts/d_addicts_crawler.ipynb)
 * **papers**: 
 
 
 ## **FOOD/RESTURAUNTS**
 * **idea**: predict hygene independent of cuisine
 * **progress**:
+  * http://www3.cs.stonybrook.edu/~junkang/hygiene/ woot!!!!
 * **papers**: 
   * [https://aclweb.org/anthology/D/D13/D13-1150.pdf](https://aclweb.org/anthology/D/D13/D13-1150.pdf)
+  
 
 
 ## **MUSIC**
