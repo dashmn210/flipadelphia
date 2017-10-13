@@ -1,14 +1,30 @@
-
-# TODO -- GET COEFS
-
 import regression_base
 from functools import partial
 
 from rpy2.robjects import r, pandas2ri
 import rpy2.robjects
 
+from collections import defaultdict
+
 
 class MixedRegression(regression_base.Regression):
+
+    def _extract_r_params(self, model_name):
+        s = str(r("coef(%s)" % model_name))
+        coef_rows = s.split('\n')[1:-4]
+
+        out = defaultdict(int)
+
+        for i in range(len(coef_rows))[::3]:
+            coef_row = coef_rows[i: i+3]
+            features = coef_row[0].split()
+            for level_coefs in coef_rows[1:]:
+                level_coefs = level_coefs.split()
+                level = level_coefs[0]
+                for feature, coef in zip(features, level_coefs[1:]):
+                    out[feature] = coef
+
+        return out
 
 
     def _fit_mixed_regression(self, split, dataset, target, ignored_vars, confounds):
@@ -26,10 +42,12 @@ class MixedRegression(regression_base.Regression):
         model = r(cmd % (formula, r_df_name))
         rpy2.robjects.globalenv[r_model_name] = model
 
-        return regression_base.rModel(
+        params = self._extract_r_params(r_model_name)
+
+        return regression_base.Model(
             model=model,
-            r_model_name=r_model_name,
-            r_df_name=r_df_name)
+            weights=params,
+            is_r=True)
 
 
     def _fit_mixed_classifier(self, split, dataset, target, ignored_vars, confounds, level=''):
@@ -51,10 +69,12 @@ class MixedRegression(regression_base.Regression):
         model = r(cmd % (formula, r_df_name))
         rpy2.robjects.globalenv[r_model_name] = model
 
+        params = self._extract_r_params(r_model_name)
+
         return regression_base.rModel(
             model=model,
-            r_model_name=r_model_name,
-            r_df_name=r_df_name)
+            weights=params,
+            is_r=True)
 
 
     def train(self, dataset, model_dir):

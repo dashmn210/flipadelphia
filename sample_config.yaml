@@ -66,18 +66,19 @@ model_spec:
       regressor_layers: 1
       regressor_units: 128
       gradient_clip: 5.0
+      epochs: 10
 #      TODO
 
   - type: "mixed-regression"
-    skip: True
+    skip: False
     params:
       # TODO
 
   - type: "regression"
-    skip: False
+    skip: True
     params:
       regularizor: 'l2'   # [l1, l2]
-      lambda: 0.0         # 0 turns it off
+      lambda: 0.0         # 0 turns regularization off
       # TODO
 
 
