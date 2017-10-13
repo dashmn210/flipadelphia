@@ -22,8 +22,8 @@
     * [example crawler 2](https://github.com/rpryzant/SubCrawl/blob/master/code_release/corpus_generation/subscene_crawler.py)
     * [examples crawler 3](https://github.com/rpryzant/japanese_corpus/blob/master/crawlers/daddicts/d_addicts_crawler.ipynb)
   * but there's also an official api put out by explorecourses (it might be crappy though?)
-    * (example usage)[http://git.javadeploy.net/jimsproch/explorecourses-api-example/tree/master]
-    * (docs)[https://github.com/rpryzant/flipadelphia/tree/master/datasets/course_catalog/explorecourses_api)
+    * [example usage](http://git.javadeploy.net/jimsproch/explorecourses-api-example/tree/master)
+    * [docs](https://github.com/rpryzant/flipadelphia/tree/master/datasets/course_catalog/explorecourses_api)
 * **papers**: 
 
 
