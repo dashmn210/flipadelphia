@@ -73,14 +73,14 @@ class Flipper:
 
             with tf.variable_scope(variable['name'] + '_prediction_head'):
                 if variable['type'] == 'categorical':
-                    preds, loss, attn_scores = self.classifier(
+                    preds, var_loss, attn_scores = self.classifier(
                         varname=variable['name'],
                         flip=variable['control'],
                         labels=self.iter[variable['name']],
                         source_encoding=source_encoding,
                         num_classes=self.dataset.num_classes(variable['name']))
                 elif variable['type'] == 'continuous':
-                    preds, loss, attn_scores = self.regressor(
+                    preds, var_loss, attn_scores = self.regressor(
                         varname=variable['name'],
                         flip=variable['control'],
                         labels=self.iter[variable['name']],
@@ -89,11 +89,14 @@ class Flipper:
                     raise Exception('ERROR: unknown type %s for variable %s' % (
                         variable['type'], variable['name']))
 
-            self.step_output[variable['name']]['loss'] = loss
+                var_loss *= variable['weight']
+                self.loss += var_loss
+
+            self.step_output[variable['name']]['loss'] = var_loss
             self.step_output[variable['name']]['pred'] = preds
             self.step_output[variable['name']]['attn'] = attn_scores
 
-            self.loss += (loss * variable['weight'])
+
 
         self.train_step = tf.contrib.layers.optimize_loss(
             loss=self.loss,

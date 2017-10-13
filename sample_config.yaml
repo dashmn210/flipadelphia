@@ -19,13 +19,13 @@ data_spec:
   - name: "continuous_1"
     type: "continuous"
     control: False
-    skip: False
+    skip: True
     weight: 1
 
   - name: "continuous_2"
     type: "continuous"
-    control: True
-    skip: True
+    control: False
+    skip: False
     weight: 1
 
   - name: "categorical_1"

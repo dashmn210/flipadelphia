@@ -2,6 +2,10 @@
 import regression_base
 from functools import partial
 
+from rpy2.robjects import r, pandas2ri
+import rpy2.robjects
+
+
 class RegularizedRegression(regression_base.Regression):
 
     def __init__(self, config, params):
@@ -11,24 +15,20 @@ class RegularizedRegression(regression_base.Regression):
 
 
     def _fit_regression(self, split, dataset, target, ignored_vars, confounds):
-        # TODO -- refactor out dataset filtering,
-        #          make mixed models use this too?
         r_df_name = 'df_' + target['name']
         r_model_name = 'model_' + target['name']
 
         df = dataset.to_pd_df(split)
-        df.drop([var['name'] for var in ignored_vars], axis=1, inplace=True)
-        response_df = df[target['name']].copy()
-        df.drop(target['name'], axis=1, inplace=True)
-
         rpy2.robjects.globalenv[r_df_name] = pandas2ri.pandas2ri(df)
 
-        cmd = "lmer(%s, data=%s, REML=FALSE)"
-        formula = '%s ~ . %s %s' % (
-            target['name'],
-            ''.join(' + (1|%s)' % confound['name'] for confound in confounds),
-            ''.join(' - %s' % var['name'] for var in ignored_vars + confounds))
-        model = r(cmd % (formula, r_df_name))
+        covariate_matrix = "data.matrix(%s[, names(%s) != '%s'])" % (
+            r_df_name, r_df_name, target['name'])
+        response_vector = "%s[,'%s']" % (
+            r_df_name, target['name'])
+
+        cmd = "glmnet(%s, %s, alpha=%d, lambda=%d, family='gaussian')" % (
+            covariate_matrix, response_vector, self.alpha, self.lmbda)
+        model = r(cmd)
         rpy2.robjects.globalenv[r_model_name] = model
 
         return regression_base.rModel(
@@ -43,18 +43,21 @@ class RegularizedRegression(regression_base.Regression):
         r_model_name = 'model_%s_%s' % (target['name'], level)
 
         df = dataset.to_pd_df(split)
+
         # otherwise the datset is assumed to be binary
         if level is not '':
             df = self._make_binary(df, target['name'], level)
+
         rpy2.robjects.globalenv[r_df_name] = pandas2ri.pandas2ri(df)
 
-        cmd = "glmer(%s, family=binomial(link='logit'), data=%s, REML=FALSE)"
-        formula = '%s ~ . %s %s' % (
-            target['name'],
-            ''.join(' + (1|%s)' % confound['name'] for confound in confounds),
-            ''.join(' - %s' % var['name'] for var in ignored_vars + confounds))
+        covariate_matrix = "data.matrix(%s[, names(%s) != '%s'])" % (
+            r_df_name, r_df_name, target['name'])
+        response_vector = "%s[,'%s']" % (
+            r_df_name, target['name'])
 
-        model = r(cmd % (formula, r_df_name))
+        cmd = "glmnet(%s, %s, alpha=%d, lambda=%d, family='binomial')" % (
+            covariate_matrix, response_vector, self.alpha, self.lmbda)
+        model = r(cmd)
         rpy2.robjects.globalenv[r_model_name] = model
 
         return regression_base.rModel(

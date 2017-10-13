@@ -4,6 +4,10 @@ TODO -- refactor out one-vs-rest + reression stuff into seperate classes
 
 
      -- BUCKET CONFOUNDS THAT ARE CONTINUOUS
+
+
+     -- FUCK R!!! so just pull out params after training
+            and use them raw from then on
 """
 
 
@@ -44,6 +48,13 @@ class Regression:
         """ creates or loads a model
         """
         pass
+
+
+    def _split(self, df, response_var, vars_to_drop):
+        df.drop([var['name'] for var in vars_to_drop], axis=1, inplace=True)
+        response_df = df[response_var['name']].copy()
+        df.drop(response_var['name'], axis=1, inplace=True)
+        return response_df, df
 
 
     def _fit_ovr(self, split, dataset, target, ignored_vars, confounds, model_fitting_fn):
