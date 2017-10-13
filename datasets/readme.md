@@ -28,6 +28,9 @@
 * **idea**: predict hygene independent of cuisine
 * **progress**:
   * http://www3.cs.stonybrook.edu/~junkang/hygiene/ woot!!!!
+  * 1) dataset, which we used to run classification including inspection information and review contents. Please note that this dataset is per inspection period as we described in the paper. 
+  * 2) restaurant meta data, which lists the restaurants and their meta information.
+  * 3) reviews, which lists all reviews with a link to each restaurant one was written for. 
 * **papers**: 
   * [https://aclweb.org/anthology/D/D13/D13-1150.pdf](https://aclweb.org/anthology/D/D13/D13-1150.pdf)
   
