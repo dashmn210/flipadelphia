@@ -51,7 +51,8 @@
 ## **INTERNET COMMENTS**
 * **idea**: feed in tweets?, predict sentiment, control for topic,party,region. 
 * **progress**:
-  * talked to rob. he is giving us the data as a JSON blob. ETA "a couple days" (10/10)
+  * rob says the data is on the nlp cluster, in `/scr/nlp3/facebook`
+  * verified: `$ ssh rpryzant@jacob.stanford.edu; cd /scr/nlp3/facebook`
 * **papers**: 
   * robs lrec submission: [https://cs.stanford.edu/~rpryzant/msc/rtgender.pdf](https://cs.stanford.edu/~rpryzant/msc/rtgender.pdf)
 
