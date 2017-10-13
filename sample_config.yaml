@@ -25,7 +25,7 @@ data_spec:
   - name: "continuous_2"
     type: "continuous"
     control: False
-    skip: False
+    skip: True
     weight: 1
 
   - name: "categorical_1"
@@ -76,7 +76,7 @@ model_spec:
   - type: "regression"
     skip: False
     params:
-      regularizor: 'l1'   # [l1, l2]
+      regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns it off
       # TODO
 

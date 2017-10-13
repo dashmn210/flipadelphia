@@ -25,8 +25,8 @@ r("library('glmnet')")
 pandas2ri.activate()
 
 
-rModel = namedtuple('rModel', 
-    ('model', 'r_model_name', 'r_df_name'))
+Model = namedtuple('rModel', 
+    ('model', 'is_r', 'weights'))
 
 
 class Regression:

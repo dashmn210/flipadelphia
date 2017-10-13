@@ -5,6 +5,7 @@ from functools import partial
 from rpy2.robjects import r, pandas2ri
 import rpy2.robjects
 
+import sklearn
 
 class RegularizedRegression(regression_base.Regression):
 
@@ -12,6 +13,7 @@ class RegularizedRegression(regression_base.Regression):
         regression_base.Regression.__init__(self, config, params)
         self.alpha = 1 if self.params['regularizor'] == 'l1' else 0
         self.lmbda = self.params['lambda']
+        self.regularizor = self.params['regularizor'] if self.lmbda > 0 else None
 
 
     def _fit_regression(self, split, dataset, target, ignored_vars, confounds):
@@ -19,23 +21,27 @@ class RegularizedRegression(regression_base.Regression):
         r_model_name = 'model_' + target['name']
 
         df = dataset.to_pd_df(split)
-        rpy2.robjects.globalenv[r_df_name] = pandas2ri.pandas2ri(df)
+        y = df[target['name']].as_matrix()
+        X = df.drop([target['name']] + [v['name'] for v in ignored_vars], axis=1)
 
-        covariate_matrix = "data.matrix(%s[, names(%s) != '%s'])" % (
-            r_df_name, r_df_name, target['name'])
-        response_vector = "%s[,'%s']" % (
-            r_df_name, target['name'])
+        if self.regularizor:
+            if self.regularizor == 'l1':
+                model_fitter = sklearn.linear_model.Lasso(alpha=self.lmbda)
+            else:
+                model_fitter = sklearn.linear_model.Ridge(alpha=self.lmbda)
+        else:
+            model_fitter = sklearn.linear_model.LinearRegression()
 
-        cmd = "glmnet(%s, %s, alpha=%d, lambda=%d, family='gaussian')" % (
-            covariate_matrix, response_vector, self.alpha, self.lmbda)
-        model = r(cmd)
-        rpy2.robjects.globalenv[r_model_name] = model
+        model = model_fitter.fit(X, y)
 
-        return regression_base.rModel(
+        weights = {}
+        for w, f in zip(model.coef_, dataset.features):
+            weights[f] = w
+
+        return regression_base.Regression.Model(
             model=model,
-            r_model_name=r_model_name,
-            r_df_name=r_df_name)
-
+            weights=weights,
+            is_r=False)
 
 
     def _fit_classifier(self, split, dataset, target, ignored_vars, confounds, level=''):
@@ -48,22 +54,23 @@ class RegularizedRegression(regression_base.Regression):
         if level is not '':
             df = self._make_binary(df, target['name'], level)
 
-        rpy2.robjects.globalenv[r_df_name] = pandas2ri.pandas2ri(df)
+        y = df[target['name']].as_matrix()
+        X = df.drop([target['name']] + [v['name'] for v in ignored_vars], axis=1)
 
-        covariate_matrix = "data.matrix(%s[, names(%s) != '%s'])" % (
-            r_df_name, r_df_name, target['name'])
-        response_vector = "%s[,'%s']" % (
-            r_df_name, target['name'])
+        model_fitter = sklearn.linear_model.LogisticRegression(
+            penalty=(self.regularizor or 'l2'),
+            C=(1.0/self.lmbda) if self.regularizor > 0 else 99999999)
 
-        cmd = "glmnet(%s, %s, alpha=%d, lambda=%d, family='binomial')" % (
-            covariate_matrix, response_vector, self.alpha, self.lmbda)
-        model = r(cmd)
-        rpy2.robjects.globalenv[r_model_name] = model
+        model = model_fitter.fit(X, list(y))
+        weights = {}
+        for w, f in zip(model.coef_[0], dataset.features):
+            weights[f] = w
 
-        return regression_base.rModel(
+        return regression_base.Regression.Model(
             model=model,
-            r_model_name=r_model_name,
-            r_df_name=r_df_name)
+            weights=weights,
+            is_r=False)
+
 
 
     def train(self, dataset, model_dir):

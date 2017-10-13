@@ -1,4 +1,6 @@
 
+# TODO -- GET COEFS
+
 import regression_base
 from functools import partial
 

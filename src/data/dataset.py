@@ -27,7 +27,7 @@ class Dataset(object):
             self.vocab = self._gen_vocab(train_text_file)
         else:
             self.vocab = self.config.vocab
-        self.features = set(v.strip() for v in open(self.vocab))
+        self.features = sorted([v.strip() for v in open(self.vocab)])
         self.vocab_size = self._check_vocab(self.vocab)
 
         # class_to_id_map: {variable name: {'class': index}  }  for each categorical variable
