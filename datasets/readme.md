@@ -24,6 +24,10 @@
   * but there's also an official api put out by explorecourses (it might be crappy though?)
     * [example usage](http://git.javadeploy.net/jimsproch/explorecourses-api-example/tree/master)
     * [docs](https://github.com/rpryzant/flipadelphia/tree/master/datasets/course_catalog/explorecourses_api)
+  * there's also an XML api
+    * To get all current active classes, you can simply call http://explorecourses.stanford.edu/search?view=xml-20140630&filter-coursestatus-Active=on&q=%25
+    * Data from past years can be obtained by passing an additional flag such as "&academicYear=20162017"
+    * This script converts it into JSON: https://gist.github.com/tummykung/cfa37c3be373a3da073ffb9b2de03d7e
 * **papers**: 
 
 
