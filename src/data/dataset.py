@@ -40,7 +40,11 @@ class Dataset(object):
                     self.class_to_id_map[variable['name']][level] = i
 
 
-    def to_pd_df(self, split):
+    def to_pd_df(self, split, categorical_features=[]):
+        # TODO !!!!!!!!!!!!!!!
+        # ONE-HOT ALL OF THE CATEGORICAL FEATURES IF GIVEN!!!
+
+
         """ convert a data split to a pandas df using bag-of-words text featurizatoin
         """
         # {variable_name: [values per example] }

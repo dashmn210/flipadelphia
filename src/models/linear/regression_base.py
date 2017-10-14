@@ -17,6 +17,7 @@ sys.path.append('../..')
 from collections import defaultdict, namedtuple
 import rpy2.robjects
 from rpy2.robjects import r, pandas2ri
+from src.models.abstract_model import Model
 
 #r("options(warn=-1)").  # TODO -- figure out how to silence warnings like rank-deficient
 r("library('lme4')") 
@@ -29,32 +30,28 @@ Model = namedtuple('rModel',
     ('model', 'is_r', 'weights'))
 
 
-class Regression:
+class Regression(Model):
 
     def __init__(self, config, params):
         self.config = config
         self.params = params
         # target variable name: R object with this model  OR  list of one-vs-rest models, one per level
         self.models = {}
+        # TODO -- PARSE TARGETS AND STUFF UP HERE!!!
 
 
-    def save(self, dir):
-        """ saves a representation of the model into a directory
-        """
+
+    def _fit_regression(self, split, dataset, target, ignored_vars, confounds):
+        raise NotImplementedError
+
+    def _fit_classifier(self, split, dataset, target, ignored_vars, confounds, level=''):
         raise NotImplementedError
 
 
-    def load(self, dataset, model_dir):
-        """ creates or loads a model
-        """
-        pass
+    def train(self, dataset, model_dir):
+        raise NotImplementedError
 
 
-    def _split(self, df, response_var, vars_to_drop):
-        df.drop([var['name'] for var in vars_to_drop], axis=1, inplace=True)
-        response_df = df[response_var['name']].copy()
-        df.drop(response_var['name'], axis=1, inplace=True)
-        return response_df, df
 
 
     def _fit_ovr(self, split, dataset, target, ignored_vars, confounds, model_fitting_fn):
@@ -81,23 +78,3 @@ class Regression:
         return out
 
     
-
-
-    def inference(self, dataset, model_dir, dev=True):
-        """ run inference on the dev/test set, save all predictions to 
-                per-variable files in model_dir, and return pointers to those files
-            saves model-specific metrics/artifacts (loss, attentional scores, etc) 
-                into self.report (also possible writes to a file in model_dir)
-        """
-        raise NotImplementedError
-
-
-    def report(self):
-        """ releases self.report, a summary of the last job this model
-                executed whether that be training, testing, etc
-        """
-        raise NotImplementedError
-
-
-
-

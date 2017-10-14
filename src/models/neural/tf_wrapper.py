@@ -81,7 +81,8 @@ class TFModelWrapper(Model):
 
         sess.run(loaded_model.model.iter['initializer'])
 
-        while global_step < self.params['num_train_steps']:
+        epochs = 0
+        while global_step < self.params['num_train_steps'] and epochs < self.params['num_epochs']:
             start_time = time.time()
             try:
                 total_loss, hidden_states, embeddings, encoding, step_result, step_input, global_step, _ = loaded_model.model.train(sess)
@@ -108,6 +109,7 @@ class TFModelWrapper(Model):
                 # print step_result
                 # write summaries
             except tf.errors.OutOfRangeError:
+                epochs += 1
                 sess.run(loaded_model.model.iter['initializer'])
 
 

@@ -71,7 +71,7 @@ class MixedRegression(regression_base.Regression):
 
         params = self._extract_r_params(r_model_name)
 
-        return regression_base.rModel(
+        return regression_base.Model(
             model=model,
             weights=params,
             is_r=True)

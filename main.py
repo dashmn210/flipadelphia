@@ -59,6 +59,7 @@ if __name__ == '__main__':
             if model_description.get('skip', False):
                 continue
 
+            print 'MAIN: training ', model_description['type']
             model_dir = os.path.join(config.working_dir, model_description['type'])
             if not os.path.exists(model_dir):
                 os.makedirs(model_dir)
@@ -67,7 +68,7 @@ if __name__ == '__main__':
                 params=model_description['params'])
 
             model.train(d, model_dir)
-            model.save(model_dir)
+            # model.save(model_dir)
 
     if args.inference:
         for model_description in config.model_spec:

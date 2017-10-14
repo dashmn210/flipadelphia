@@ -19,13 +19,13 @@ data_spec:
   - name: "continuous_1"
     type: "continuous"
     control: False
-    skip: True
+    skip: False
     weight: 1
 
   - name: "continuous_2"
     type: "continuous"
-    control: False
-    skip: True
+    control: True
+    skip: False
     weight: 1
 
   - name: "categorical_1"
@@ -51,7 +51,7 @@ vocab: null
 # all of these will be run
 model_spec:
   - type: "neural"
-    skip: True
+    skip: False
     params:
       batch_size: 16
       num_train_steps: 10000
@@ -66,7 +66,7 @@ model_spec:
       regressor_layers: 1
       regressor_units: 128
       gradient_clip: 5.0
-      epochs: 10
+      num_epochs: 10
 #      TODO
 
   - type: "mixed-regression"
@@ -74,8 +74,16 @@ model_spec:
     params:
       # TODO
 
+  - type: "fixed-regression"
+    skip: False
+    params:
+      regularizor: 'l2'   # [l1, l2]
+      lambda: 0.0         # 0 turns regularization off
+      # TODO
+
+
   - type: "regression"
-    skip: True
+    skip: False
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off

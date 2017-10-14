@@ -14,7 +14,7 @@ class RegularizedRegression(regression_base.Regression):
         self.alpha = 1 if self.params['regularizor'] == 'l1' else 0
         self.lmbda = self.params['lambda']
         self.regularizor = self.params['regularizor'] if self.lmbda > 0 else None
-
+        # TODO -- PARSE TARGETS AND STUFF UP HERE!!!
 
     def _fit_regression(self, split, dataset, target, ignored_vars, confounds):
         r_df_name = 'df_' + target['name']
@@ -38,7 +38,7 @@ class RegularizedRegression(regression_base.Regression):
         for w, f in zip(model.coef_, dataset.features):
             weights[f] = w
 
-        return regression_base.Regression.Model(
+        return regression_base.Model(
             model=model,
             weights=weights,
             is_r=False)
@@ -66,7 +66,7 @@ class RegularizedRegression(regression_base.Regression):
         for w, f in zip(model.coef_[0], dataset.features):
             weights[f] = w
 
-        return regression_base.Regression.Model(
+        return regression_base.Model(
             model=model,
             weights=weights,
             is_r=False)
