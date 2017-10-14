@@ -2,9 +2,9 @@
 class Model(object):
     """ superclass for all models 
     """
-    def __init__(self, config):
+    def __init__(self, config, params):
         self.config = config
-        self.report = None
+        self.params = params
 
 
     def save(self, dir):

@@ -7,8 +7,10 @@ from src.models.linear.plain_regression import RegularizedRegression
 from src.models.linear.fixed_regression import FixedRegression
 
 
+
 MODEL_CLASSES = {
     'neural': TFModelWrapper,
     'mixed-regression': MixedRegression,
+    'fixed-regression': FixedRegression,
     'regression': RegularizedRegression
 }

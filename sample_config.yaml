@@ -18,25 +18,25 @@ data_spec:
 
   - name: "continuous_1"
     type: "continuous"
-    control: False
+    control: True
     skip: False
     weight: 1
 
   - name: "continuous_2"
     type: "continuous"
-    control: True
+    control: False
     skip: False
     weight: 1
 
   - name: "categorical_1"
     type: "categorical"
-    control: False
+    control: True
     skip: False
     weight: 1
 
   - name: "categorical_2"
     type: "categorical"
-    control: True
+    control: False
     skip: False
     weight: 1
 
@@ -51,7 +51,7 @@ vocab: null
 # all of these will be run
 model_spec:
   - type: "neural"
-    skip: False
+    skip: True
     params:
       batch_size: 16
       num_train_steps: 10000
@@ -70,7 +70,7 @@ model_spec:
 #      TODO
 
   - type: "mixed-regression"
-    skip: False
+    skip: True
     params:
       # TODO
 

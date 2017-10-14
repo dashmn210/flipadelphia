@@ -26,25 +26,34 @@ r("library('glmnet')")
 pandas2ri.activate()
 
 
-Model = namedtuple('rModel', 
+ModelResult = namedtuple('rModel', 
     ('model', 'is_r', 'weights'))
 
 
 class Regression(Model):
 
     def __init__(self, config, params):
-        self.config = config
-        self.params = params
-        # target variable name: R object with this model  OR  list of one-vs-rest models, one per level
+        Model.__init__(self, config, params)
+        # target variable name: R object with this model  
+        #     OR  list of one-vs-rest models, one per level
         self.models = {}
-        # TODO -- PARSE TARGETS AND STUFF UP HERE!!!
+
+        variables = [v for v in self.config.data_spec[1:] \
+                        if not v.get('skip', False)]
+        self.targets = [
+            variable for variable in variables \
+            if variable['control'] == False]
+        self.confounds = [
+            variable for variable in variables \
+            if variable['control']]
 
 
 
-    def _fit_regression(self, split, dataset, target, ignored_vars, confounds):
+
+    def _fit_regression(self, split, dataset, target, ignored_vars):
         raise NotImplementedError
 
-    def _fit_classifier(self, split, dataset, target, ignored_vars, confounds, level=''):
+    def _fit_classifier(self, split, dataset, target, ignored_vars, level=''):
         raise NotImplementedError
 
 
@@ -52,13 +61,11 @@ class Regression(Model):
         raise NotImplementedError
 
 
-
-
-    def _fit_ovr(self, split, dataset, target, ignored_vars, confounds, model_fitting_fn):
+    def _fit_ovr(self, split, dataset, target, ignored_vars, model_fitting_fn):
         models = {}
         for level in dataset.class_to_id_map[target['name']].keys():
             models[level] = model_fitting_fn(
-                split, dataset, target, ignored_vars, confounds, level=level)
+                split, dataset, target, ignored_vars, level=level)
         return models
 
 

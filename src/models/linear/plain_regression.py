@@ -14,15 +14,36 @@ class RegularizedRegression(regression_base.Regression):
         self.alpha = 1 if self.params['regularizor'] == 'l1' else 0
         self.lmbda = self.params['lambda']
         self.regularizor = self.params['regularizor'] if self.lmbda > 0 else None
-        # TODO -- PARSE TARGETS AND STUFF UP HERE!!!
 
-    def _fit_regression(self, split, dataset, target, ignored_vars, confounds):
+
+    def _data_to_numpy(self, split, dataset, target, ignored_vars, level=''):
+        # note that cols are sorted just like self.features
+        df = dataset.to_pd_df(split)
+
+        if level is not '':
+            # turn response into 1's on the favored level, and 0 elsewhere
+            df = self._make_binary(df, target['name'], level)
+
+        y = df[target['name']].as_matrix()
+
+        # this also drops confounds
+        not_in_covariates = \
+            [target['name']] + \
+            [v['name'] for v in ignored_vars]
+        X = df.drop(not_in_covariates, axis=1)
+
+        features = list(X.columns)
+        assert features == dataset.features
+
+        return y, X.as_matrix(), features
+
+
+
+    def _fit_regression(self, split, dataset, target, ignored_vars):
         r_df_name = 'df_' + target['name']
         r_model_name = 'model_' + target['name']
 
-        df = dataset.to_pd_df(split)
-        y = df[target['name']].as_matrix()
-        X = df.drop([target['name']] + [v['name'] for v in ignored_vars], axis=1)
+        y, X, feature_names = self._data_to_numpy(split, dataset, target, ignored_vars)
 
         if self.regularizor:
             if self.regularizor == 'l1':
@@ -35,27 +56,21 @@ class RegularizedRegression(regression_base.Regression):
         model = model_fitter.fit(X, y)
 
         weights = {}
-        for w, f in zip(model.coef_, dataset.features):
+        for w, f in zip(model.coef_, feature_names):
             weights[f] = w
+        weights['intercept'] = model.intercept_
 
-        return regression_base.Model(
+        return regression_base.ModelResult(
             model=model,
             weights=weights,
             is_r=False)
 
 
-    def _fit_classifier(self, split, dataset, target, ignored_vars, confounds, level=''):
+    def _fit_classifier(self, split, dataset, target, ignored_vars, level=''):
         r_df_name = 'df_%s_%s' % (target['name'], level)
         r_model_name = 'model_%s_%s' % (target['name'], level)
 
-        df = dataset.to_pd_df(split)
-
-        # otherwise the datset is assumed to be binary
-        if level is not '':
-            df = self._make_binary(df, target['name'], level)
-
-        y = df[target['name']].as_matrix()
-        X = df.drop([target['name']] + [v['name'] for v in ignored_vars], axis=1)
+        y, X, feature_names = self._data_to_numpy(split, dataset, target, ignored_vars, level)
 
         model_fitter = sklearn.linear_model.LogisticRegression(
             penalty=(self.regularizor or 'l2'),
@@ -63,10 +78,11 @@ class RegularizedRegression(regression_base.Regression):
 
         model = model_fitter.fit(X, list(y))
         weights = {}
-        for w, f in zip(model.coef_[0], dataset.features):
+        for w, f in zip(model.coef_[0], feature_names):
             weights[f] = w
+        weights['intercept'] = model.intercept_
 
-        return regression_base.Model(
+        return regression_base.ModelResult(
             model=model,
             weights=weights,
             is_r=False)
@@ -79,18 +95,10 @@ class RegularizedRegression(regression_base.Regression):
         """
         train_split = self.config.train_suffix
 
-        targets = [
-            var for var in self.config.data_spec[1:] \
-            if var['control'] == False \
-            and not var.get('skip', False)]
-
-        confounds = []
-
-        for i, target in enumerate(targets):
-            ignored_variables = [
-                var for var in self.config.data_spec[1:] \
-                if var['name'] != target['name'] \
-                and not var.get('skip', False)]
+        for i, target in enumerate(self.targets):
+            ignored = self.targets[:i] + self.targets[i+1:]
+            # ignore the confounds as well as off-target targets
+            ignored += self.confounds
 
             if target['type']== 'continuous':
                 fitting_function = self._fit_regression
@@ -102,10 +110,9 @@ class RegularizedRegression(regression_base.Regression):
                 split=train_split,
                 dataset=dataset,
                 target=target,
-                ignored_vars=ignored_variables,
-                confounds=confounds)
+                ignored_vars=ignored)
 
-        print self.models
+        # print self.models
 
 
 

@@ -27,7 +27,7 @@ class MixedRegression(regression_base.Regression):
         return out
 
 
-    def _fit_mixed_regression(self, split, dataset, target, ignored_vars, confounds):
+    def _fit_mixed_regression(self, split, dataset, target, ignored_vars):
         r_df_name = 'df_' + target['name']
         r_model_name = 'model_' + target['name']
 
@@ -37,20 +37,20 @@ class MixedRegression(regression_base.Regression):
         cmd = "lmer(%s, data=%s, REML=FALSE)"
         formula = '%s ~ . %s %s' % (
             target['name'],
-            ''.join(' + (1|%s)' % confound['name'] for confound in confounds),
-            ''.join(' - %s' % var['name'] for var in ignored_vars + confounds))
+            ''.join(' + (1|%s)' % confound['name'] for confound in self.confounds),
+            ''.join(' - %s' % var['name'] for var in ignored_vars + self.confounds))
         model = r(cmd % (formula, r_df_name))
         rpy2.robjects.globalenv[r_model_name] = model
 
         params = self._extract_r_params(r_model_name)
 
-        return regression_base.Model(
+        return regression_base.ModelResult(
             model=model,
             weights=params,
             is_r=True)
 
 
-    def _fit_mixed_classifier(self, split, dataset, target, ignored_vars, confounds, level=''):
+    def _fit_mixed_classifier(self, split, dataset, target, ignored_vars, level=''):
         r_df_name = 'df_%s_%s' % (target['name'], level)
         r_model_name = 'model_%s_%s' % (target['name'], level)
 
@@ -63,15 +63,15 @@ class MixedRegression(regression_base.Regression):
         cmd = "glmer(%s, family=binomial(link='logit'), data=%s, REML=FALSE)"
         formula = '%s ~ . %s %s' % (
             target['name'],
-            ''.join(' + (1|%s)' % confound['name'] for confound in confounds),
-            ''.join(' - %s' % var['name'] for var in ignored_vars + confounds))
+            ''.join(' + (1|%s)' % confound['name'] for confound in self.confounds),
+            ''.join(' - %s' % var['name'] for var in ignored_vars + self.confounds))
 
         model = r(cmd % (formula, r_df_name))
         rpy2.robjects.globalenv[r_model_name] = model
 
         params = self._extract_r_params(r_model_name)
 
-        return regression_base.Model(
+        return regression_base.ModelResult(
             model=model,
             weights=params,
             is_r=True)
@@ -83,17 +83,8 @@ class MixedRegression(regression_base.Regression):
         """
         train_split = self.config.train_suffix
 
-        targets = [
-            variable for variable in self.config.data_spec[1:] \
-            if variable['control'] == False \
-            and not variable.get('skip', False)]
-        confounds = [
-            variable for variable in self.config.data_spec[1:] \
-            if variable['control'] \
-            and not variable.get('skip', False)]
-
-        for i, target in enumerate(targets):
-            ignored_targets = targets[:i] + targets[i+1:]
+        for i, target in enumerate(self.targets):
+            ignored = self.targets[:i] + self.targets[i+1:]
 
             if target['type']== 'continuous':
                 fitting_function = self._fit_mixed_regression
@@ -105,10 +96,9 @@ class MixedRegression(regression_base.Regression):
                 split=train_split,
                 dataset=dataset,
                 target=target,
-                ignored_vars=ignored_targets,
-                confounds=confounds)
+                ignored_vars=ignored)
 
-        print self.models
+        # print self.models
 
 
 

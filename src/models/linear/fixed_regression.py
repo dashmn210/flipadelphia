@@ -1,56 +1,52 @@
 
 import regression_base
+import plain_regression
 from functools import partial
 
 from rpy2.robjects import r, pandas2ri
 import rpy2.robjects
 
 import sklearn
+import pandas as pd
 
 class FixedRegression(plain_regression.RegularizedRegression):
 
-    def __init__(self, config, params):
-        regression_base.Regression.__init__(self, config, params)
-        self.alpha = 1 if self.params['regularizor'] == 'l1' else 0
-        self.lmbda = self.params['lambda']
-        self.regularizor = self.params['regularizor'] if self.lmbda > 0 else None
-        # TODO -- PARSE TARGETS AND STUFF UP HERE!!!
+    def _data_to_numpy(self, split, dataset, target, ignored_vars, level=''):
+        df = dataset.to_pd_df(split)
+
+        if level is not '':
+            # turn response into 1's on the favored level, and 0 elsewhere
+            df = self._make_binary(df, target['name'], level)
+
+        df_confounds = df[[c['name'] for c in self.confounds]]
+
+        y = df[target['name']].as_matrix()
+
+        # this also drops confounds
+        not_in_covariates = \
+            [target['name']] + \
+            [v['name'] for v in ignored_vars]
+        X = df.drop(not_in_covariates, axis=1)
 
 
-    def train(self, dataset, model_dir):
-        """ trains the model using a src.data.dataset.Dataset
-            saves model-specific metrics (loss, etc) into self.report
-        """
-        train_split = self.config.train_suffix
+        # HACKY!!! :(
+        # now add back in the confounds (1-hot if categorical)
+        #  (and also modify self.features to know about these confounds)
+        feature_names = list(X.columns)
 
-        targets = [
-            var for var in self.config.data_spec[1:] \
-            if var['control'] == False \
-            and not var.get('skip', False)]
-
-        confounds = []
-
-        for i, target in enumerate(targets):
-            ignored_variables = [
-                var for var in self.config.data_spec[1:] \
-                if var['name'] != target['name'] \
-                and not var.get('skip', False)]
-
-            if target['type']== 'continuous':
-                fitting_function = self._fit_regression
+        for confound in self.confounds:
+            if confound['type'] == 'continuous':
+                X = pd.concat([X, df_confounds[confound['name']]], axis=1)
             else:
-                fitting_function = partial(
-                    self._fit_ovr, model_fitting_fn=self._fit_classifier)
+                for level in dataset.class_to_id_map[confound['name']].keys():
+                    new = self._make_binary(df_confounds, confound['name'], level)[confound['name']]
+                    X = pd.concat([X, new], axis=1)   
+                    # add level info to the name of the feature
+                    X = X.rename(columns={
+                        confound['name']: '%s_%s' % (confound['name'], level)
+                        })
 
-            self.models[target['name']] = fitting_function(
-                split=train_split,
-                dataset=dataset,
-                target=target,
-                ignored_vars=ignored_variables,
-                confounds=confounds)
+        features = list(X.columns)
 
-        print self.models
-
-
-
+        return y, X.as_matrix(), features
 

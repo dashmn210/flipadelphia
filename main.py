@@ -41,10 +41,28 @@ def set_seed(seed):
     tf.set_random_seed(seed)  # only default graph
 
 
+def validate_config(config):
+    # dissalow when you're running mixed effects and trying to control for a scalar
+    has_continuous_control = any(
+        [v.get('control', False) and v['type'] == 'continuous' \
+            and not v.get('skip', False) for v in config.data_spec])
+    has_mixed_effects = any(
+        [m['type'] == 'mixed-regression' and not m.get('skip', False) \
+            for m in config.model_spec])
+
+    if has_continuous_control and has_mixed_effects:
+        raise Exception("no continuous controls with mixed effects!")
+
+    return True
+
+
+
 if __name__ == '__main__':
     # parse args
     args = process_command_line()
     config = load_config(args.config)   
+    validate_config(config)
+
 
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
     set_seed(config.seed)
@@ -63,6 +81,7 @@ if __name__ == '__main__':
             model_dir = os.path.join(config.working_dir, model_description['type'])
             if not os.path.exists(model_dir):
                 os.makedirs(model_dir)
+
             model = constants.MODEL_CLASSES[model_description['type']](
                 config=config, 
                 params=model_description['params'])
