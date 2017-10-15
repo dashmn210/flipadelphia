@@ -10,6 +10,8 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from src.models.abstract_model import Model
 
 
+import tf_utils
+
 # # # # global gradient reversal functions  # # # #
 def reverse_grad_grad(op, grad):
     return tf.constant(-1.) * grad
@@ -25,7 +27,6 @@ def reverse_grad(tensor):
 
 
 # TODO move to abstract class
-Model = namedtuple("Model", ('graph', 'model', 'iterator'))
 
 
 
@@ -40,10 +41,10 @@ class Flipper:
     def build_model_graph(config, params, dataset, split):
         graph = tf.Graph()
         with graph.as_default():
-            iterators = dataset.make_tf_iterators(split)
+            iterators = dataset.make_tf_iterators(split, params)
             model = Flipper(config, params, dataset, iterators, split)
 
-        return Model(graph=graph, model=model, iterator=iterators)
+        return tf_utils.TFModel(graph=graph, model=model, iterator=iterators)
 
 
     def __init__(self, config, params, dataset, iterators, split):
@@ -199,7 +200,6 @@ class Flipper:
         # Replace all scores for padded inputs with tf.float32.min
         source_name = self.config.data_spec[0]['name']
         _, source_lens = self.iter[source_name]
-#        num_scores = tf.shape(scores)[1]
         scores_mask = tf.sequence_mask(
             lengths=tf.to_int32(source_lens),
             maxlen=tf.to_int32(tf.reduce_max(source_lens)),

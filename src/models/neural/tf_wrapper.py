@@ -8,6 +8,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 from src.models.abstract_model import Model
 import src.models.neural.tf_flipper as tf_flipper
+import src.models.neural.tf_regression as tf_regression
+import tf_utils
+
 
 
 def add_summary(summary_writer, global_step, name, value):
@@ -19,14 +22,13 @@ def add_summary(summary_writer, global_step, name, value):
 
 
 
-
-
 class TFModelWrapper(Model):
     """ fake model to test out iterators etc
     """
     def __init__(self, config, params):
         self.config = config
         self.params = params
+
 
     def save(self, model_dir):
         # TODO!!!!!
@@ -44,7 +46,7 @@ class TFModelWrapper(Model):
         """
         latest_ckpt = tf.train.latest_checkpoint(model_dir)
 
-        model = tf_flipper.Flipper.build_model_graph(
+        model = self.model_builder_class.build_model_graph(
             self.config, self.params, dataset, target_split)
         sess = tf.Session(graph=model.graph)
 
@@ -85,7 +87,8 @@ class TFModelWrapper(Model):
         while global_step < self.params['num_train_steps'] and epochs < self.params['num_epochs']:
             start_time = time.time()
             try:
-                total_loss, hidden_states, embeddings, encoding, step_result, step_input, global_step, _ = loaded_model.model.train(sess)
+               # total_loss, hidden_states, embeddings, encoding, step_result, step_input, global_step, _ = loaded_model.model.train(sess)
+                print loaded_model.model.train(sess)
                 print 'loss: ', total_loss
                 for variable in self.config.data_spec[1:]:
                     if variable['skip']:
@@ -131,6 +134,20 @@ class TFModelWrapper(Model):
         # TODO
         raise NotImplementedError
 
+
+
+
+class TFFlipperWrapper(TFModelWrapper):
+    def __init__(self, config, params):
+        TFModelWrapper.__init__(self, config, params)
+
+        self.model_builder_class = tf_flipper.Flipper
+
+class TFStackedRegressionWrapper(TFModelWrapper):
+    def __init__(self, config, params):
+        TFModelWrapper.__init__(self, config, params)
+
+        self.model_builder_class = tf_regression.StackedRegression
 
 
 

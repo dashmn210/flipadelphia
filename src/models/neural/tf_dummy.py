@@ -7,10 +7,7 @@ import tensorflow as tf
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 from src.models.abstract_model import Model
-
-
-# TODO move to abstract class
-Model = namedtuple("Model", ('graph', 'model', 'iterator'))
+import tf_utils
 
 
 
@@ -27,7 +24,7 @@ class TFDummy:
             iterators = dataset.make_tf_iterators(split)
             model = TFDummy(config, params, dataset, iterators, split)
 
-        return Model(graph=graph, model=model, iterator=iterators)
+        return TFModel(graph=graph, model=model, iterator=iterators)
 
 
     def __init__(self, config, params, dataset, iterators, split):

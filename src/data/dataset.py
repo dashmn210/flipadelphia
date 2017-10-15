@@ -131,7 +131,7 @@ class Dataset(object):
 
 
 
-    def make_tf_iterators(self, split):
+    def make_tf_iterators(self, split, params):
         """ split = one of config.{train/dev/test}_suffix
 
             returns a dictionary mapping each variable
@@ -145,9 +145,6 @@ class Dataset(object):
         eos_id = tf.cast(
             vocab_table.lookup(tf.constant(self.config.eos)),
             tf.int32)
-        neural_params = next( (
-            m for m in self.config.model_spec if m['type'] == 'neural' ))['params']
-
 
         def text_dataset(file):
             dataset = tf.contrib.data.TextLineDataset(file)
@@ -197,7 +194,7 @@ class Dataset(object):
             padding_values = tuple(padding_values)
 
             return datset.padded_batch(
-                neural_params['batch_size'],
+                params['batch_size'],
                 padded_shapes=padded_shapes,
                 padding_values=padding_values)
 

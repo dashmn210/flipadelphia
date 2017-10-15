@@ -19,7 +19,7 @@ data_spec:
   - name: "continuous_1"
     type: "continuous"
     control: True
-    skip: False
+    skip: True
     weight: 1
 
   - name: "continuous_2"
@@ -50,8 +50,16 @@ vocab: null
 
 # all of these will be run
 model_spec:
+  - type: 'stacked-regression'
+    skip: False
+    params:
+      batch_size: 2
+      num_train_steps: 10000
+      learning_rate: 0.001
+      num_epochs: 10
+
   - type: "neural"
-    skip: True
+    skip: False
     params:
       batch_size: 16
       num_train_steps: 10000
@@ -70,7 +78,7 @@ model_spec:
 #      TODO
 
   - type: "mixed-regression"
-    skip: True
+    skip: False
     params:
       # TODO
 

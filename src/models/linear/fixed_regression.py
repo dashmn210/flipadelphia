@@ -28,7 +28,6 @@ class FixedRegression(plain_regression.RegularizedRegression):
             [v['name'] for v in ignored_vars]
         X = df.drop(not_in_covariates, axis=1)
 
-
         # HACKY!!! :(
         # now add back in the confounds (1-hot if categorical)
         #  (and also modify self.features to know about these confounds)
