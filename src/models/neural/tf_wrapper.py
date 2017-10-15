@@ -84,37 +84,15 @@ class TFModelWrapper(Model):
         sess.run(loaded_model.model.iter['initializer'])
 
         epochs = 0
-        while global_step < self.params['num_train_steps'] and epochs < self.params['num_epochs']:
+        while global_step < self.params['num_train_steps'] or epochs < self.params['num_epochs']:
             start_time = time.time()
             try:
                # total_loss, hidden_states, embeddings, encoding, step_result, step_input, global_step, _ = loaded_model.model.train(sess)
                 print loaded_model.model.train(sess)
-                print 'loss: ', total_loss
-                for variable in self.config.data_spec[1:]:
-                    if variable['skip']:
-                        continue
-
-                    print 'input on %s: ' % variable['name']
-                    print step_input[variable['name']]
-                    print 'output: (loss: %f)' % step_result[variable['name']]['loss']
-                    print step_result[variable['name']]['pred']
-                print 
-                print
-                # print 'input'
-                # print step_input
-                # print 'embeddings'
-                # print embeddings
-                # print 'hidden_states'
-                # print hidden_states
-                # print 'encoding'
-                # print encoding
-                # print 'step_result'
-                # print step_result
-                # write summaries
             except tf.errors.OutOfRangeError:
                 epochs += 1
                 sess.run(loaded_model.model.iter['initializer'])
-
+        quit()
 
 
     def inference(self, dataset, model_dir, dev=True):

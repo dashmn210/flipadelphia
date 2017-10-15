@@ -18,7 +18,7 @@ data_spec:
 
   - name: "continuous_1"
     type: "continuous"
-    control: True
+    control: False
     skip: True
     weight: 1
 
@@ -30,14 +30,14 @@ data_spec:
 
   - name: "categorical_1"
     type: "categorical"
-    control: True
-    skip: False
+    control: False
+    skip: True
     weight: 1
 
   - name: "categorical_2"
     type: "categorical"
-    control: False
-    skip: False
+    control: True
+    skip: True
     weight: 1
 
 
@@ -53,10 +53,10 @@ model_spec:
   - type: 'stacked-regression'
     skip: False
     params:
-      batch_size: 2
-      num_train_steps: 10000
-      learning_rate: 0.001
-      num_epochs: 10
+      batch_size: 16
+      num_train_steps: 1
+      learning_rate: 0.01
+      num_epochs: 1
 
   - type: "neural"
     skip: False
@@ -77,9 +77,9 @@ model_spec:
       num_epochs: 10
 #      TODO
 
-  - type: "mixed-regression"
-    skip: False
-    params:
+  # - type: "mixed-regression"
+  #   skip: False
+  #   params:
       # TODO
 
   - type: "fixed-regression"
