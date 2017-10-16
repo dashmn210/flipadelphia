@@ -30,13 +30,13 @@ data_spec:
 
   - name: "categorical_1"
     type: "categorical"
-    control: False
+    control: True
     skip: False
     weight: 1
 
   - name: "categorical_2"
     type: "categorical"
-    control: True
+    control: False
     skip: False
     weight: 1
 

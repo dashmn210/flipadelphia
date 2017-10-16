@@ -90,6 +90,8 @@ class TFModelWrapper(Model):
             try:
                # total_loss, hidden_states, embeddings, encoding, step_result, step_input, global_step, _ = loaded_model.model.train(sess)
                 print loaded_model.model.train(sess)
+                print
+                print
             except tf.errors.OutOfRangeError:
                 epochs += 1
                 sess.run(loaded_model.model.iter['initializer'])

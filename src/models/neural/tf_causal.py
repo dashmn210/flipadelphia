@@ -42,6 +42,60 @@ class CausalNetwork:
         self.global_step = tf.Variable(0, trainable=False)
         self.dropout = tf.placeholder(tf.float32, name='dropout')
 
+
+        # use attention to encode the input
+        self.attention_scores, attn_context = self.attentional_encoder()
+
+        # now get all the confounds into one vector
+        confound_vector = self.vectorize_confounds()
+
+        # use confounds to predict targets
+        self.confound_output = defaultdict(dict)
+        self.final_output = defaultdict(dict)
+        for var in self.config.data_spec[1:]:
+            if var['skip'] or var['control']:
+                continue
+            with tf.variable_scope(var['name']):
+                if var['type'] == 'continuous':
+                    confound_preds, confound_loss, final_preds, final_loss = \
+                        self.double_predict_regression(
+                            response=var,
+                            confound_input=confound_vector,
+                            x_input=attn_context)
+                else:
+                    confound_preds, confound_loss, final_preds, final_loss = \
+                        self.double_predict_classification(
+                            response=var,
+                            confound_input=confound_vector,
+                            x_input=attn_context)
+
+            self.confound_output[var['name']]['pred'] = confound_preds
+            self.confound_output[var['name']]['loss'] = confound_loss
+
+            self.final_output[var['name']]['pred'] = final_preds
+            self.final_output[var['name']]['loss'] = final_loss
+
+        # add all yer losses up
+        self.cum_confound_loss = tf.reduce_sum(
+            [x['loss'] for x in self.confound_output.values()])
+        self.cum_final_loss = tf.reduce_sum(
+            [x['loss'] for x in self.final_output.values()])
+        self.cumulative_loss = tf.reduce_sum(
+            [self.cum_confound_loss, self.cum_final_loss])
+
+        self.train_step = tf.contrib.layers.optimize_loss(
+            loss=self.cumulative_loss,
+            global_step=self.global_step,
+            learning_rate=self.learning_rate,
+            optimizer='Adam',
+            summaries=["loss", "gradient_norm"])
+
+
+        self.trainable_variable_names = [v.name for v in tf.trainable_variables()]
+
+
+
+    def attentional_encoder(self):
         # use attention to encode the source
         with tf.variable_scope('encoder'):
             source_name = self.config.data_spec[0]['name']
@@ -54,14 +108,16 @@ class CausalNetwork:
                 units=self.params['encoder_units'],
                 dropout=self.dropout)
         with tf.variable_scope('attention'):
-            self.attn_scores, attn_context = tf_utils.attention(
+            attn_scores, attn_context = tf_utils.attention(
                 states=rnn_outputs,
                 seq_lens=self.iter[source_name][1],
                 layers=self.params['attn_layers'],
                 units=self.params['attn_units'],
                 dropout=self.dropout)
 
-        # now get all the confounds into one vector
+        return attn_scores, attn_context
+
+    def vectorize_confounds(self):
         confounds = []
         for var in self.config.data_spec[1:]:
             if var['skip'] or not var['control']:
@@ -77,43 +133,66 @@ class CausalNetwork:
                         self.dataset.num_levels(var['name']), 
                         self.params['embedding_size']])
                 confounds.append(tf.nn.embedding_lookup(E, self.iter[var['name']]))
-        confound_input = tf.concat(confounds, axis=1)
-
-        # use confounds to predict targets
-        for var in self.config.data_spec[1:]:
-            if var['skip'] or var['control']:
-                continue
-            with tf.variable_scope('%s_control_pred' % var['name']):
-                if var['type'] == 'continuous':
-                    preds, mean_loss = tf_utils.regressor(
-                        inputs=confound_input,
-                        labels=self.iter[var['name']],
-                        layers=self.params['regressor_layers'],
-                        hidden=self.params['regressor_units'],
-                        dropout=self.dropout)
-                else:
-                    preds, mean_loss = tf_utils.classifier(
-                        inputs=confound_input,
-                        labels=self.iter[var['name']],
-                        layers=self.params['classifier_layers'],
-                        num_classes=self.dataset.num_levels(var['name']),
-                        hidden=self.params['classifier_units'],
-                        dropout=self.dropout,
-                        sparse_labels=True)
-
-            print preds
-            print mean_loss
-        quit()
-
-        # TODO -- concat X and preds, use taht to predict y too
+        confound_vector = tf.concat(confounds, axis=1)
+        return confound_vector
 
 
+    def double_predict_regression(self, response, confound_input, x_input):
+        with tf.variable_scope('control_pred'):
+            confound_preds, confound_loss = tf_utils.regressor(
+                inputs=confound_input,
+                labels=self.iter[response['name']],
+                layers=self.params['regressor_layers'],
+                hidden=self.params['regressor_units'],
+                dropout=self.dropout)
+        
+        # force this into [batch size, attn width + 1]
+        final_input = tf.concat(
+            [tf.expand_dims(confound_preds, 1), x_input], axis=1)
+        final_input = tf.reshape(
+            final_input, [-1, self.params['attn_units'] * 2 + 1])
+
+        with tf.variable_scope('final_pred'):
+            final_preds, final_loss = tf_utils.regressor(
+                inputs=final_input,
+                labels=self.iter[response['name']],
+                layers=self.params['regressor_layers'],
+                hidden=self.params['regressor_units'],
+                dropout=self.dropout)
+
+        return confound_preds, confound_loss, final_preds, final_loss
+
+
+    def double_predict_classification(self, response, confound_input, x_input):
+        with tf.variable_scope('control_pred'):
+            confound_preds, confound_loss = tf_utils.classifier(
+                inputs=confound_input,
+                labels=self.iter[response['name']],
+                layers=self.params['classifier_layers'],
+                num_classes=self.dataset.num_levels(response['name']),
+                hidden=self.params['classifier_units'],
+                dropout=self.dropout,
+                sparse_labels=True)
+
+        final_input = tf.concat([confound_preds, x_input], axis=1)
+
+        with tf.variable_scope('final_pred'):
+            final_preds, final_loss = tf_utils.classifier(
+                inputs=final_input,
+                labels=self.iter[response['name']],
+                layers=self.params['classifier_layers'],
+                num_classes=self.dataset.num_levels(response['name']),
+                hidden=self.params['classifier_units'],
+                dropout=self.dropout,
+                sparse_labels=True)
+
+        return confound_preds, confound_loss, final_preds, final_loss
 
     def train(self, sess):
         ops = [
             self.train_step,
-            self.labels['continuous_2'],
-            self.final_preds,
-            self.final_losses
+            self.final_output,
+            self.confound_output,
+            self.iter
         ]
-        return sess.run(ops)
+        return sess.run(ops, feed_dict={self.dropout: 0.2})

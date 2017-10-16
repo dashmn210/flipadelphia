@@ -161,15 +161,12 @@ class StackedRegression:
             tf.reduce_sum(c_losses.values()) + tf.reduce_sum(final_losses.values())
 
         # now optimize
-
         self.train_step = tf.contrib.layers.optimize_loss(
             loss=self.cumulative_loss,
             global_step=self.global_step,
             learning_rate=self.learning_rate,
             optimizer='SGD',
             summaries=["loss", "gradient_norm"])
-
-
 
         self.trainable_variable_names = [v.name for v in tf.trainable_variables()]
 
