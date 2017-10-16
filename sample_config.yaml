@@ -59,7 +59,7 @@ model_spec:
       num_epochs: 1
 
   - type: "neural"
-    skip: False
+    skip: True
     params:
       batch_size: 16
       num_train_steps: 10000
@@ -78,7 +78,7 @@ model_spec:
 #      TODO
 
   - type: "causal-neural"
-    skip: True
+    skip: False
     params:
       batch_size: 16
       num_train_steps: 10000

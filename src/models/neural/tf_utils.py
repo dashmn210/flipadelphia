@@ -93,7 +93,6 @@ def build_rnn_cells(layers=1, units=256, dropout=0.0):
     multicell = tf.contrib.rnn.MultiRNNCell(cells)
     return multicell
 
-
 def rnn_encode(source, source_len, vocab_size, embedding_size, 
                                         layers, units, dropout):
     with tf.variable_scope('embedding'):

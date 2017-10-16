@@ -40,6 +40,10 @@ class Dataset(object):
                     self.class_to_id_map[variable['name']][level] = i
 
 
+    def num_levels(self, name):
+        return len(self.class_to_id_map[name])
+
+
     def to_pd_df(self, split):
         """ convert a data split to a pandas df using bag-of-words text featurizatoin
         """

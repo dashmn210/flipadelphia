@@ -74,7 +74,6 @@ class Flipper:
                 dropout=self.dropout)
 
         # now build all the prediction heads
-        self.loss = 0
         self.step_output = defaultdict(dict)
         for variable in self.config.data_spec[1:]:
             if variable['skip']:
@@ -106,12 +105,13 @@ class Flipper:
                     raise Exception('ERROR: unknown type %s for variable %s' % (
                         variable['type'], variable['name']))
 
-                mean_loss *= variable['weight']
-                self.loss += mean_loss
+                mean_loss = tf.scalar_mul(variable['weight'], mean_loss)
 
             self.step_output[variable['name']]['loss'] = mean_loss
             self.step_output[variable['name']]['pred'] = preds
 
+        # now optimize
+        self.loss = tf.reduce_sum([x['loss'] for x in self.step_output.values()])
 
         self.train_step = tf.contrib.layers.optimize_loss(
             loss=self.loss,
@@ -121,6 +121,7 @@ class Flipper:
             optimizer='Adam',
             summaries=["loss", "gradient_norm"])
 
+        # savers, summaries, etc
         self.trainable_variable_names = [v.name for v in tf.trainable_variables()]
 
 
