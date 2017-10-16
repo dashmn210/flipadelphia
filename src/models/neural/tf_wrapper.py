@@ -9,6 +9,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from src.models.abstract_model import Model
 import src.models.neural.tf_flipper as tf_flipper
 import src.models.neural.tf_regression as tf_regression
+import src.models.neural.tf_causal as tf_causal
 import tf_utils
 
 
@@ -126,6 +127,12 @@ class TFStackedRegressionWrapper(TFModelWrapper):
         TFModelWrapper.__init__(self, config, params)
 
         self.model_builder_class = tf_regression.StackedRegression
+
+class TFCausalWrapper(TFModelWrapper):
+    def __init__(self, config, params):
+        TFModelWrapper.__init__(self, config, params)
+
+        self.model_builder_class = tf_causal.CausalNetwork
 
 
 
