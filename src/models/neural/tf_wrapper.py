@@ -124,11 +124,11 @@ class TFFlipperWrapper(TFModelWrapper):
 
         self.model_builder_class = tf_flipper.Flipper
 
-class TFStackedRegressionWrapper(TFModelWrapper):
+class TFCausalRegressionWrapper(TFModelWrapper):
     def __init__(self, config, params):
         TFModelWrapper.__init__(self, config, params)
 
-        self.model_builder_class = tf_regression.StackedRegression
+        self.model_builder_class = tf_regression.CausalRegression
 
 class TFCausalWrapper(TFModelWrapper):
     def __init__(self, config, params):

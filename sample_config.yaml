@@ -50,8 +50,8 @@ vocab: null
 
 # all of these will be run
 model_spec:
-  - type: 'stacked-regression'
-    skip: True
+  - type: 'causal-regression'
+    skip: False
     params:
       batch_size: 16
       num_train_steps: 1
@@ -78,7 +78,7 @@ model_spec:
 #      TODO
 
   - type: "causal-neural"
-    skip: False
+    skip: True
     params:
       batch_size: 16
       num_train_steps: 10000

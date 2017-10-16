@@ -191,6 +191,7 @@ class CausalNetwork:
     def train(self, sess):
         ops = [
             self.train_step,
+            self.cum_final_loss,
             self.final_output,
             self.confound_output,
             self.iter
