@@ -63,6 +63,8 @@ if __name__ == '__main__':
     d = Dataset(config)
 
     if args.train:
+        d.set_active_split(config.train_suffix)
+
         for model_description in config.model_spec:
             if model_description.get('skip', False):
                 continue
@@ -80,13 +82,21 @@ if __name__ == '__main__':
             model.save(model_dir)
 
     if args.inference:
+        d.set_active_split(config.test_suffix)
+
         for model_description in config.model_spec:
             if model_description.get('skip', False):
                 continue
+            print 'MAIN: inference with ', model_description['type']
+
+            model = constants.MODEL_CLASSES[model_description['type']](
+                config=config, 
+                params=model_description['params'])
 
             model_dir = os.path.join(config.working_dir, model_description['type'])
-            model.load(model_dir)
-            predictions = model.inference(d, model_dir, dev=False)
+            model.load(d, model_dir)
+            # quit()
+            # predictions = model.inference(d, model_dir, dev=False)
 
             # TODO evaluate 
                 # categorical-specific

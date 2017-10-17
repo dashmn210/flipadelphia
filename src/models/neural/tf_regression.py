@@ -19,22 +19,21 @@ import tf_utils
 class CausalRegression:
 
     @staticmethod
-    def build_model_graph(config, params, dataset, split):
+    def build_model_graph(config, params, dataset):
         graph = tf.Graph()
         with graph.as_default():
-            iterators = dataset.make_tf_iterators(split, params)
-            model = CausalRegression(config, params, dataset, iterators, split)
+            iterators = dataset.make_tf_iterators(params)
+            model = CausalRegression(config, params, dataset, iterators)
 
         return tf_utils.TFModel(graph=graph, model=model, iterator=iterators)
 
 
-    def __init__(self, config, params, dataset, iterators, split):
+    def __init__(self, config, params, dataset, iterators):
         has_confounds = any(
             [(var['control'] and not var['skip']) \
             for var in config.data_spec[1:]])
 
         self.iter = iterators
-        self.split = split
         self.config = config
         self.params = params
         self.dataset = dataset

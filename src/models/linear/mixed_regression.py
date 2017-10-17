@@ -38,11 +38,11 @@ class MixedRegression(regression_base.Regression):
         return out
 
 
-    def _fit_mixed_regression(self, split, dataset, target, ignored_vars):
+    def _fit_mixed_regression(self, dataset, target, ignored_vars):
         r_df_name = 'df_' + target['name']
         r_model_name = 'model_' + target['name']
 
-        df = dataset.to_pd_df(split)
+        df = dataset.to_pd_df()
         rpy2.robjects.globalenv[r_df_name] = pandas2ri.pandas2ri(df)
 
         cmd = "lmer(%s, data=%s, REML=FALSE)"
@@ -61,11 +61,11 @@ class MixedRegression(regression_base.Regression):
             is_r=True)
 
 
-    def _fit_mixed_classifier(self, split, dataset, target, ignored_vars, level=''):
+    def _fit_mixed_classifier(self, dataset, target, ignored_vars, level=''):
         r_df_name = 'df_%s_%s' % (target['name'], level)
         r_model_name = 'model_%s_%s' % (target['name'], level)
 
-        df = dataset.to_pd_df(split)
+        df = dataset.to_pd_df()
         # otherwise the datset is assumed to be binary
         if level is not '':
             df = self._make_binary(df, target['name'], level)
@@ -92,8 +92,6 @@ class MixedRegression(regression_base.Regression):
         """ trains the model using a src.data.dataset.Dataset
             saves model-specific metrics (loss, etc) into self.report
         """
-        train_split = self.config.train_suffix
-
         for i, target in enumerate(self.targets):
             ignored = self.targets[:i] + self.targets[i+1:]
 
@@ -104,12 +102,10 @@ class MixedRegression(regression_base.Regression):
                     self._fit_ovr, model_fitting_fn=self._fit_mixed_classifier)
 
             self.models[target['name']] = fitting_function(
-                split=train_split,
                 dataset=dataset,
                 target=target,
                 ignored_vars=ignored)
 
-        # print self.models
 
 
 

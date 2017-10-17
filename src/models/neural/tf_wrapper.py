@@ -40,19 +40,19 @@ class TFModelWrapper(Model):
             os.path.join(model_dir, 'model.ckpt'),
             global_step=self.global_step)
 
-    def load(self, dataset, model_dir, target_split):
+    def load(self, dataset, model_dir):
         model, global_step, sess = self.create_or_load_model(
-            model_dir, dataset, target_split)
+            model_dir, dataset)
         return model
 
 
-    def create_or_load_model(self, model_dir, dataset, target_split):
+    def create_or_load_model(self, model_dir, dataset):
         """ not refactored into self.load() because of shared code paths
         """
         latest_ckpt = tf.train.latest_checkpoint(model_dir)
 
         model = self.model_builder_class.build_model_graph(
-            self.config, self.params, dataset, target_split)
+            self.config, self.params, dataset)
         sess = tf.Session(graph=model.graph)
 
         with model.graph.as_default():
@@ -62,14 +62,14 @@ class TFModelWrapper(Model):
                 start_time = time.time()
                 model.model.saver.restore(sess, latest_ckpt)
                 sess.run(tf.tables_initializer())
-                print "INFO: loaded %s model parameters from %s, time %.2fs" % \
-                    (target_split, latest_ckpt, time.time() - start_time)
+                print "INFO: loaded model parameters from %s, time %.2fs" % \
+                    (latest_ckpt, time.time() - start_time)
             else:
                 start_time = time.time()
                 sess.run(tf.global_variables_initializer())
                 sess.run(tf.tables_initializer())
-                print "INFO: created %s model with fresh parameters, time %.2fs" % \
-                                (target_split, time.time() - start_time)
+                print "INFO: created model with fresh parameters, time %.2fs" % \
+                                (time.time() - start_time)
 
         print "INFO: trainable variables:"
         values = sess.run(model.model.trainable_variable_names)

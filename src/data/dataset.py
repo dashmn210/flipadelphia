@@ -39,19 +39,22 @@ class Dataset(object):
                 for i, level in enumerate(self._classes(var_filename)):
                     self.class_to_id_map[variable['name']][level] = i
 
+    def set_active_split(self, split):
+        self.split = split
+
 
     def num_levels(self, name):
         return len(self.class_to_id_map[name])
 
 
-    def to_pd_df(self, split):
+    def to_pd_df(self):
         """ convert a data split to a pandas df using bag-of-words text featurizatoin
         """
         # {variable_name: [values per example] }
         # note that we're breaking each text feature into its own "variable"
         data = defaultdict(list)
 
-        data_files = self.data_files[split]
+        data_files = self.data_files[self.split]
 
         # start with the input text features
         input_variable_name = self.config.data_spec[0]['name']
@@ -135,9 +138,8 @@ class Dataset(object):
 
 
 
-    def make_tf_iterators(self, split, params):
-        """ split = one of config.{train/dev/test}_suffix
-
+    def make_tf_iterators(self, params):
+        """
             returns a dictionary mapping each variable
                 to a tf iterator's placeholder, along with
                 the special key 'initializer' which maps to 
@@ -204,7 +206,7 @@ class Dataset(object):
 
         datasets = []
         for variable in self.config.data_spec:
-            data_file = self.data_files[split][variable['name']]
+            data_file = self.data_files[self.split][variable['name']]
             if variable['type'] == 'text':
                 dataset = text_dataset(data_file)
             elif variable['type'] == 'continuous':

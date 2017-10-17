@@ -19,6 +19,10 @@ import rpy2.robjects
 from rpy2.robjects import r, pandas2ri
 from src.models.abstract_model import Model
 
+import pickle
+import os
+
+
 #r("options(warn=-1)").  # TODO -- figure out how to silence warnings like rank-deficient
 r("library('lme4')") 
 r("library('MuMIn')")
@@ -26,7 +30,7 @@ r("library('glmnet')")
 pandas2ri.activate()
 
 
-ModelResult = namedtuple('rModel', 
+ModelResult = namedtuple('ModelResult', 
     ('model', 'is_r', 'weights'))
 
 
@@ -34,8 +38,8 @@ class Regression(Model):
 
     def __init__(self, config, params):
         Model.__init__(self, config, params)
-        # target variable name: R object with this model  
-        #     OR  list of one-vs-rest models, one per level
+        # target variable name (exploded if categorical)
+        #     maps to ===>  R object with this model  
         self.models = {}
 
         variables = [v for v in self.config.data_spec[1:] \
@@ -48,6 +52,27 @@ class Regression(Model):
             if variable['control']]
 
 
+    def save(self, model_dir):
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir)
+
+        for response_name, rmodel in self.models.iteritems():
+            response_file = os.path.join(model_dir, response_name)
+            with open(response_file, 'w') as out:
+                pickle.dump(rmodel, out)
+
+    def load(self, dataset, model_dir):
+        target_names = map(lambda x: x['name'], self.targets)
+
+        for filename in os.listdir(model_dir):
+            if filename not in target_names:
+                continue
+
+            with open(os.path.join(model_dir, filename), 'r') as infile:
+                self.models[filename] = pickle.load(infile)
+
+        assert set(target_names) == set(self.models.keys())
+        print 'INFO: loaded model parameters from ', model_dir
 
 
     def _fit_regression(self, split, dataset, target, ignored_vars):

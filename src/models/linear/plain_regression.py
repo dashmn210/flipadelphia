@@ -16,9 +16,9 @@ class RegularizedRegression(regression_base.Regression):
         self.regularizor = self.params['regularizor'] if self.lmbda > 0 else None
 
 
-    def _data_to_numpy(self, split, dataset, target, ignored_vars, level=''):
+    def _data_to_numpy(self, dataset, target, ignored_vars, level=''):
         # note that cols are sorted just like self.features
-        df = dataset.to_pd_df(split)
+        df = dataset.to_pd_df()
 
         if level is not '':
             # turn response into 1's on the favored level, and 0 elsewhere
@@ -39,11 +39,11 @@ class RegularizedRegression(regression_base.Regression):
 
 
 
-    def _fit_regression(self, split, dataset, target, ignored_vars):
+    def _fit_regression(self, dataset, target, ignored_vars):
         r_df_name = 'df_' + target['name']
         r_model_name = 'model_' + target['name']
 
-        y, X, feature_names = self._data_to_numpy(split, dataset, target, ignored_vars)
+        y, X, feature_names = self._data_to_numpy(dataset, target, ignored_vars)
 
         if self.regularizor:
             if self.regularizor == 'l1':
@@ -66,11 +66,11 @@ class RegularizedRegression(regression_base.Regression):
             is_r=False)
 
 
-    def _fit_classifier(self, split, dataset, target, ignored_vars, level=''):
+    def _fit_classifier(self, dataset, target, ignored_vars, level=''):
         r_df_name = 'df_%s_%s' % (target['name'], level)
         r_model_name = 'model_%s_%s' % (target['name'], level)
 
-        y, X, feature_names = self._data_to_numpy(split, dataset, target, ignored_vars, level)
+        y, X, feature_names = self._data_to_numpy(dataset, target, ignored_vars, level)
 
         model_fitter = sklearn.linear_model.LogisticRegression(
             penalty=(self.regularizor or 'l2'),
@@ -93,8 +93,6 @@ class RegularizedRegression(regression_base.Regression):
         """ trains the model using a src.data.dataset.Dataset
             saves model-specific metrics (loss, etc) into self.report
         """
-        train_split = self.config.train_suffix
-
         for i, target in enumerate(self.targets):
             ignored = self.targets[:i] + self.targets[i+1:]
             # ignore the confounds as well as off-target targets
@@ -107,12 +105,10 @@ class RegularizedRegression(regression_base.Regression):
                     self._fit_ovr, model_fitting_fn=self._fit_classifier)
 
             self.models[target['name']] = fitting_function(
-                split=train_split,
                 dataset=dataset,
                 target=target,
                 ignored_vars=ignored)
 
-        # print self.models
 
 
 

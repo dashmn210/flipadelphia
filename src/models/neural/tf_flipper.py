@@ -34,18 +34,17 @@ class Flipper:
     """
     # move to tf utils?
     @staticmethod
-    def build_model_graph(config, params, dataset, split):
+    def build_model_graph(config, params, dataset):
         graph = tf.Graph()
         with graph.as_default():
-            iterators = dataset.make_tf_iterators(split, params)
-            model = Flipper(config, params, dataset, iterators, split)
+            iterators = dataset.make_tf_iterators(params)
+            model = Flipper(config, params, dataset, iterators)
 
         return tf_utils.TFModel(graph=graph, model=model, iterator=iterators)
 
 
-    def __init__(self, config, params, dataset, iterators, split):
+    def __init__(self, config, params, dataset, iterators):
         self.iter = iterators
-        self.split = split
         self.config = config
         self.params = params
         self.dataset = dataset

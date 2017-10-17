@@ -11,8 +11,8 @@ import pandas as pd
 
 class FixedRegression(plain_regression.RegularizedRegression):
 
-    def _data_to_numpy(self, split, dataset, target, ignored_vars, level=''):
-        df = dataset.to_pd_df(split)
+    def _data_to_numpy(self, dataset, target, ignored_vars, level=''):
+        df = dataset.to_pd_df()
 
         if level is not '':
             # turn response into 1's on the favored level, and 0 elsewhere
