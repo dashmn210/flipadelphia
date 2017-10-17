@@ -8,6 +8,17 @@ from collections import defaultdict
 
 
 class MixedRegression(regression_base.Regression):
+    def __init__(self, config, params):
+        regression_base.Regression.__init__(self, config, params)
+        self.confounds = []
+        for var in self.config.data_spec[1:]:
+            if var['control']:
+                if var['type'] == 'continuous':
+                    print 'WARNING: mixed regression is skipping confound %s (continuous)' % (
+                        var['name'])
+                else:
+                    self.confounds.append(var)
+
 
     def _extract_r_params(self, model_name):
         s = str(r("coef(%s)" % model_name))

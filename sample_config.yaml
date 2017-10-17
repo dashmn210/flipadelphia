@@ -18,25 +18,25 @@ data_spec:
 
   - name: "continuous_1"
     type: "continuous"
-    control: False
+    control: True
     skip: False
     weight: 1
 
   - name: "continuous_2"
     type: "continuous"
-    control: True
+    control: False
     skip: False
     weight: 1
 
   - name: "categorical_1"
     type: "categorical"
-    control: True
+    control: False
     skip: False
     weight: 1
 
   - name: "categorical_2"
     type: "categorical"
-    control: False
+    control: True
     skip: False
     weight: 1
 
@@ -50,38 +50,37 @@ vocab: null
 
 # all of these will be run
 model_spec:
+  - type: "neural"
+    skip: False
+    params:
+      batch_size: 16
+      num_train_steps: 100
+      learning_rate: 0.001
+      embedding_size: 128
+      encoder_layers: 2
+      encoder_units: 128
+      attn_layers: 2
+      attn_units: 128
+      classifier_layers: 1
+      classifier_units: 128
+      regressor_layers: 1
+      regressor_units: 128
+      gradient_clip: 5.0
+      num_epochs: 100
+
   - type: 'causal-regression'
     skip: False
     params:
       batch_size: 16
-      num_train_steps: 1
+      num_train_steps: 100
       learning_rate: 0.01
-      num_epochs: 1
-
-  - type: "neural"
-    skip: True
-    params:
-      batch_size: 16
-      num_train_steps: 10000
-      learning_rate: 0.001
-      embedding_size: 128
-      encoder_layers: 2
-      encoder_units: 128
-      attn_layers: 2
-      attn_units: 128
-      classifier_layers: 1
-      classifier_units: 128
-      regressor_layers: 1
-      regressor_units: 128
-      gradient_clip: 5.0
-      num_epochs: 10
-#      TODO
+      num_epochs: 100
 
   - type: "causal-neural"
-    skip: True
+    skip: False
     params:
       batch_size: 16
-      num_train_steps: 10000
+      num_train_steps: 100
       learning_rate: 0.001
       embedding_size: 128
       encoder_layers: 2
@@ -93,27 +92,22 @@ model_spec:
       regressor_layers: 1
       regressor_units: 128
       gradient_clip: 5.0
-      num_epochs: 10
+      num_epochs: 100
 
 
   - type: "mixed-regression"
-    skip: True
+    skip: False
     params:
-      # TODO
 
   - type: "fixed-regression"
     skip: False
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off
-      # TODO
-
 
   - type: "regression"
     skip: False
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off
-      # TODO
-
 

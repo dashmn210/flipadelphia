@@ -107,11 +107,13 @@ class Flipper:
 
                 mean_loss = tf.scalar_mul(variable['weight'], mean_loss)
 
+            tf.summary.scalar('%s_loss' % variable['name'], mean_loss)
             self.step_output[variable['name']]['loss'] = mean_loss
             self.step_output[variable['name']]['pred'] = preds
 
         # now optimize
         self.loss = tf.reduce_sum([x['loss'] for x in self.step_output.values()])
+        tf.summary.scalar('global_loss', self.loss)
 
         self.train_step = tf.contrib.layers.optimize_loss(
             loss=self.loss,
@@ -119,10 +121,13 @@ class Flipper:
             learning_rate=self.learning_rate,
             clip_gradients=self.params['gradient_clip'],
             optimizer='Adam',
-            summaries=["loss", "gradient_norm"])
+            summaries=["gradient_norm"])
 
         # savers, summaries, etc
         self.trainable_variable_names = [v.name for v in tf.trainable_variables()]
+        self.summaries = tf.summary.merge_all()
+        self.saver = tf.train.Saver(tf.global_variables())
+
 
 
     def reverse(self, in_tensor):
@@ -136,7 +141,9 @@ class Flipper:
     def train(self, sess):
         ops = [
             self.global_step,
-            self.train_step]
+            self.train_step,
+            self.summaries
+        ]
         return sess.run(ops, feed_dict={self.dropout: 0.2})
 
 

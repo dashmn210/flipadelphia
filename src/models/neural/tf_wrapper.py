@@ -32,9 +32,13 @@ class TFModelWrapper(Model):
 
 
     def save(self, model_dir):
-        # TODO!!!!!
-        pass
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir)
 
+        self.loaded_model.model.saver.save(
+            self.sess,
+            os.path.join(model_dir, 'model.ckpt'),
+            global_step=self.global_step)
 
     def load(self, dataset, model_dir, target_split):
         model, global_step, sess = self.create_or_load_model(
@@ -56,10 +60,10 @@ class TFModelWrapper(Model):
 
             if latest_ckpt:
                 start_time = time.time()
-                model.saver.restore(sess, ckpt)
+                model.model.saver.restore(sess, latest_ckpt)
                 sess.run(tf.tables_initializer())
                 print "INFO: loaded %s model parameters from %s, time %.2fs" % \
-                    (target_split, ckpt, time.time() - start_time)
+                    (target_split, latest_ckpt, time.time() - start_time)
             else:
                 start_time = time.time()
                 sess.run(tf.global_variables_initializer())
@@ -77,25 +81,23 @@ class TFModelWrapper(Model):
 
 
     def train(self, dataset, model_dir):
-        loaded_model, global_step, sess = self.create_or_load_model(
+        self.loaded_model, self.global_step, self.sess = self.create_or_load_model(
             model_dir, dataset, self.config.train_suffix)
         summary_writer = tf.summary.FileWriter(
-            os.path.join(model_dir, "train_log"), loaded_model.graph)
+            os.path.join(model_dir, "train_log"), self.loaded_model.graph)
 
-        sess.run(loaded_model.model.iter['initializer'])
+        self.sess.run(self.loaded_model.model.iter['initializer'])
 
         epochs = 0
-        while global_step < self.params['num_train_steps'] or epochs < self.params['num_epochs']:
+        while self.global_step < self.params['num_train_steps'] and epochs < self.params['num_epochs']:
             start_time = time.time()
             try:
-               # total_loss, hidden_states, embeddings, encoding, step_result, step_input, global_step, _ = loaded_model.model.train(sess)
-                print loaded_model.model.train(sess)
-                print
-                print
+                self.global_step, loss, summary = self.loaded_model.model.train(self.sess)
+                summary_writer.add_summary(summary, self.global_step)
             except tf.errors.OutOfRangeError:
                 epochs += 1
-                sess.run(loaded_model.model.iter['initializer'])
-        quit()
+                print epochs
+                self.sess.run(self.loaded_model.model.iter['initializer'])
 
 
     def inference(self, dataset, model_dir, dev=True):

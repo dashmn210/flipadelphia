@@ -42,17 +42,7 @@ def set_seed(seed):
 
 
 def validate_config(config):
-    # dissalow when you're running mixed effects and trying to control for a scalar
-    has_continuous_control = any(
-        [v.get('control', False) and v['type'] == 'continuous' \
-            and not v.get('skip', False) for v in config.data_spec])
-    has_mixed_effects = any(
-        [m['type'] == 'mixed-regression' and not m.get('skip', False) \
-            for m in config.model_spec])
-
-    if has_continuous_control and has_mixed_effects:
-        raise Exception("no continuous controls with mixed effects!")
-
+    # TODO
     return True
 
 
@@ -87,7 +77,7 @@ if __name__ == '__main__':
                 params=model_description['params'])
 
             model.train(d, model_dir)
-            # model.save(model_dir)
+            model.save(model_dir)
 
     if args.inference:
         for model_description in config.model_spec:

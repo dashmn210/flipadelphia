@@ -69,9 +69,11 @@ class CausalNetwork:
                             confound_input=confound_vector,
                             x_input=attn_context)
 
+            tf.summary.scalar('%s_confound_loss' % var['name'], confound_loss)
             self.confound_output[var['name']]['pred'] = confound_preds
             self.confound_output[var['name']]['loss'] = confound_loss
 
+            tf.summary.scalar('%s_final_loss' % var['name'], final_loss)
             self.final_output[var['name']]['pred'] = final_preds
             self.final_output[var['name']]['loss'] = final_loss
 
@@ -82,6 +84,9 @@ class CausalNetwork:
             [x['loss'] for x in self.final_output.values()])
         self.cumulative_loss = tf.reduce_sum(
             [self.cum_confound_loss, self.cum_final_loss])
+        tf.summary.scalar('cum_confound_loss', self.cum_confound_loss)
+        tf.summary.scalar('cum_final_loss', self.cum_final_loss)
+        tf.summary.scalar('cum_loss', self.cumulative_loss)
 
         self.train_step = tf.contrib.layers.optimize_loss(
             loss=self.cumulative_loss,
@@ -90,7 +95,8 @@ class CausalNetwork:
             optimizer='Adam',
             summaries=["loss", "gradient_norm"])
 
-
+        self.summaries = tf.summary.merge_all()
+        self.saver = tf.train.Saver(tf.global_variables())
         self.trainable_variable_names = [v.name for v in tf.trainable_variables()]
 
 
@@ -190,10 +196,8 @@ class CausalNetwork:
 
     def train(self, sess):
         ops = [
+            self.global_step,
             self.train_step,
-            self.cum_final_loss,
-            self.final_output,
-            self.confound_output,
-            self.iter
+            self.summaries,
         ]
         return sess.run(ops, feed_dict={self.dropout: 0.2})
