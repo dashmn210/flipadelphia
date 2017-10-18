@@ -22,7 +22,7 @@ class MixedRegression(regression_base.Regression):
                     self.confounds.append(var)
 
 
-    def _extract_r_params(self, model_name):
+    def _extract_r_params(self, model_name, model):
         s = str(r("coef(%s)" % model_name))
         coef_rows = s.split('\n')[1:-4]
 
@@ -32,41 +32,44 @@ class MixedRegression(regression_base.Regression):
             coef_row = coef_rows[i: i+3]
             features = coef_row[0].split()
             for level_coefs in coef_rows[1:]:
+                # TODO !!!!!!!! FIX THIS!!!!!!
+                print coef_rows, 'THERE'
+                print level_coefs, 'HERE'
                 level_coefs = level_coefs.split()
                 level = level_coefs[0]
                 for feature, coef in zip(features, level_coefs[1:]):
-                    out[feature] = coef
-
+                    if 'intercept' in feature.lower():
+                        print coef_row, level_coefs, coef
+                        out['intercept'] = float(coef)
+                    else:
+                        out[feature] = float(coef)
         return out
-
 
     def _fit_mixed_regression(self, dataset, target, ignored_vars):
         r_df_name = 'df_' + target['name']
         r_model_name = 'model_' + target['name']
 
         df = dataset.to_pd_df()
+        # TODO - handle this feature gracefully
+        if '...' in set(df.columns):
+            df.drop('...', axis=1, inplace=True)
         rpy2.robjects.globalenv[r_df_name] = pandas2ri.pandas2ri(df)
 
-        # TODO -- RENAME VARIABLES!!!!
-        r('names(df_continuous_2)<-gsub("^\\\\.\\\\.", "V.", names(df_continuous_2))')
-        print r('lm(continuous_2 ~ ., data=df_continuous_2)')
-        quit()
         cmd = "lmer(%s, data=%s, REML=FALSE)"
         formula = '%s ~ . %s %s' % (
             target['name'],
             ''.join(' + (1|%s)' % confound['name'] for confound in self.confounds),
             ''.join(' - %s' % var['name'] for var in ignored_vars + self.confounds))
 
-        print cmd % (formula, r_df_name)
         model = r(cmd % (formula, r_df_name))
         rpy2.robjects.globalenv[r_model_name] = model
 
-        params = self._extract_r_params(r_model_name)
+        params = self._extract_r_params(r_model_name, model)
 
         return regression_base.ModelResult(
             model=model,
             weights=params,
-            is_r=True)
+            response_type='continuous')
 
 
     def _fit_mixed_classifier(self, dataset, target, ignored_vars, level=''):
@@ -77,6 +80,9 @@ class MixedRegression(regression_base.Regression):
         # otherwise the datset is assumed to be binary
         if level is not '':
             df = self._make_binary(df, target['name'], level)
+        # TODO - handle this feature gracefully
+        if '...' in set(df.columns):
+            df.drop('...', axis=1, inplace=True)
         rpy2.robjects.globalenv[r_df_name] = pandas2ri.pandas2ri(df)
 
         cmd = "glmer(%s, family=binomial(link='logit'), data=%s, REML=FALSE)"
@@ -93,7 +99,7 @@ class MixedRegression(regression_base.Regression):
         return regression_base.ModelResult(
             model=model,
             weights=params,
-            is_r=True)
+            response_type='categorical')
 
 
     def train(self, dataset, model_dir):

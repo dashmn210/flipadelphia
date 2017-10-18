@@ -18,7 +18,7 @@ from collections import defaultdict, namedtuple
 import rpy2.robjects
 from rpy2.robjects import r, pandas2ri
 from src.models.abstract_model import Model
-
+import math
 import pickle
 import os
 
@@ -31,7 +31,7 @@ pandas2ri.activate()
 
 
 ModelResult = namedtuple('ModelResult', 
-    ('model', 'is_r', 'weights'))
+    ('model', 'response_type', 'weights'))
 
 
 class Regression(Model):
@@ -60,6 +60,36 @@ class Regression(Model):
             response_file = os.path.join(model_dir, response_name)
             with open(response_file, 'w') as out:
                 pickle.dump(rmodel, out)
+
+
+    def inference(self, dataset, model_dir):
+        df = dataset.to_pd_df()
+        predictions = defaultdict(dict)
+        for response_name, val in self.models.iteritems():
+            if isinstance(val, dict):
+                for response_level, model in val.iteritems():
+                    predictions[response_name][response_level] = self._predict(df, model)
+            else:
+                predictions[response_name] = self._predict(df, val)
+        return predictions
+
+
+    def _predict(self, df, model):
+        def score(example):
+            s = 0
+            for f, w in model.weights.items():
+                s += float(example.get(f, 0) * w or 0)
+            return s + model.weights['intercept']
+
+        out = []
+        for _, row in df.iterrows():
+            s = score(row)
+            if model.response_type == 'continuous':
+                out.append(s)
+            else:
+                out.append(1.0 / math.exp(-s))
+        return out
+
 
     def load(self, dataset, model_dir):
         target_names = map(lambda x: x['name'], self.targets)

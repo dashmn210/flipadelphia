@@ -63,7 +63,7 @@ class RegularizedRegression(regression_base.Regression):
         return regression_base.ModelResult(
             model=model,
             weights=weights,
-            is_r=False)
+            response_type='categorical')
 
 
     def _fit_classifier(self, dataset, target, ignored_vars, level=''):
@@ -85,7 +85,7 @@ class RegularizedRegression(regression_base.Regression):
         return regression_base.ModelResult(
             model=model,
             weights=weights,
-            is_r=False)
+            response_type='categorical')
 
 
 

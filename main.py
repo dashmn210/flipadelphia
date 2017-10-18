@@ -96,8 +96,8 @@ if __name__ == '__main__':
             model_dir = os.path.join(config.working_dir, model_description['type'])
             model.load(d, model_dir)
 
-            predictions = model.inference(d, model_dir, dev=False)
-
+            predictions = model.inference(d, model_dir)
+            print predictions
             # TODO evaluate 
                 # categorical-specific
                     # AUC
