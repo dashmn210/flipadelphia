@@ -42,7 +42,11 @@
 * **papers**: 
   * [https://aclweb.org/anthology/D/D13/D13-1150.pdf](https://aclweb.org/anthology/D/D13/D13-1150.pdf)
   
-
+## **MORE FOOD**
+* **idea** predict rating from review, control by resturaunt type, price, etc
+* **progress**
+  * data is at https://nlp.stanford.edu/robvoigt/nis/, but unopenable
+  * emailed rob about this
 
 ## **MUSIC**
 * **idea**: predict length on chart from lyrics, control for genre/popularity of singer/(when released)
