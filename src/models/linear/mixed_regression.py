@@ -11,8 +11,10 @@ class MixedRegression(regression_base.Regression):
     def __init__(self, config, params):
         regression_base.Regression.__init__(self, config, params)
         self.confounds = []
+        self.extra_ignored = []
         for var in self.config.data_spec[1:]:
             if var['control']:
+                self.extra_ignored.append(var)
                 if var['type'] == 'continuous':
                     print 'WARNING: mixed regression is skipping confound %s (continuous)' % (
                         var['name'])
@@ -45,11 +47,17 @@ class MixedRegression(regression_base.Regression):
         df = dataset.to_pd_df()
         rpy2.robjects.globalenv[r_df_name] = pandas2ri.pandas2ri(df)
 
+        # TODO -- RENAME VARIABLES!!!!
+        r('names(df_continuous_2)<-gsub("^\\\\.\\\\.", "V.", names(df_continuous_2))')
+        print r('lm(continuous_2 ~ ., data=df_continuous_2)')
+        quit()
         cmd = "lmer(%s, data=%s, REML=FALSE)"
         formula = '%s ~ . %s %s' % (
             target['name'],
             ''.join(' + (1|%s)' % confound['name'] for confound in self.confounds),
             ''.join(' - %s' % var['name'] for var in ignored_vars + self.confounds))
+
+        print cmd % (formula, r_df_name)
         model = r(cmd % (formula, r_df_name))
         rpy2.robjects.globalenv[r_model_name] = model
 
@@ -104,8 +112,7 @@ class MixedRegression(regression_base.Regression):
             self.models[target['name']] = fitting_function(
                 dataset=dataset,
                 target=target,
-                ignored_vars=ignored)
-
+                ignored_vars=ignored + self.extra_ignored)
 
 
 

@@ -40,10 +40,11 @@ class TFModelWrapper(Model):
             os.path.join(model_dir, 'model.ckpt'),
             global_step=self.global_step)
 
+
     def load(self, dataset, model_dir):
-        model, global_step, sess = self.create_or_load_model(
-            model_dir, dataset)
-        return model
+        self.loaded_model, self.global_step, self.sess = \
+            self.create_or_load_model(model_dir, dataset)
+        return self.loaded_model
 
 
     def create_or_load_model(self, model_dir, dataset):
@@ -81,8 +82,8 @@ class TFModelWrapper(Model):
 
 
     def train(self, dataset, model_dir):
-        self.loaded_model, self.global_step, self.sess = self.create_or_load_model(
-            model_dir, dataset, self.config.train_suffix)
+        self.loaded_model, self.global_step, self.sess = \
+            self.create_or_load_model(model_dir, dataset)
         summary_writer = tf.summary.FileWriter(
             os.path.join(model_dir, "train_log"), self.loaded_model.graph)
 
@@ -106,8 +107,15 @@ class TFModelWrapper(Model):
             saves model-specific metrics/artifacts (loss, attentional scores, etc) 
                 into self.report (also possible writes to a file in model_dir)
         """
-        # TODO
-        raise NotImplementedError
+        # TODO gather predictions, put in common form
+        self.sess.run(self.loaded_model.model.iter['initializer'])
+
+        start = time.time()
+        try:
+            while True:
+                print self.loaded_model.model.test(self.sess)
+        except tf.errors.OutOfRangeError:
+            print 'INFERENCE: finished, took %.2fs' % (time.time() - start)
 
 
     def report(self):
@@ -116,7 +124,6 @@ class TFModelWrapper(Model):
         """
         # TODO
         raise NotImplementedError
-
 
 
 

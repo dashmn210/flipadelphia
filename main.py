@@ -22,8 +22,8 @@ def process_command_line():
     parser = argparse.ArgumentParser(description='usage')
     parser.add_argument('--config', dest='config', type=str, default='config.yaml', 
                         help='config file for this experiment')
-    parser.add_argument('--inference', dest='inference', action='store_true', 
-                        help='run inference')
+    parser.add_argument('--test', dest='test', action='store_true', 
+                        help='run test')
     parser.add_argument('--train', dest='train', action='store_true', 
                         help='run training')
     parser.add_argument('--gpu', dest='gpu', type=str, default='0', help='gpu')
@@ -81,7 +81,7 @@ if __name__ == '__main__':
             model.train(d, model_dir)
             model.save(model_dir)
 
-    if args.inference:
+    if args.test:
         d.set_active_split(config.test_suffix)
 
         for model_description in config.model_spec:
@@ -95,8 +95,8 @@ if __name__ == '__main__':
 
             model_dir = os.path.join(config.working_dir, model_description['type'])
             model.load(d, model_dir)
-            # quit()
-            # predictions = model.inference(d, model_dir, dev=False)
+
+            predictions = model.inference(d, model_dir, dev=False)
 
             # TODO evaluate 
                 # categorical-specific

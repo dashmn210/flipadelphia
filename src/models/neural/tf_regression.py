@@ -204,3 +204,11 @@ class CausalRegression:
             self.summaries
         ]
         return sess.run(ops)
+
+
+    def test(self, sess):
+        ops = [
+            self.final_output
+        ]
+        return sess.run(ops)
+

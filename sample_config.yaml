@@ -1,8 +1,8 @@
 
 
 ########## DATA
-data_dir: "datasets/synthetic/leo_will_verysmall/"
-prefix: "10_examples"
+data_dir: "datasets/synthetic/leo_will_small/"
+prefix: "generated"
 train_suffix: ".train"
 dev_suffix: ".dev"
 test_suffix: ".test"
@@ -51,48 +51,48 @@ vocab: null
 # all of these will be run
 model_spec:
   - type: "neural"
-    skip: False
+    skip: True
     params:
       batch_size: 16
       num_train_steps: 100
       learning_rate: 0.001
-      embedding_size: 128
+      embedding_size: 10
       encoder_layers: 2
-      encoder_units: 128
+      encoder_units: 10
       attn_layers: 2
-      attn_units: 128
+      attn_units: 10
       classifier_layers: 1
-      classifier_units: 128
+      classifier_units: 10
       regressor_layers: 1
-      regressor_units: 128
+      regressor_units: 10
       gradient_clip: 5.0
-      num_epochs: 100
+      num_epochs: 10
 
   - type: 'causal-regression'
-    skip: False
+    skip: True
     params:
       batch_size: 16
       num_train_steps: 100
       learning_rate: 0.01
-      num_epochs: 100
+      num_epochs: 10
 
   - type: "causal-neural"
-    skip: False
+    skip: True
     params:
       batch_size: 16
       num_train_steps: 100
       learning_rate: 0.001
-      embedding_size: 128
+      embedding_size: 10
       encoder_layers: 2
-      encoder_units: 128
+      encoder_units: 10
       attn_layers: 2
-      attn_units: 128
+      attn_units: 10
       classifier_layers: 1
-      classifier_units: 128
+      classifier_units: 10
       regressor_layers: 1
-      regressor_units: 128
+      regressor_units: 10
       gradient_clip: 5.0
-      num_epochs: 100
+      num_epochs: 10
 
 
   - type: "mixed-regression"

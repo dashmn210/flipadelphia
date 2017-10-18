@@ -145,4 +145,8 @@ class Flipper:
         ]
         return sess.run(ops, feed_dict={self.dropout: 0.2})
 
-
+    def test(self, sess):
+        ops = [
+            self.step_output
+        ]
+        return sess.run(ops, feed_dict={self.dropout: 0.0})

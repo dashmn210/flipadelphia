@@ -200,3 +200,10 @@ class CausalNetwork:
             self.summaries,
         ]
         return sess.run(ops, feed_dict={self.dropout: 0.2})
+
+
+    def test(self, sess):
+        ops = [
+            self.final_output
+        ]
+        return sess.run(ops, feed_dict={self.dropout: 0.0})

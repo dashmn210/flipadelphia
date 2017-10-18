@@ -75,10 +75,10 @@ class Regression(Model):
         print 'INFO: loaded model parameters from ', model_dir
 
 
-    def _fit_regression(self, split, dataset, target, ignored_vars):
+    def _fit_regression(self, dataset, target, ignored_vars):
         raise NotImplementedError
 
-    def _fit_classifier(self, split, dataset, target, ignored_vars, level=''):
+    def _fit_classifier(self, dataset, target, ignored_vars, level=''):
         raise NotImplementedError
 
 
@@ -86,11 +86,11 @@ class Regression(Model):
         raise NotImplementedError
 
 
-    def _fit_ovr(self, split, dataset, target, ignored_vars, model_fitting_fn):
+    def _fit_ovr(self, dataset, target, ignored_vars, model_fitting_fn):
         models = {}
         for level in dataset.class_to_id_map[target['name']].keys():
             models[level] = model_fitting_fn(
-                split, dataset, target, ignored_vars, level=level)
+                dataset, target, ignored_vars, level=level)
         return models
 
 
