@@ -46,11 +46,17 @@ class CausalRegression:
         with tf.variable_scope('input'):
             input_vector = tf.map_fn(
                 lambda seq: self._to_dense_vector(seq, self.dataset.vocab_size),
-                self.iter[self.config.data_spec[0]['name']][0])
+                self.iter[self.config.data_spec[0]['name']][1])
             input_encoded = tf_utils.fc_tube(
                 inputs=tf.cast(input_vector, tf.float32),
                 num_outputs=1,
                 layers=1)
+        # TODO this is PAINFULLY hacky!!!
+        cur_graph = tf.get_default_graph()
+        self.feature_weights = cur_graph.get_tensor_by_name(
+            'input/layer_0/weights:0')
+        self.feature_intercept = cur_graph.get_tensor_by_name(
+            'input/layer_0/biases:0')
 
         # transform confounds similarly
         with tf.variable_scope('condfound_input'):
@@ -208,7 +214,17 @@ class CausalRegression:
 
     def test(self, sess):
         ops = [
+            self.feature_weights,
+            self.feature_intercept,
             self.final_output
         ]
-        return sess.run(ops)
+        weights, intercept, output = sess.run(ops)
 
+        output_scores = {varname: result['pred'] for varname, result in output.items()}
+
+        feature_importance = {}
+        for feature_name, weight in zip(open(self.dataset.vocab), weights):
+            feature_importance[feature_name.strip()] = weight[0]
+        feature_importance['intercept'] = intercept[0]
+
+        return output_scores, feature_importance

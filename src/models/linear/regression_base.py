@@ -17,7 +17,7 @@ sys.path.append('../..')
 from collections import defaultdict, namedtuple
 import rpy2.robjects
 from rpy2.robjects import r, pandas2ri
-from src.models.abstract_model import Model
+from src.models.abstract_model import Model, Prediction
 import math
 import pickle
 import os
@@ -61,6 +61,42 @@ class Regression(Model):
             with open(response_file, 'w') as out:
                 pickle.dump(rmodel, out)
 
+    def _summarize_model_weights(self):
+        def dict_average(dict_list):
+            if len(dict_list) > 1:
+                assert all(
+                    set(dict_list[0]) == set(dict_list[i])\
+                    for i in range(len(dict_list))[1:])
+            return {
+                f: sum(d[f] for d in dict_list) / len(dict_list) \
+                for f in dict_list[0].keys()
+            }
+
+        weights = {}
+        # get duplicate of self.models except lists of weights
+        for k, v in self.models.items():
+            if isinstance(v, dict):
+                if k not in weights:
+                    weights[k] = {}
+                for k2, v2 in v.items():
+                    if k2 not in weights[k]:
+                        weights[k][k2] = []
+                    weights[k][k2].append(v2.weights)
+            else:
+                if k not in weights:
+                    weights[k] = []
+                weights[k].append(v.weights)
+
+        # now average each list
+        out = defaultdict(dict)
+        for k, v in weights.items():
+            if isinstance(v, dict):
+                for k2, v2 in v.items():
+                    out[k][k2] = dict_average(v2)
+            else:
+                out[k] = dict_average(v)
+        return out
+
 
     def inference(self, dataset, model_dir):
         df = dataset.to_pd_df()
@@ -71,7 +107,12 @@ class Regression(Model):
                     predictions[response_name][response_level] = self._predict(df, model)
             else:
                 predictions[response_name] = self._predict(df, val)
-        return predictions
+
+        average_coefs = self._summarize_model_weights()
+
+        return Prediction(
+            scores=predictions,
+            feature_importance=average_coefs)
 
 
     def _predict(self, df, model):

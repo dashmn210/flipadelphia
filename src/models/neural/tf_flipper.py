@@ -6,7 +6,7 @@ from collections import namedtuple, defaultdict
 import tensorflow as tf
 from tensorflow.python.framework import function
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
-
+import numpy as np
 from src.models.abstract_model import Model
 import src.models.neural.tf_utils as tf_utils
 
@@ -53,12 +53,14 @@ class Flipper:
         self.dropout = tf.placeholder(tf.float32, name='dropout')
         self.global_step = tf.Variable(0, trainable=False)
 
+        source_name = self.config.data_spec[0]['name']
+        self.input_text, input_ids, input_lens = self.iter[source_name]
+
         # use attention to encode the source
         with tf.variable_scope('encoder'):
-            source_name = self.config.data_spec[0]['name']
             rnn_outputs, source_embeddings = tf_utils.rnn_encode(
-                source=self.iter[source_name][0],
-                source_len=self.iter[source_name][1],
+                source=input_ids,
+                source_len=input_lens,
                 vocab_size=self.dataset.vocab_size,
                 embedding_size=self.params['embedding_size'],
                 layers=self.params['encoder_layers'],
@@ -67,7 +69,7 @@ class Flipper:
         with tf.variable_scope('attention'):
             self.attn_scores, attn_context = tf_utils.attention(
                 states=rnn_outputs,
-                seq_lens=self.iter[source_name][1],
+                seq_lens=input_lens,
                 layers=self.params['attn_layers'],
                 units=self.params['attn_units'],
                 dropout=self.dropout)
@@ -85,7 +87,7 @@ class Flipper:
                     prediction_input = attn_context
 
                 if variable['type'] == 'categorical':
-                    logits, mean_loss = tf_utils.classifier(
+                    preds, mean_loss = tf_utils.classifier(
                         inputs=prediction_input,
                         labels=self.iter[variable['name']],
                         layers=self.params['classifier_layers'],
@@ -137,16 +139,32 @@ class Flipper:
         out_tensor.set_shape(input_shape)
         return out_tensor
 
+
     def train(self, sess):
         ops = [
             self.global_step,
             self.train_step,
-            self.summaries
+            self.summaries,
         ]
         return sess.run(ops, feed_dict={self.dropout: 0.2})
 
+
     def test(self, sess):
         ops = [
-            self.step_output
+            self.input_text,
+            self.step_output,
+            self.attn_scores
         ]
-        return sess.run(ops, feed_dict={self.dropout: 0.0})
+        inputs, outputs, scores = sess.run(ops, feed_dict={self.dropout: 0.0})
+
+        attn_scores = defaultdict(list)
+        for text, attn in zip(inputs, scores):
+            for word, score in zip(text, attn):
+                attn_scores[word].append(score)
+        mean_attn_scores = {k: np.mean(v) for k, v in attn_scores.items()}
+
+        output_scores = {
+            response: output['pred'] \
+            for response, output in outputs.items()}
+
+        return output_scores, mean_attn_scores

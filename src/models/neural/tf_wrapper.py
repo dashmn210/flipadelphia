@@ -6,7 +6,7 @@ from collections import namedtuple
 import tensorflow as tf
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
-from src.models.abstract_model import Model
+from src.models.abstract_model import Model, Prediction
 import src.models.neural.tf_flipper as tf_flipper
 import src.models.neural.tf_regression as tf_regression
 import src.models.neural.tf_causal as tf_causal
@@ -113,7 +113,10 @@ class TFModelWrapper(Model):
         start = time.time()
         try:
             while True:
-                print self.loaded_model.model.test(self.sess)
+                scores, feature_importance = self.loaded_model.model.test(self.sess)
+                print scores
+                print feature_importance
+                quit()
         except tf.errors.OutOfRangeError:
             print 'INFERENCE: finished, took %.2fs' % (time.time() - start)
 

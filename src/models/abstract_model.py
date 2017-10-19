@@ -1,3 +1,10 @@
+from collections import namedtuple
+
+
+Prediction = namedtuple(
+    'Prediction',
+    ('scores', 'feature_importance'))
+ 
 
 class Model(object):
     """ superclass for all models 

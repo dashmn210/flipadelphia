@@ -2,7 +2,7 @@
 TODO -- REFACTOR THE SHIT OUT OF THIS!!!
 """
 
-
+import numpy as np
 import sys
 sys.path.append('../..')
 import os
@@ -41,9 +41,11 @@ class CausalNetwork:
         self.global_step = tf.Variable(0, trainable=False)
         self.dropout = tf.placeholder(tf.float32, name='dropout')
 
+        source_name = self.config.data_spec[0]['name']
+        self.input_text, self.input_ids, self.input_lens = self.iter[source_name]
 
         # use attention to encode the input
-        self.attention_scores, attn_context = self.attentional_encoder()
+        self.attn_scores, attn_context = self.attentional_encoder()
 
         # now get all the confounds into one vector
         confound_vector = self.vectorize_confounds()
@@ -103,10 +105,9 @@ class CausalNetwork:
     def attentional_encoder(self):
         # use attention to encode the source
         with tf.variable_scope('encoder'):
-            source_name = self.config.data_spec[0]['name']
             rnn_outputs, source_embeddings = tf_utils.rnn_encode(
-                source=self.iter[source_name][0],
-                source_len=self.iter[source_name][1],
+                source=self.input_ids,
+                source_len=self.input_lens,
                 vocab_size=self.dataset.vocab_size,
                 embedding_size=self.params['embedding_size'],
                 layers=self.params['encoder_layers'],
@@ -115,7 +116,7 @@ class CausalNetwork:
         with tf.variable_scope('attention'):
             attn_scores, attn_context = tf_utils.attention(
                 states=rnn_outputs,
-                seq_lens=self.iter[source_name][1],
+                seq_lens=self.input_lens,
                 layers=self.params['attn_layers'],
                 units=self.params['attn_units'],
                 dropout=self.dropout)
@@ -203,7 +204,22 @@ class CausalNetwork:
 
 
     def test(self, sess):
+        # TODO  -- refactor, mostly shared with tf-flipper
         ops = [
-            self.final_output
+            self.input_text,
+            self.final_output,
+            self.attn_scores
         ]
-        return sess.run(ops, feed_dict={self.dropout: 0.0})
+        inputs, outputs, scores = sess.run(ops, feed_dict={self.dropout: 0.0})
+
+        attn_scores = defaultdict(list)
+        for text, attn in zip(inputs, scores):
+            for word, score in zip(text, attn):
+                attn_scores[word].append(score)
+        mean_attn_scores = {k: np.mean(v) for k, v in attn_scores.items()}
+
+        output_scores = {
+            response: output['pred'] \
+            for response, output in outputs.items()}
+
+        return output_scores, mean_attn_scores

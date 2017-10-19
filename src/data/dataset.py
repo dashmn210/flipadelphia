@@ -31,7 +31,8 @@ class Dataset(object):
         self.vocab_size = self._check_vocab(self.vocab)
 
         # class_to_id_map: {variable name: {'class': index}  }  for each categorical variable
-        # (for tensorflow)
+        # (for tensorflow, and so that all the models can talk about 
+        #  categorical classes the same way
         self.class_to_id_map = defaultdict(dict)
         for variable in self.config.data_spec[1:]:
             if variable['type'] == "categorical":
@@ -157,10 +158,10 @@ class Dataset(object):
             # break sentences into tokens
             dataset = dataset.map(lambda txt: tf.string_split([txt]).values)
             # convert to ids
-            dataset = dataset.map(lambda txt: tf.cast(
-                vocab_table.lookup(txt), tf.int32))
+            dataset = dataset.map(lambda txt: (
+                txt, tf.cast(vocab_table.lookup(txt), tf.int32)))
             # add lengths
-            dataset = dataset.map(lambda txt: (txt, tf.size(txt)))
+            dataset = dataset.map(lambda txt, ids: (txt, ids, tf.size(ids)))
             return dataset
 
         def continuous_dataset(file):
@@ -182,14 +183,14 @@ class Dataset(object):
 
 
         def batch_up(datset):
-            # first element is (text, text len), followed by all other vars
+            # first element is (text, text, text len), followed by all other vars
             num_variables = len(self.config.data_spec)
             padded_shapes = tuple(
-                [(tf.TensorShape([None]), tf.TensorShape([]))] + [
+                [(tf.TensorShape([None]), tf.TensorShape([None]), tf.TensorShape([]))] + [
                 tf.TensorShape([]) for _ in range(num_variables - 1)])
 
             # pad text with eos, otherwise 0 (means unused)
-            padding_values = [(eos_id, 0)]
+            padding_values = [(self.config.eos, eos_id, 0)]
             # but hast to be 0.0 for tf.float32 (aka scalars) and 0 for tf.int32
             # (aka categorical)
             for var in self.config.data_spec[1:]:
