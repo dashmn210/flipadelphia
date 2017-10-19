@@ -96,11 +96,11 @@ model_spec:
 
 
   - type: "mixed-regression"
-    skip: False
+    skip: True
     params:
 
   - type: "fixed-regression"
-    skip: False
+    skip: True
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off

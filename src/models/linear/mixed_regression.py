@@ -22,24 +22,18 @@ class MixedRegression(regression_base.Regression):
                     self.confounds.append(var)
 
 
-    def _extract_r_params(self, model_name, model):
+    def _extract_r_params(self, model_name):
         s = str(r("coef(%s)" % model_name))
         coef_rows = s.split('\n')[1:-4]
-
         out = defaultdict(int)
-
         for i in range(len(coef_rows))[::3]:
-            coef_row = coef_rows[i: i+3]
-            features = coef_row[0].split()
-            for level_coefs in coef_rows[1:]:
-                # TODO !!!!!!!! FIX THIS!!!!!!
-                print coef_rows, 'THERE'
-                print level_coefs, 'HERE'
+            row = coef_rows[i: i+3]
+            features = row[0].split()
+            for level_coefs in row[1:]:
                 level_coefs = level_coefs.split()
                 level = level_coefs[0]
                 for feature, coef in zip(features, level_coefs[1:]):
                     if 'intercept' in feature.lower():
-                        print coef_row, level_coefs, coef
                         out['intercept'] = float(coef)
                     else:
                         out[feature] = float(coef)
@@ -64,7 +58,7 @@ class MixedRegression(regression_base.Regression):
         model = r(cmd % (formula, r_df_name))
         rpy2.robjects.globalenv[r_model_name] = model
 
-        params = self._extract_r_params(r_model_name, model)
+        params = self._extract_r_params(r_model_name)
 
         return regression_base.ModelResult(
             model=model,
