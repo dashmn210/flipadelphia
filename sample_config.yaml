@@ -69,7 +69,7 @@ model_spec:
       num_epochs: 10
 
   - type: 'causal-regression'
-    skip: False
+    skip: True
     params:
       batch_size: 16
       num_train_steps: 100
@@ -96,7 +96,7 @@ model_spec:
 
 
   - type: "mixed-regression"
-    skip: True
+    skip: False
     params:
 
   - type: "fixed-regression"

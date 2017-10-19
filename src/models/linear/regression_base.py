@@ -18,10 +18,11 @@ from collections import defaultdict, namedtuple
 import rpy2.robjects
 from rpy2.robjects import r, pandas2ri
 from src.models.abstract_model import Model, Prediction
+import src.msc.utils as utils
 import math
 import pickle
 import os
-
+import numpy as np
 
 #r("options(warn=-1)").  # TODO -- figure out how to silence warnings like rank-deficient
 r("library('lme4')") 
@@ -58,8 +59,7 @@ class Regression(Model):
 
         for response_name, rmodel in self.models.iteritems():
             response_file = os.path.join(model_dir, response_name)
-            with open(response_file, 'w') as out:
-                pickle.dump(rmodel, out)
+            utils.pickle(rmodel, response_file)
 
     def _summarize_model_weights(self):
         def dict_average(dict_list):
@@ -103,8 +103,15 @@ class Regression(Model):
         predictions = defaultdict(dict)
         for response_name, val in self.models.iteritems():
             if isinstance(val, dict):
-                for response_level, model in val.iteritems():
-                    predictions[response_name][response_level] = self._predict(df, model)
+                # convert {level: scores} to 2d matrix with rows like:
+                #  level1 score, level2 score, etc
+                # (where ordering is determined by the dataset)
+                response_levels = dataset.num_levels(response_name)
+                level_predictions = \
+                    lambda level: self._predict(df, val[dataset.id_to_class_map[level]])
+                arr = np.array(
+                    [level_predictions(l) for l in range(response_levels)])
+                predictions[response_name] = np.transpose(arr, [1, 0])
             else:
                 predictions[response_name] = self._predict(df, val)
 
@@ -134,13 +141,11 @@ class Regression(Model):
 
     def load(self, dataset, model_dir):
         target_names = map(lambda x: x['name'], self.targets)
-
         for filename in os.listdir(model_dir):
             if filename not in target_names:
                 continue
-
-            with open(os.path.join(model_dir, filename), 'r') as infile:
-                self.models[filename] = pickle.load(infile)
+            self.models[filename] = \
+                utils.depickle(os.path.join(model_dir, filename))
 
         assert set(target_names) == set(self.models.keys())
         print 'INFO: loaded model parameters from ', model_dir

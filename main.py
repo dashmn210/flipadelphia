@@ -7,14 +7,15 @@ import yaml
 import os
 import argparse
 from collections import namedtuple
-
+import pickle
 import random
 import numpy as np
 import tensorflow as tf
 
 from src.data.dataset import Dataset
 import src.msc.constants as constants
-
+import src.msc.utils as utils
+import src.analysis.evaluator as evaluator
 import src.models.neural.tf_dummy as tf_dummy
 import src.models.neural.tf_flipper as tf_flipper
 
@@ -97,7 +98,14 @@ if __name__ == '__main__':
             model.load(d, model_dir)
 
             predictions = model.inference(d, model_dir)
-            print predictions
+            utils.pickle(
+                predictions, os.path.join(model_dir, 'predictions'))
+
+            evaluation = evaluator.evaluate(config, d, predictions, model_dir)
+            utils.pickle(
+                evaluation, os.path.join(model_dir, 'evaluation'))
+
+
             # TODO evaluate 
                 # categorical-specific
                     # AUC

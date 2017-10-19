@@ -85,7 +85,6 @@ class MixedRegression(regression_base.Regression):
             ''.join(' + (1|%s)' % confound['name'] for confound in self.confounds),
             ''.join(' - %s' % var['name'] for var in ignored_vars + self.confounds))
 
-        print cmd % (formula, r_df_name)
         model = r(cmd % (formula, r_df_name))
         rpy2.robjects.globalenv[r_model_name] = model
 

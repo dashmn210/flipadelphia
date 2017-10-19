@@ -34,14 +34,23 @@ class Dataset(object):
         # (for tensorflow, and so that all the models can talk about 
         #  categorical classes the same way
         self.class_to_id_map = defaultdict(dict)
+        self.id_to_class_map = defaultdict(dict)
         for variable in self.config.data_spec[1:]:
             if variable['type'] == "categorical":
                 var_filename = self.data_files[config.train_suffix][variable['name']]
                 for i, level in enumerate(self._classes(var_filename)):
                     self.class_to_id_map[variable['name']][level] = i
+                    self.id_to_class_map[i] = level
 
     def set_active_split(self, split):
         self.split = split
+
+    def get_tokenized_input(self):
+        input_text_name = self.config.data_spec[0]['name']
+        return [
+            line.strip().split() \
+            for line in self.data_files[self.split][input_text_name]
+        ]
 
 
     def num_levels(self, name):

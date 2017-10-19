@@ -2,7 +2,7 @@ import sys
 sys.path.append('../..')
 import os
 import time
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 import tensorflow as tf
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
@@ -12,7 +12,7 @@ import src.models.neural.tf_regression as tf_regression
 import src.models.neural.tf_causal as tf_causal
 import tf_utils
 
-
+import numpy as np
 
 def add_summary(summary_writer, global_step, name, value):
   """Add a new summary to the current summary_writer.
@@ -111,15 +111,30 @@ class TFModelWrapper(Model):
         self.sess.run(self.loaded_model.model.iter['initializer'])
 
         start = time.time()
+        all_feature_importance = defaultdict(list)
+        predictions = {}
         try:
             while True:
                 scores, feature_importance = self.loaded_model.model.test(self.sess)
-                print scores
-                print feature_importance
-                quit()
+
+                for response, scores in scores.items():
+                    if response not in predictions:
+                        predictions[response] = scores
+                    else:
+                        predictions[response] = np.concatenate(
+                            (predictions[response], scores), axis=0)
+
+                for feature, value in feature_importance.items():
+                    all_feature_importance[feature].append(value)
+
         except tf.errors.OutOfRangeError:
             print 'INFERENCE: finished, took %.2fs' % (time.time() - start)
 
+        mean_feature_importance = {k: np.mean(v) for k, v in all_feature_importance.items()}
+
+        return Prediction(
+            scores=predictions,
+            feature_importance=mean_feature_importance)
 
     def report(self):
         """ releases self.report, a summary of the last job this model
