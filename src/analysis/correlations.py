@@ -14,29 +14,27 @@ import numpy as np
 np.warnings.filterwarnings('ignore')
 
 
-def cramers_v(feature, text, num_levels, labels):
-    """ chisq statistic for a single feature, given some descriptions
-        and target info (Y) and target labels (possible values for Y)
+def cramers_v(feature, text, targets, possible_labels):
+    """ chisq statistic for a single feature, given some text
+        and target info (Y) and possible_labels (possible values for Y)
     """
-    obs = np.zeros( (2, len(labels)) )
-    for description, target in zip(descriptions, targets):
+    obs = np.zeros( (2, len(possible_labels)) )
+    for description, target in zip(text, targets):
         if feature in description:
-            obs[1, labels.index(target)] += 1
+            obs[1, possible_labels.index(target)] += 1
         else:
-            obs[0, labels.index(target)] += 1
+            obs[0, possible_labels.index(target)] += 1
 
     row_totals = np.sum(obs, axis=1)
     col_totals = np.sum(obs, axis=0)
     n = np.sum(obs)
     expected = np.outer(row_totals, col_totals) / n
-
     chisq = np.sum( np.nan_to_num(((obs - expected) ** 2 ) / expected ))
 
     r = 2
-    k = len(labels)
+    k = len(possible_labels)
     phisq = chisq / n
     V = np.sqrt(phisq / min(k-1, r-1))
-    print V
     return V
 
 

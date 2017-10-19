@@ -19,6 +19,7 @@ import rpy2.robjects
 from rpy2.robjects import r, pandas2ri
 from src.models.abstract_model import Model, Prediction
 import src.msc.utils as utils
+import src.msc.utils as utils
 import math
 import pickle
 import os
@@ -62,42 +63,22 @@ class Regression(Model):
             utils.pickle(rmodel, response_file)
 
     def _summarize_model_weights(self):
-        # TODO!!!!!!! FIX THIS!!!!!!!!!!
-        # SHOULD BE FLATTENED MORE!!!!!!!!!!!!!!!!!
+        def nested_model_iter(d):
+            for _, model in d.iteritems():
+                if isinstance(model, dict):
+                    for k, v in nested_model_iter(model):
+                        yield k, v
+                else:
+                    for k, v in model.weights.items():
+                        yield k, v
 
-        def dict_average(dict_list):
-            if len(dict_list) > 1:
-                assert all(
-                    set(dict_list[0]) == set(dict_list[i])\
-                    for i in range(len(dict_list))[1:])
-            return {
-                f: sum(d[f] for d in dict_list) / len(dict_list) \
-                for f in dict_list[0].keys()
-            }
-
-        weights = {}
+        weights = defaultdict(list)
         # get duplicate of self.models except lists of weights
-        for k, v in self.models.items():
-            if isinstance(v, dict):
-                if k not in weights:
-                    weights[k] = {}
-                for k2, v2 in v.items():
-                    if k2 not in weights[k]:
-                        weights[k][k2] = []
-                    weights[k][k2].append(v2.weights)
-            else:
-                if k not in weights:
-                    weights[k] = []
-                weights[k].append(v.weights)
-
-        # now average each list
-        out = defaultdict(dict)
-        for k, v in weights.items():
-            if isinstance(v, dict):
-                for k2, v2 in v.items():
-                    out[k][k2] = dict_average(v2)
-            else:
-                out[k] = dict_average(v)
+        for feature, value in nested_model_iter(self.models):
+            weights[feature].append(value)
+        out = {
+            f: np.mean(v) for f, v in weights.iteritems()
+        }
         return out
 
 

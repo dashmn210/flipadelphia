@@ -19,21 +19,22 @@ def evaluate(config, dataset, predictions, model_dir):
             importance_threshold = utils.percentile(
                 predictions.feature_importance.values(),
                 config.feature_importance_threshold)
-            print features
-            print predictions.feature_importance.keys()
-
-            correlations[var] = np.mean([
-                cramers_v(
-                    feature=f, 
-                    text=input_text, 
-                    num_levels=dataset.num_levels(var['name']),
-                    labels=labels) \
-                for f in features \
-                if predictions.feature_importance[f] > importance_threshold
-            ])
-
+            if var['type'] == 'categorical':
+                correlations[var['name']] = np.mean([
+                    cramers_v(
+                        feature=f, 
+                        text=input_text, 
+                        targets=labels,
+                        possible_labels=dataset.class_to_id_map[var['name']].keys()) \
+                    for f in features \
+                    if predictions.feature_importance.get(f, 0) > importance_threshold
+                ])
+            else:
+                # TODO pointwise-biserial
+                pass
 
         # if in scores...
-
+    print correlations
+    print performance
 
 
