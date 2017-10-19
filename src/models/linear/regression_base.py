@@ -62,6 +62,9 @@ class Regression(Model):
             utils.pickle(rmodel, response_file)
 
     def _summarize_model_weights(self):
+        # TODO!!!!!!! FIX THIS!!!!!!!!!!
+        # SHOULD BE FLATTENED MORE!!!!!!!!!!!!!!!!!
+
         def dict_average(dict_list):
             if len(dict_list) > 1:
                 assert all(

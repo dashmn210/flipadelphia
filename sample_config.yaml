@@ -111,3 +111,8 @@ model_spec:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off
 
+
+
+
+######### EVALUATION
+feature_importance_threshold: 0.9

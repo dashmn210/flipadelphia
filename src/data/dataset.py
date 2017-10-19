@@ -49,7 +49,14 @@ class Dataset(object):
         input_text_name = self.config.data_spec[0]['name']
         return [
             line.strip().split() \
-            for line in self.data_files[self.split][input_text_name]
+            for line in open(self.data_files[self.split][input_text_name])
+        ]
+
+    def data_for_var(self, var):
+        eval_fn = str if var['type'] == 'categorical' else float
+        return [
+            eval_fn(x.strip()) \
+            for x in open(self.data_files[self.split][var['name']])
         ]
 
 

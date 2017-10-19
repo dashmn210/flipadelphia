@@ -1,5 +1,8 @@
 import numpy as np
-
+import sys
+sys.path.append('../..')
+import src.msc.utils as utils
+from correlations import cramers_v
 
 
 
@@ -12,23 +15,25 @@ def evaluate(config, dataset, predictions, model_dir):
         if var['control']:
             features = dataset.features
             input_text = dataset.get_tokenized_input()
-            # TODO -- INSTEAD OF LOGITS, 
-            #.        GATHER LABELS
-            print predictions.scores
-            print var['name']
-            logits = predictions.scores[var['name']]
-            print logits
-            print np.argmax(logits, axis=0)
-            quit()
-            correlations[var] = np.mean(
+            labels = dataset.data_for_var(var)
+            importance_threshold = utils.percentile(
+                predictions.feature_importance.values(),
+                config.feature_importance_threshold)
+            print features
+            print predictions.feature_importance.keys()
+
+            correlations[var] = np.mean([
                 cramers_v(
                     feature=f, 
-                    input=input_text, 
+                    text=input_text, 
                     num_levels=dataset.num_levels(var['name']),
-                    labels=None))
-        else:
-            pass
+                    labels=labels) \
+                for f in features \
+                if predictions.feature_importance[f] > importance_threshold
+            ])
 
+
+        # if in scores...
 
 
 

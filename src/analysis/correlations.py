@@ -9,12 +9,12 @@ python correlation.py [word_list] [input file] [output file]
 """
 import sys
 import numpy as np
-from tqdm import tqdm
+#from tqdm import tqdm
 
 np.warnings.filterwarnings('ignore')
 
 
-def cramers_v(feature, descriptions, targets, labels):
+def cramers_v(feature, text, num_levels, labels):
     """ chisq statistic for a single feature, given some descriptions
         and target info (Y) and target labels (possible values for Y)
     """
@@ -36,7 +36,7 @@ def cramers_v(feature, descriptions, targets, labels):
     k = len(labels)
     phisq = chisq / n
     V = np.sqrt(phisq / min(k-1, r-1))
-
+    print V
     return V
 
 
@@ -71,17 +71,17 @@ def pointwise_biserial(feature, descriptions, prices):
 
 
 
-features = [x.strip().split()[0] for x in open(sys.argv[1])]
+# features = [x.strip().split()[0] for x in open(sys.argv[1])]
 
-descriptions = [x.strip().split() for x in open(sys.argv[2])]
+# descriptions = [x.strip().split() for x in open(sys.argv[2])]
 
-labels = [x.strip().split('|') for x in open(sys.argv[3])]
+# labels = [x.strip().split('|') for x in open(sys.argv[3])]
 
 
-sales = [int(x[0]) for x in labels]
-brands = [x[1] for x in labels]
-brand_labels = list(set(brands))
-prices = [np.log(float(x[2])) if x[2] != '\N' else -1 for x in labels]
+# sales = [int(x[0]) for x in labels]
+# brands = [x[1] for x in labels]
+# brand_labels = list(set(brands))
+# prices = [np.log(float(x[2])) if x[2] != '\N' else -1 for x in labels]
 
-print np.mean([cramers_v(fi, descriptions, brands, brand_labels) for fi in tqdm(features)])
-print np.mean(filter(lambda x: not np.isnan(x), [pointwise_biserial(fi, descriptions, prices) for fi in tqdm(features)]))
+# print np.mean([cramers_v(fi, descriptions, brands, brand_labels) for fi in tqdm(features)])
+# print np.mean(filter(lambda x: not np.isnan(x), [pointwise_biserial(fi, descriptions, prices) for fi in tqdm(features)]))
