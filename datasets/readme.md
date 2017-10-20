@@ -65,6 +65,15 @@
   * robs lrec submission: [https://cs.stanford.edu/~rpryzant/msc/rtgender.pdf](https://cs.stanford.edu/~rpryzant/msc/rtgender.pdf)
 
 
+## **REDDIT**
+* **idea**: post title, predict upvotes while controling for subreddit, (time of day, author?)
+* **progress**: 
+  * spoke to will. the data is on the infoLAB machines, he will work to get us access (10/10)
+  * verified data is in `madmax3:/dfs/dataset/infolab`
+* **papers**: 
+
+
+
 
 
 # In the pipeline...
@@ -75,12 +84,6 @@
 * **progress**:
 * **papers**: 
 
-
-## **NEWS/REDDIT**
-* **idea**: post title, predict upvotes while controling for subreddit, (time of day, author?)
-* **progress**: 
-  * spoke to will. the data is on the infoLAB machines, he will work to get us access (10/10)
-* **papers**: 
 
 
 
