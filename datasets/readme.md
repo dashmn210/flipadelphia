@@ -15,6 +15,19 @@
     * To get all current active classes, you can simply call http://explorecourses.stanford.edu/search?view=xml-20140630&filter-coursestatus-Active=on&q=%25
     * Data from past years can be obtained by passing an additional flag such as "&academicYear=20162017"
     * This script converts it into JSON: https://gist.github.com/tummykung/cfa37c3be373a3da073ffb9b2de03d7e
+    * reid meeting notes
+      * throw away attributes
+      * days => categorical
+      * keep nulls
+      * rm termid (dup of term)
+      * course => course_number
+      * make a new course_level feature (100, 200 etc)
+      * make sure there aren't any within-example newlines
+      * replace reqs with number of things the course satisfies
+      * rename id ==> courseid, classid ==> sectionid
+      * rm enrollStatus
+      * change startTime/endTIme to some kind of int
+      * look into mapping instructure to some kind of importance
 * **papers**: 
 
 ## **FINANCE**
