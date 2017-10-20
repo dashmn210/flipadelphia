@@ -85,6 +85,7 @@
 ## **FINANCE**
 * **idea**: look at financial docs (10K, 8Q), predict stock price. controling for industry
 * **progress**:
+  * https://nlp.stanford.edu/pubs/stock-event.html
 * **papers**: 
   * [https://web.stanford.edu/~jurafsky/pubs/lrec2014_stocks.pdf](https://web.stanford.edu/~jurafsky/pubs/lrec2014_stocks.pdf)
 
