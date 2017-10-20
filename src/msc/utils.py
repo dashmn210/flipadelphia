@@ -2,6 +2,8 @@ import cPickle
 import bisect
 
 
+
+
 def pickle(obj, path):
     with open(path, 'w') as f:
         cPickle.dump(obj, f)
@@ -24,3 +26,9 @@ def nested_iter(obj):
         else:
             for k2, v2 in nested_iter(v):
                 yield k2, v2
+
+def rm_nans(arr1, arr2):
+    """ 
+    """
+
+

@@ -104,23 +104,9 @@ if __name__ == '__main__':
             evaluation = evaluator.evaluate(config, d, predictions, model_dir)
             utils.pickle(
                 evaluation, os.path.join(model_dir, 'evaluation'))
+            evaluator.write_summary(evaluation, model_dir)
 
 
-            # TODO evaluate 
-                # categorical-specific
-                    # AUC
-                    # ROC curve
-                    # average feature correlation with this (cramer's V) 
-                # continuous-specific
-                    # accuracy
-                    # MSE
-                    # residual plot
-                    # average feature correlation (point-biserial)
-                # model-specific ( model.report() )
-                    # conditional/marginal R^2
-                    # loss
-                    # attention dump? 
-                    # etc etc
 
     # TODO
     utils.cleanup(d.data_by_variable)  # pointers to all cut files

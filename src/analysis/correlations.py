@@ -38,21 +38,21 @@ def cramers_v(feature, text, targets, possible_labels):
     return V
 
 
-def pointwise_biserial(feature, descriptions, prices):
+def pointwise_biserial(feature, text, targets):
     """ pointwise biserial statistic
     https://en.wikipedia.org/wiki/Point-biserial_correlation_coefficient
     """
-    s = np.std(prices)
+    s = np.std(targets)
 
     group0 = []
     group1 = []
-    for description, price in zip(descriptions, prices):
-        if price == -1:
+    for text_example, val in zip(text, targets):
+        if val == -1:
             continue
-        if feature in description:
-            group0.append(price)
+        if feature in text_example:
+            group0.append(val)
         else:
-            group1.append(price)
+            group1.append(val)
 
     m0 = np.mean(group0)
     m1 = np.mean(group1)
