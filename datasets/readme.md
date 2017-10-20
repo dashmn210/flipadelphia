@@ -1,18 +1,4 @@
-# Datasets
-
-
-## **BOOKS**
-* **idea**: feed in book (summary, editorial, review) and predict sales, control for author, genre, year published. crawl goodreads, amazon?
-* **progress**:
-* **papers**: 
-
-
-## **NEWS/REDDIT**
-* **idea**: post title, predict upvotes while controling for subreddit, (time of day, author?)
-* **progress**: 
-  * spoke to will. the data is on the infoLAB machines, he will work to get us access (10/10)
-* **papers**: 
-
+# In progress Datasets 
 
 ## **COURSE DESCRIPTIONS**
 * **idea**: take course description, predict enrollement, control for professor, subject/dept, (school, reqs met)
@@ -31,6 +17,13 @@
     * This script converts it into JSON: https://gist.github.com/tummykung/cfa37c3be373a3da073ffb9b2de03d7e
 * **papers**: 
 
+## **FINANCE**
+* **idea**: look at financial docs (10K, 8Q), predict stock price. controling for industry
+* **progress**:
+  * https://nlp.stanford.edu/pubs/stock-event.html
+* **papers**: 
+  * [https://web.stanford.edu/~jurafsky/pubs/lrec2014_stocks.pdf](https://web.stanford.edu/~jurafsky/pubs/lrec2014_stocks.pdf)
+
 
 ## **FOOD/RESTURAUNTS**
 * **idea**: predict hygene independent of cuisine
@@ -48,6 +41,37 @@
   * data is at https://nlp.stanford.edu/robvoigt/nis/, but unopenable
   * emailed rob about this
 
+
+
+## **INTERNET COMMENTS**
+* **idea**: feed in tweets?, predict sentiment, control for topic,party,region. 
+* **progress**:
+  * rob says the data is on the nlp cluster, in `/scr/nlp3/facebook`
+  * verified: `$ ssh rpryzant@jacob.stanford.edu; cd /scr/nlp3/facebook`
+* **papers**: 
+  * robs lrec submission: [https://cs.stanford.edu/~rpryzant/msc/rtgender.pdf](https://cs.stanford.edu/~rpryzant/msc/rtgender.pdf)
+
+
+
+
+# In the pipeline...
+
+
+## **BOOKS**
+* **idea**: feed in book (summary, editorial, review) and predict sales, control for author, genre, year published. crawl goodreads, amazon?
+* **progress**:
+* **papers**: 
+
+
+## **NEWS/REDDIT**
+* **idea**: post title, predict upvotes while controling for subreddit, (time of day, author?)
+* **progress**: 
+  * spoke to will. the data is on the infoLAB machines, he will work to get us access (10/10)
+* **papers**: 
+
+
+
+
 ## **MUSIC**
 * **idea**: predict length on chart from lyrics, control for genre/popularity of singer/(when released)
 * **progress**:
@@ -58,15 +82,6 @@
 * **idea**: take movie reviews?, predict box office sales. control for ad budget, popular of actor, hype, year. 
 * **progress**:
 * **papers**: 
-
-
-## **INTERNET COMMENTS**
-* **idea**: feed in tweets?, predict sentiment, control for topic,party,region. 
-* **progress**:
-  * rob says the data is on the nlp cluster, in `/scr/nlp3/facebook`
-  * verified: `$ ssh rpryzant@jacob.stanford.edu; cd /scr/nlp3/facebook`
-* **papers**: 
-  * robs lrec submission: [https://cs.stanford.edu/~rpryzant/msc/rtgender.pdf](https://cs.stanford.edu/~rpryzant/msc/rtgender.pdf)
 
 
 ## **ASPECT ANALYSIS**
@@ -80,14 +95,6 @@
 * **idea**: predict page hits with first paragraph control for parent, domain, etc.
 * **progress**:
 * **papers**: 
-
-
-## **FINANCE**
-* **idea**: look at financial docs (10K, 8Q), predict stock price. controling for industry
-* **progress**:
-  * https://nlp.stanford.edu/pubs/stock-event.html
-* **papers**: 
-  * [https://web.stanford.edu/~jurafsky/pubs/lrec2014_stocks.pdf](https://web.stanford.edu/~jurafsky/pubs/lrec2014_stocks.pdf)
 
 
 ## **RECIDIVISM**
