@@ -24,6 +24,7 @@ import math
 import pickle
 import os
 import numpy as np
+import time
 
 #r("options(warn=-1)").  # TODO -- figure out how to silence warnings like rank-deficient
 r("library('lme4')") 
@@ -37,7 +38,9 @@ ModelResult = namedtuple('ModelResult',
 
 
 class Regression(Model):
+    """ base class for all regression-type models
 
+    """
     def __init__(self, config, params):
         Model.__init__(self, config, params)
         # target variable name (exploded if categorical)
@@ -61,6 +64,8 @@ class Regression(Model):
         for response_name, rmodel in self.models.iteritems():
             response_file = os.path.join(model_dir, response_name)
             utils.pickle(rmodel, response_file)
+        print 'REGRESSION: saved into ', model_dir
+
 
     def _summarize_model_weights(self):
         def nested_model_iter(d):
@@ -124,6 +129,7 @@ class Regression(Model):
 
 
     def load(self, dataset, model_dir):
+        start_time = time.time()
         target_names = map(lambda x: x['name'], self.targets)
         for filename in os.listdir(model_dir):
             if filename not in target_names:
@@ -132,7 +138,8 @@ class Regression(Model):
                 utils.depickle(os.path.join(model_dir, filename))
 
         assert set(target_names) == set(self.models.keys())
-        print 'INFO: loaded model parameters from ', model_dir
+        print 'REGRESSION: loaded model parameters from %s, time %.2fs' % (
+            model_dir, time.time() - start)
 
 
     def _fit_regression(self, dataset, target, ignored_vars):

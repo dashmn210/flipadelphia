@@ -1,7 +1,7 @@
 import cPickle
 import bisect
 
-
+import tensorflow as tf
 
 
 def pickle(obj, path):
@@ -31,4 +31,10 @@ def rm_nans(arr1, arr2):
     """ 
     """
 
+def add_summary(summary_writer, global_step, name, value):
+  """Add a new summary to the current summary_writer.
+  Useful to log things that are not part of the training graph, e.g., name=BLEU.
+  """
+  summary = tf.Summary(value=[tf.Summary.Value(tag=name, simple_value=value)])
+  summary_writer.add_summary(summary, global_step)
 

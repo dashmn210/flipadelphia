@@ -11,6 +11,7 @@ import pickle
 import random
 import numpy as np
 import tensorflow as tf
+import time
 
 from src.data.dataset import Dataset
 import src.msc.constants as constants
@@ -20,6 +21,8 @@ import src.models.neural.tf_dummy as tf_dummy
 import src.models.neural.tf_flipper as tf_flipper
 
 def process_command_line():
+    """ returns a 1-tuple of cli args
+    """
     parser = argparse.ArgumentParser(description='usage')
     parser.add_argument('--config', dest='config', type=str, default='config.yaml', 
                         help='config file for this experiment')
@@ -31,7 +34,10 @@ def process_command_line():
     args = parser.parse_args()
     return args
 
+
 def load_config(filename):
+    """ loads YAML config into a named tuple
+    """
     d = yaml.load(open(filename).read())
     d = namedtuple("config", d.keys())(**d)
     return d
@@ -63,6 +69,8 @@ if __name__ == '__main__':
     # use config to preprocess data
     d = Dataset(config)
 
+    # if train, switch the dataset to train, then
+    #  train and save each model in the config spec
     if args.train:
         d.set_active_split(config.train_suffix)
 
@@ -71,6 +79,7 @@ if __name__ == '__main__':
                 continue
 
             print 'MAIN: training ', model_description['type']
+            start_time = time.time()
             model_dir = os.path.join(config.working_dir, model_description['type'])
             if not os.path.exists(model_dir):
                 os.makedirs(model_dir)
@@ -81,7 +90,12 @@ if __name__ == '__main__':
 
             model.train(d, model_dir)
             model.save(model_dir)
+            print 'MAIN: training %s done, time %.2fs' % (
+                model_description['type'], time.time() - start_time)
 
+    # if test, switch thh datset to test, 
+    #  and run inference + evaluation for each model
+    #  in the config spec
     if args.test:
         d.set_active_split(config.test_suffix)
 
@@ -89,6 +103,7 @@ if __name__ == '__main__':
             if model_description.get('skip', False):
                 continue
             print 'MAIN: inference with ', model_description['type']
+            start_time = time.time()
 
             model = constants.MODEL_CLASSES[model_description['type']](
                 config=config, 
@@ -106,8 +121,10 @@ if __name__ == '__main__':
                 evaluation, os.path.join(model_dir, 'evaluation'))
             evaluator.write_summary(evaluation, model_dir)
 
+            print 'MAIN: evaluation %s done, time %.2fs' % (
+                model_description['type'], time.time() - start_time)
 
+    # TODO maybe some kind of cleanup of temporrary files? like
+    # datasets, etc etc
+    utils.cleanup()
 
-    # TODO
-    utils.cleanup(d.data_by_variable)  # pointers to all cut files
-    utils.cleanup(predictions)  # pointers to all predictions files

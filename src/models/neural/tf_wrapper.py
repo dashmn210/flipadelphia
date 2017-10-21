@@ -14,17 +14,9 @@ import tf_utils
 
 import numpy as np
 
-def add_summary(summary_writer, global_step, name, value):
-  """Add a new summary to the current summary_writer.
-  Useful to log things that are not part of the training graph, e.g., name=BLEU.
-  """
-  summary = tf.Summary(value=[tf.Summary.Value(tag=name, simple_value=value)])
-  summary_writer.add_summary(summary, global_step)
-
-
 
 class TFModelWrapper(Model):
-    """ fake model to test out iterators etc
+    """ base wrapper that manipulates each tensorflow graph
     """
     def __init__(self, config, params):
         self.config = config
@@ -102,15 +94,8 @@ class TFModelWrapper(Model):
 
 
     def inference(self, dataset, model_dir, dev=True):
-        """ run inference on the dev/test set, save all predictions to 
-                per-variable files in model_dir, and return pointers to those files
-            saves model-specific metrics/artifacts (loss, attentional scores, etc) 
-                into self.report (also possible writes to a file in model_dir)
-        """
-        # TODO gather predictions, put in common form
         self.sess.run(self.loaded_model.model.iter['initializer'])
 
-        start = time.time()
         all_feature_importance = defaultdict(list)
         predictions = {}
         try:
@@ -128,7 +113,7 @@ class TFModelWrapper(Model):
                     all_feature_importance[feature].append(value)
 
         except tf.errors.OutOfRangeError:
-            print 'INFERENCE: finished, took %.2fs' % (time.time() - start)
+            pass
 
         mean_feature_importance = {k: np.mean(v) for k, v in all_feature_importance.items()}
 

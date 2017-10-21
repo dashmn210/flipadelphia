@@ -1,6 +1,17 @@
 from collections import namedtuple
 
 
+""" little object to represent model inference
+
+    scores: 
+        {
+            response variable name: [prediction per example on that response variable]
+        }
+    feature_importance:
+        {
+            feature name: importance value for that feature
+        }
+"""
 Prediction = namedtuple(
     'Prediction',
     ('scores', 'feature_importance'))
@@ -29,15 +40,16 @@ class Model(object):
     def train(self, dataset, model_dir):
         """ trains the model using a src.data.dataset.Dataset
             saves model-specific metrics (loss, etc) into self.report
+
+            returns nothing, but updates some kind of inner self.model
         """
         raise NotImplementedError
 
 
     def inference(self, dataset, model_dir):
-        """ run inference on the dev/test set, save all predictions to 
-                per-variable files in model_dir, and return pointers to those files
-            saves model-specific metrics/artifacts (loss, attentional scores, etc) 
-                into self.report (also possible writes to a file in model_dir)
+        """ run inference on whichever split the dataset is configured for
+
+            returns a abstract_model.Prediction
         """
         raise NotImplementedError
 
@@ -45,5 +57,7 @@ class Model(object):
     def report(self):
         """ releases self.report, a summary of the last job this model
                 executed whether that be training, testing, etc
+
+            currently ignored
         """
         raise NotImplementedError

@@ -18,25 +18,25 @@ data_spec:
 
   - name: "continuous_1"
     type: "continuous"
-    control: True
+    control: False
     skip: False
     weight: 1
 
   - name: "continuous_2"
     type: "continuous"
-    control: False
+    control: True
     skip: False
     weight: 1
 
   - name: "categorical_1"
     type: "categorical"
-    control: False
+    control: True
     skip: False
     weight: 1
 
   - name: "categorical_2"
     type: "categorical"
-    control: True
+    control: False
     skip: False
     weight: 1
 
@@ -100,13 +100,13 @@ model_spec:
     params:
 
   - type: "fixed-regression"
-    skip: True
+    skip: False
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off
 
   - type: "regression"
-    skip: True
+    skip: False
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off

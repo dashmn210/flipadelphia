@@ -11,13 +11,19 @@ UNK_ID = 0
 
 
 class Dataset(object):
+    """ this objectis VERY IMPORTANT!!
+    
+        it is the hub for all data manipulation logic and knowledge.
+        this and the config should contain basically all the information
+            needed to run an experiment from start to finish
+    """
 
     def __init__(self, config):
         self.config = config
         assert self.config.data_spec[0]['type'] == 'text', \
             'text input must be first element of data spec!'
 
-        # {train/val/test: {variable name: filepath with just that variable on each line}  }
+        # this is {train/val/test: {variable name: filepath with just that variable on each line}  }
         self.data_files = self._cut_data()
 
         # vocab = filepath to vocab file
@@ -42,8 +48,12 @@ class Dataset(object):
                     self.class_to_id_map[variable['name']][level] = i
                     self.id_to_class_map[i] = level
 
+
     def set_active_split(self, split):
+        """ points the dataset towards a split
+        """
         self.split = split
+
 
     def get_tokenized_input(self):
         input_text_name = self.config.data_spec[0]['name']
@@ -51,6 +61,7 @@ class Dataset(object):
             line.strip().split() \
             for line in open(self.data_files[self.split][input_text_name])
         ]
+
 
     def data_for_var(self, var):
         eval_fn = str if var['type'] == 'categorical' else float
@@ -61,6 +72,8 @@ class Dataset(object):
 
 
     def num_levels(self, name):
+        """ num levels for some categorical var
+        """
         return len(self.class_to_id_map[name])
 
 

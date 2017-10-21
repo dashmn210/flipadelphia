@@ -3,7 +3,7 @@ from functools import partial
 
 from rpy2.robjects import r, pandas2ri
 import rpy2.robjects
-
+import numpy as np
 from collections import defaultdict
 
 
@@ -23,20 +23,12 @@ class MixedRegression(regression_base.Regression):
 
 
     def _extract_r_params(self, model_name):
-        s = str(r("coef(%s)" % model_name))
-        coef_rows = s.split('\n')[1:-4]
-        out = defaultdict(int)
-        for i in range(len(coef_rows))[::3]:
-            row = coef_rows[i: i+3]
-            features = row[0].split()
-            for level_coefs in row[1:]:
-                level_coefs = level_coefs.split()
-                level = level_coefs[0]
-                for feature, coef in zip(features, level_coefs[1:]):
-                    if 'intercept' in feature.lower():
-                        out['intercept'] = float(coef)
-                    else:
-                        out[feature] = float(coef)
+        s = r("coef(%s)" % model_name)
+        out = defaultdict(float)
+        for i, x in enumerate(s[0].names):
+            if 'intercept' in x.lower():
+                x = 'intercept'
+            out[x] = np.mean(s[0][i])
         return out
 
     def _fit_mixed_regression(self, dataset, target, ignored_vars):
