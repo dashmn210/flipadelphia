@@ -72,7 +72,16 @@
   * verified data is in `madmax3:/dfs/dataset/infolab`
 * **papers**: 
 
-
+## **CFPB COMPLAINTS**
+* **idea**: 
+  * there’s this thing called the CFPB, which i guess is a regulatory layer that sits in between consumers and financial organizations.
+  * If people are pissed off with their bank, credit lender, etc, they send this complaint to the CFPB and the CFPB goes and addresses the complaint
+  * Some complaints get timely responses, others get tardy responses, others get none at all (i.e. the person isn’t helped)
+  * We can try to find out the best way to word a complaint to get a timely resolution, regardless of the company you have issue with, nature of your problem (mortgage, credit reporting, etc etc)
+* **progress**
+  * https://data.consumerfinance.gov/dataset/Consumer-Complaints/s6ew-h6mp
+* **papers**:
+  * https://scholar.princeton.edu/sites/default/files/bstewart/files/ais.pdf
 
 
 
