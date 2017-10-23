@@ -14,6 +14,7 @@ https://www.youtube.com/watch?v=HMq7rTo7C6M
     * understand and implement https://arxiv.org/pdf/1605.03661.pdf
     * understand and implement https://scholar.princeton.edu/sites/default/files/bstewart/files/ais.pdf
     * understand and implement https://arxiv.org/pdf/1606.03976.pdf
+         * https://github.com/clinicalml/cfrnet
 * think about backproping through cramer's v?
 * plotting
 * post-training summaries
