@@ -86,6 +86,7 @@ class TFModelWrapper(Model):
             start_time = time.time()
             try:
                 self.global_step, loss, summary = self.loaded_model.model.train(self.sess)
+                print self.global_step
                 summary_writer.add_summary(summary, self.global_step)
             except tf.errors.OutOfRangeError:
                 epochs += 1

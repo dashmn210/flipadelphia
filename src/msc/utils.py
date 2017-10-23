@@ -27,10 +27,6 @@ def nested_iter(obj):
             for k2, v2 in nested_iter(v):
                 yield k2, v2
 
-def rm_nans(arr1, arr2):
-    """ 
-    """
-
 def add_summary(summary_writer, global_step, name, value):
   """Add a new summary to the current summary_writer.
   Useful to log things that are not part of the training graph, e.g., name=BLEU.

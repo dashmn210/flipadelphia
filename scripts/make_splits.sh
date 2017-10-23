@@ -1,12 +1,13 @@
 # splits a tsv data file into train/test/val splits
-
+#usage: sh make_splits.sh [tsv]
+# e.g. sh make_splits.sh ../datasets/cfpb/cleaned_data.tsv
 
 FILE=$1
 FILENAME=$(basename ${FILE})
 
 
-TEST=8
-DEV=8
+TEST=3000
+DEV=3000
 BOTH=$((DEV+TEST))
 
 

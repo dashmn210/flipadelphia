@@ -1,8 +1,7 @@
 
-
 ########## DATA
-data_dir: "datasets/synthetic/leo_will_small/"
-prefix: "generated"
+data_dir: "datasets/cfpb/"
+prefix: "cleaned_data.tsv"
 train_suffix: ".train"
 dev_suffix: ".dev"
 test_suffix: ".test"
@@ -11,30 +10,36 @@ sos: "<s>"
 eos: "</s>"
 unk: "<unk>"
 
-# should be in left-right order
+
 data_spec:
-  - name: "text-input"
+  - name: "consumer-complaint"
     type: "text"
 
-  - name: "continuous_1"
-    type: "continuous"
-    control: False
-    skip: False
-    weight: 1
-
-  - name: "continuous_2"
-    type: "continuous"
-    control: True
-    skip: False
-    weight: 1
-
-  - name: "categorical_1"
+  - name: "product"
     type: "categorical"
     control: True
     skip: False
     weight: 1
 
-  - name: "categorical_2"
+  - name: "issue"
+    type: "categorical"
+    control: True
+    skip: False
+    weight: 1
+
+  - name: "state"
+    type: "categorical"
+    control: True
+    skip: True
+    weight: 1
+
+  - name: "company-response"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "timely-response"
     type: "categorical"
     control: False
     skip: False
@@ -45,15 +50,16 @@ data_spec:
 seed: 1
 working_dir: "test_run"
 
-# points to a 1-per-line file of tokens, or null (use all words)
+# points to a 1-per-line file of tokens, or null (generate with top_n words)
 vocab: null 
+top_n: 10000
 
 # all of these will be run
 model_spec:
   - type: "neural"
     skip: False
     params:
-      batch_size: 16
+      batch_size: 128
       num_train_steps: 100
       learning_rate: 0.001
       embedding_size: 10
@@ -71,7 +77,7 @@ model_spec:
   - type: 'causal-regression'
     skip: False
     params:
-      batch_size: 16
+      batch_size: 128
       num_train_steps: 100
       learning_rate: 0.01
       num_epochs: 10
@@ -79,7 +85,7 @@ model_spec:
   - type: "causal-neural"
     skip: False
     params:
-      batch_size: 16
+      batch_size: 128
       num_train_steps: 100
       learning_rate: 0.001
       embedding_size: 10

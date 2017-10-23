@@ -4,6 +4,7 @@ from nltk.tokenize import word_tokenize
 import pandas as pd
 from tensorflow.python.ops import lookup_ops
 import tensorflow as tf
+import time
 
 # assumes unk is at top of vocab file but we are enforcing that in _check_vocab()
 UNK_ID = 0
@@ -24,15 +25,20 @@ class Dataset(object):
             'text input must be first element of data spec!'
 
         # this is {train/val/test: {variable name: filepath with just that variable on each line}  }
+        print 'DATASET: making splits...'
         self.data_files = self._cut_data()
 
         # vocab = filepath to vocab file
         if self.config.vocab is None:
+            start = time.time()
+            print 'DATASET: generating vocab of %d tokens..' % self.config.top_n
             input_text_name = config.data_spec[0]['name']
             train_text_file = self.data_files[config.train_suffix][input_text_name]
             self.vocab = self._gen_vocab(train_text_file)
+            print 'DATASET: vocab done, took %.2fs' % (time.time() - start)
         else:
             self.vocab = self.config.vocab
+
         self.features = sorted([v.strip() for v in open(self.vocab)])
         self.vocab_size = self._check_vocab(self.vocab)
 
@@ -44,10 +50,10 @@ class Dataset(object):
         for variable in self.config.data_spec[1:]:
             if variable['type'] == "categorical":
                 var_filename = self.data_files[config.train_suffix][variable['name']]
-                for i, level in enumerate(self._classes(var_filename)):
+                for i, level in enumerate(set(open(var_filename).read().split('\n'))):  # unique rows
+                    level = level.strip()
                     self.class_to_id_map[variable['name']][level] = i
                     self.id_to_class_map[i] = level
-
 
     def set_active_split(self, split):
         """ points the dataset towards a split
@@ -107,12 +113,6 @@ class Dataset(object):
         return pd.DataFrame.from_dict(data)
 
 
-    def _classes(self, filename):
-        """ returns the unique entries in a one-per-line file
-                (vocab, categorical variables, etc)
-        """
-        return Counter(word_tokenize(open(filename).read())).keys()
-
     def num_classes(self, varname):
         return len(self.class_to_id_map[varname])
 
@@ -129,9 +129,13 @@ class Dataset(object):
 
 
     def _gen_vocab(self, text_file):
-        vocab = self._classes(text_file)
-        vocab = [self.config.unk, self.config.sos, self.config.eos] + vocab
         vocab_file = os.path.join(self.config.working_dir, 'generated_vocab')
+        if os.path.exists(vocab_file):
+            return vocab_file
+
+        word_ctr = Counter(open(text_file).read().split())
+        vocab = map(lambda x: x[0], word_ctr.most_common(self.config.top_n))
+        vocab = [self.config.unk, self.config.sos, self.config.eos] + vocab
 
         with open(vocab_file, 'w') as f:
             f.write('\n'.join(vocab))
@@ -152,9 +156,12 @@ class Dataset(object):
             for i, variable in enumerate(c.data_spec):
                 variable_path = data_prefix + '.' + variable['name'] + split_suffix
 
+
                 variable_paths[split_suffix][variable['name']] = variable_path
-                os.system('cat %s | cut -f%d > %s' % (
-                    file, i+1, variable_path))
+
+                if not os.path.exists(variable_path):
+                    os.system('cat %s | cut -f%d > %s' % (
+                        file, i+1, variable_path))
 
         return variable_paths
 

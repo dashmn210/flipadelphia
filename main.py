@@ -12,6 +12,7 @@ import random
 import numpy as np
 import tensorflow as tf
 import time
+import sys
 
 from src.data.dataset import Dataset
 import src.msc.constants as constants
@@ -60,6 +61,8 @@ if __name__ == '__main__':
     config = load_config(args.config)   
     validate_config(config)
 
+    reload(sys)
+    sys.setdefaultencoding('utf8')
 
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
     set_seed(config.seed)
@@ -67,7 +70,10 @@ if __name__ == '__main__':
         os.makedirs(config.working_dir)
 
     # use config to preprocess data
+    start = time.time()
+    print 'MAIN: parsing dataset'
     d = Dataset(config)
+    print 'MAIN: dataset done. took %.2fs' % (time.time() - start)
 
     # if train, switch the dataset to train, then
     #  train and save each model in the config spec
