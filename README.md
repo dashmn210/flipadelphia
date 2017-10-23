@@ -18,4 +18,4 @@ https://www.youtube.com/watch?v=HMq7rTo7C6M
 * think about backproping through cramer's v?
 * plotting
 * post-training summaries
-
+* progress bars, restarting experiments, etc etc
