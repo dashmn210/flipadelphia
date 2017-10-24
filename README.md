@@ -19,3 +19,4 @@ https://www.youtube.com/watch?v=HMq7rTo7C6M
 * plotting
 * post-training summaries
 * progress bars, restarting experiments, etc etc
+* impose max length on input seqs
