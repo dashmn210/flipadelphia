@@ -1,0 +1,46 @@
+
+########## DATA
+data_dir: "datasets/cfpb/"
+prefix: "cleaned_data.tsv"
+train_suffix: ".train"
+dev_suffix: ".dev"
+test_suffix: ".test"
+
+sos: "<s>"
+eos: "</s>"
+unk: "<unk>"
+
+
+data_spec:
+  - name: "consumer-complaint"
+    type: "text"
+
+  - name: "product"
+    type: "categorical"
+    control: True
+    skip: False
+    weight: 1
+
+  - name: "issue"
+    type: "categorical"
+    control: True
+    skip: False
+    weight: 1
+
+  - name: "state"
+    type: "categorical"
+    control: True
+    skip: True
+    weight: 1
+
+  - name: "company-response"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "timely-response"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
