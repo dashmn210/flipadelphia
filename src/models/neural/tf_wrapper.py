@@ -10,6 +10,8 @@ from src.models.abstract_model import Model, Prediction
 import src.models.neural.tf_flipper as tf_flipper
 import src.models.neural.tf_regression as tf_regression
 import src.models.neural.tf_causal as tf_causal
+import src.msc.utils as utils
+
 import tf_utils
 
 import numpy as np
@@ -83,9 +85,11 @@ class TFModelWrapper(Model):
 
         epochs = 0
         start_time = time.time()
-        while self.global_step < self.params['num_train_steps'] and epochs < self.params['num_epochs']:
+        prog = utils.Progbar(target=self.params['num_train_steps'])
+        while self.global_step < self.params['num_train_steps']:
             try:
                 self.global_step, loss, summary = self.loaded_model.model.train(self.sess)
+                prog.update(self.global_step, [('train loss', loss)])
                 summary_writer.add_summary(summary, self.global_step)
             except tf.errors.OutOfRangeError:
                 epochs += 1

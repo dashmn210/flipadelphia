@@ -55,11 +55,19 @@ class Dataset(object):
                     self.class_to_id_map[variable['name']][level] = i
                     self.id_to_class_map[i] = level
 
+
     def set_active_split(self, split):
         """ points the dataset towards a split
         """
         self.split = split
 
+
+    def num_examples(self):
+        """ number of batches in current split
+        """
+        input_variable_name = self.config.data_spec[0]['name']        
+        examples = sum(1 for _ in open(self.data_files[self.split][input_variable_name]))
+        return examples
 
     def get_tokenized_input(self):
         input_text_name = self.config.data_spec[0]['name']

@@ -60,7 +60,7 @@ model_spec:
     skip: False
     params:
       batch_size: 128
-      num_train_steps: 100
+      num_train_steps: 1000
       learning_rate: 0.001
       embedding_size: 10
       encoder_layers: 2
@@ -72,21 +72,19 @@ model_spec:
       regressor_layers: 1
       regressor_units: 10
       gradient_clip: 5.0
-      num_epochs: 10
 
   - type: 'causal-regression'
     skip: False
     params:
       batch_size: 128
-      num_train_steps: 100
+      num_train_steps: 1000
       learning_rate: 0.01
-      num_epochs: 10
 
   - type: "causal-neural"
     skip: False
     params:
       batch_size: 128
-      num_train_steps: 100
+      num_train_steps: 1000
       learning_rate: 0.001
       embedding_size: 10
       encoder_layers: 2
@@ -98,7 +96,6 @@ model_spec:
       regressor_layers: 1
       regressor_units: 10
       gradient_clip: 5.0
-      num_epochs: 10
 
 
   - type: "mixed-regression"
