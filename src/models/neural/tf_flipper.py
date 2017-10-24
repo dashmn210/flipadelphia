@@ -146,7 +146,7 @@ class Flipper:
             self.train_step,
             self.summaries,
         ]
-        return sess.run(ops, feed_dict={self.dropout: 0.2})
+        return sess.run(ops, feed_dict={self.dropout: self.params['dropout']})
 
 
     def test(self, sess):

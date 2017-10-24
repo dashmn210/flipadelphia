@@ -72,6 +72,7 @@ model_spec:
       regressor_layers: 1
       regressor_units: 10
       gradient_clip: 5.0
+      dropout: 0.4
 
   - type: 'causal-regression'
     skip: False
@@ -96,6 +97,7 @@ model_spec:
       regressor_layers: 1
       regressor_units: 10
       gradient_clip: 5.0
+      dropout: 0.4
 
 
   - type: "mixed-regression"
