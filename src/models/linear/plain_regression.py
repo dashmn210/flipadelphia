@@ -43,6 +43,7 @@ class RegularizedRegression(regression_base.Regression):
         r_df_name = 'df_' + target['name']
         r_model_name = 'model_' + target['name']
 
+        print 'REGRESSION, getting numpy data for ', target['name']
         y, X, feature_names = self._data_to_numpy(dataset, target, ignored_vars)
 
         if self.regularizor:
@@ -71,6 +72,7 @@ class RegularizedRegression(regression_base.Regression):
         r_df_name = 'df_%s_%s' % (target['name'], level)
         r_model_name = 'model_%s_%s' % (target['name'], level)
 
+        print 'REGRESSION, getting numpy data for ', target['name'], ' level ', level
         y, X, feature_names = self._data_to_numpy(dataset, target, ignored_vars, level)
 
         model_fitter = sklearn.linear_model.LogisticRegression(

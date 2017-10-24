@@ -5,6 +5,7 @@ import pandas as pd
 from tensorflow.python.ops import lookup_ops
 import tensorflow as tf
 import time
+from tqdm import tqdm
 
 # assumes unk is at top of vocab file but we are enforcing that in _check_vocab()
 UNK_ID = 0
@@ -55,6 +56,9 @@ class Dataset(object):
                     self.class_to_id_map[variable['name']][level] = i
                     self.id_to_class_map[i] = level
 
+        # pandas df of the current split, lazily computed
+        self.featurized_data_df = None
+
 
     def set_active_split(self, split):
         """ points the dataset towards a split
@@ -91,18 +95,28 @@ class Dataset(object):
         return len(self.class_to_id_map[name])
 
 
-    def to_pd_df(self):
+    def to_pd_df(self, force=True):
         """ convert a data split to a pandas df using bag-of-words text featurizatoin
         """
         # {variable_name: [values per example] }
         # note that we're breaking each text feature into its own "variable"
+
+        #if we're not forcing, we have something, and it's for the current split
+        if not force and self.featurized_data_df is not None \
+                and self.featurized_data_df[1] == self.split:
+            print 'DATASET: reusing cached df...'
+            return self.featurized_data_df
+
+        print 'DATASET: featurizing data...'
         data = defaultdict(list)
 
         data_files = self.data_files[self.split]
 
         # start with the input text features
+        # TODO -- speed this up>?
         input_variable_name = self.config.data_spec[0]['name']
-        for input_ex in open(data_files[input_variable_name]):
+        examples = sum(1 for _ in open(data_files[input_variable_name]))
+        for input_ex in tqdm(open(data_files[input_variable_name]), total=examples):
             input_words = set(input_ex.split())
             for feature in self.features:
                 data[feature].append(1 if feature in input_words else 0)
@@ -118,7 +132,8 @@ class Dataset(object):
                 data[var_name].append(
                     str(x) if variable['type'] == 'categorical' else float(x))
 
-        return pd.DataFrame.from_dict(data)
+        self.featurized_data_df = pd.DataFrame.from_dict(data), self.split
+        return self.featurized_data_df[0]
 
 
     def num_classes(self, varname):

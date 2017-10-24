@@ -10,24 +10,24 @@ sos: "<s>"
 eos: "</s>"
 unk: "<unk>"
 
-
+# NOTE -- var names can't overlap with features
 data_spec:
   - name: "consumer-complaint"
     type: "text"
 
-  - name: "product"
+  - name: "product-in-question"
     type: "categorical"
     control: True
     skip: False
     weight: 1
 
-  - name: "issue"
+  - name: "issue-in-question"
     type: "categorical"
     control: True
     skip: False
     weight: 1
 
-  - name: "state"
+  - name: "state-of-origin"
     type: "categorical"
     control: True
     skip: True
@@ -52,12 +52,12 @@ working_dir: "test_run"
 
 # points to a 1-per-line file of tokens, or null (generate with top_n words)
 vocab: null 
-top_n: 10000
+top_n: 100
 
 # all of these will be run
 model_spec:
   - type: "neural"
-    skip: False
+    skip: True
     params:
       batch_size: 128
       max_seq_len: 50
@@ -76,14 +76,14 @@ model_spec:
       dropout: 0.4
 
   - type: 'causal-regression'
-    skip: False
+    skip: True
     params:
       batch_size: 128
       num_train_steps: 1000
       learning_rate: 0.01
 
   - type: "causal-neural"
-    skip: False
+    skip: True
     params:
       batch_size: 128
       max_seq_len: 50
@@ -103,7 +103,7 @@ model_spec:
 
 
   - type: "mixed-regression"
-    skip: False
+    skip: True
     params:
 
   - type: "fixed-regression"
