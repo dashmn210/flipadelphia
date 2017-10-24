@@ -53,6 +53,7 @@ class RegularizedRegression(regression_base.Regression):
         else:
             model_fitter = sklearn.linear_model.LinearRegression()
 
+        print 'REGRESSION: fitting target %s'
         model = model_fitter.fit(X, y)
 
         weights = {}
@@ -75,7 +76,7 @@ class RegularizedRegression(regression_base.Regression):
         model_fitter = sklearn.linear_model.LogisticRegression(
             penalty=(self.regularizor or 'l2'),
             C=(1.0/self.lmbda) if self.regularizor > 0 else 99999999)
-
+        print 'REGRESSION: fitting target %s, level %s' % (target['name'], level)
         model = model_fitter.fit(X, list(y))
         weights = {}
         for w, f in zip(model.coef_[0], feature_names):

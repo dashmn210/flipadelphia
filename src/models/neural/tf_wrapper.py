@@ -82,15 +82,15 @@ class TFModelWrapper(Model):
         self.sess.run(self.loaded_model.model.iter['initializer'])
 
         epochs = 0
+        start_time = time.time()
         while self.global_step < self.params['num_train_steps'] and epochs < self.params['num_epochs']:
-            start_time = time.time()
             try:
                 self.global_step, loss, summary = self.loaded_model.model.train(self.sess)
-                print self.global_step
                 summary_writer.add_summary(summary, self.global_step)
             except tf.errors.OutOfRangeError:
                 epochs += 1
-                print epochs
+                print 'epoch ', epochs, ' took %.2fs' % (time.time() - start_time)
+                start_time = time.time()
                 self.sess.run(self.loaded_model.model.iter['initializer'])
 
 
