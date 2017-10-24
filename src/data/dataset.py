@@ -204,8 +204,15 @@ class Dataset(object):
             # convert to ids
             dataset = dataset.map(lambda txt: (
                 txt, tf.cast(vocab_table.lookup(txt), tf.int32)))
+
+            # now cut off
+            maxlen = params['max_seq_len']
+            dataset = dataset.map(lambda txt, ids: (txt[:maxlen], ids[:maxlen]))
+
             # add lengths
             dataset = dataset.map(lambda txt, ids: (txt, ids, tf.size(ids)))
+
+
             return dataset
 
         def continuous_dataset(file):
