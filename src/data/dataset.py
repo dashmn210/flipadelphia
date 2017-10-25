@@ -59,6 +59,7 @@ class Dataset(object):
                 var_filename = self.data_files[config.train_suffix][variable['name']]
                 for i, level in enumerate(set(open(var_filename).read().split('\n'))):  # unique rows
                     level = level.strip()
+                    if level == '': continue
                     self.class_to_id_map[variable['name']][level] = i
                     self.id_to_class_map[i] = level
 
@@ -104,7 +105,6 @@ class Dataset(object):
             line = line.strip()
             if text_file:
                 for feature in line.split():
-                    print len(feature_id_map), len(set(feature_id_map.values())), feature in feature_id_map
                     out[i][feature_id_map.get(feature, UNK_ID)] += 1
             elif feature_id_map is not None:
                 out[i][feature_id_map[line]] += 1
@@ -153,47 +153,47 @@ class Dataset(object):
         return len(self.class_to_id_map[name])
 
 
-    def to_pd_df(self, force=False):
-        """ convert a data split to a pandas df using bag-of-words text featurizatoin
-        """
-        # {variable_name: [values per example] }
-        # note that we're breaking each text feature into its own "variable"
+    # def to_pd_df(self, force=False):
+    #     """ convert a data split to a pandas df using bag-of-words text featurizatoin
+    #     """
+    #     # {variable_name: [values per example] }
+    #     # note that we're breaking each text feature into its own "variable"
 
-        #if we're not forcing, we have something, and it's for the current split
-        if not force and self.featurized_data_df is not None \
-                and self.featurized_data_df[1] == self.split:
-            print 'DATASET: reusing cached df...'
-            return self.featurized_data_df
+    #     #if we're not forcing, we have something, and it's for the current split
+    #     if not force and self.featurized_data_df is not None \
+    #             and self.featurized_data_df[1] == self.split:
+    #         print 'DATASET: reusing cached df...'
+    #         return self.featurized_data_df
 
-        print 'DATASET: featurizing data...'
-        data = defaultdict(list)
+    #     print 'DATASET: featurizing data...'
+    #     data = defaultdict(list)
 
-        data_files = self.data_files[self.split]
+    #     data_files = self.data_files[self.split]
 
-        # start with the input text features
-        # TODO -- speed this up!!!
-        examples = sum(1 for _ in open(data_files[self.input_varname()]))
-        for input_ex in tqdm(open(data_files[self.input_varname()]), total=examples):
-            input_words = set(input_ex.split())
-            for feature in self.features:
-                data[feature].append(1 if feature in input_words else 0)
+    #     # start with the input text features
+    #     # TODO -- speed this up!!!
+    #     examples = sum(1 for _ in open(data_files[self.input_varname()]))
+    #     for input_ex in tqdm(open(data_files[self.input_varname()]), total=examples):
+    #         input_words = set(input_ex.split())
+    #         for feature in self.features:
+    #             data[feature].append(1 if feature in input_words else 0)
 
-        # now do all the other variables
-        for variable in self.config.data_spec[1:]:
-            if variable.get('skip', False):
-                continue
+    #     # now do all the other variables
+    #     for variable in self.config.data_spec[1:]:
+    #         if variable.get('skip', False):
+    #             continue
 
-            var_name = variable['name']
-            for x in open(data_files[var_name]):
-                x = x.strip()
-                data[var_name].append(
-                    str(x) if variable['type'] == 'categorical' else float(x))
+    #         var_name = variable['name']
+    #         for x in open(data_files[var_name]):
+    #             x = x.strip()
+    #             data[var_name].append(
+    #                 str(x) if variable['type'] == 'categorical' else float(x))
 
-        print 'DATASET: generating pandas df...'
-        self.featurized_data_df = pd.DataFrame.from_dict(data), self.split
-        print 'DATASET: pandas df done.'
+    #     print 'DATASET: generating pandas df...'
+    #     self.featurized_data_df = pd.DataFrame.from_dict(data), self.split
+    #     print 'DATASET: pandas df done.'
 
-        return self.featurized_data_df[0]
+    #     return self.featurized_data_df[0]
 
 
     def num_classes(self, varname):

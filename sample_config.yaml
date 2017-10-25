@@ -97,7 +97,7 @@ model_spec:
 
 
   - type: "mixed-regression"
-    skip: True
+    skip: False
     params:
 
   - type: "fixed-regression"

@@ -8,12 +8,32 @@ import rpy2.robjects
 
 import sklearn
 import pandas as pd
+import numpy as np
 
 class FixedRegression(plain_regression.RegularizedRegression):
 
-    def _data_to_numpy(self, dataset, target, ignored_vars, level=''):
-        df = dataset.to_pd_df()
+    def _get_np_xy(self, dataset, target_name, level=None):
+        split = dataset.split
+        y = dataset.np_data[split][target_name]
+        if level is not None:
+            target_col = dataset.class_to_id_map[target_name][level]
+            y = y[:,target_col]
+        y = np.squeeze(y) # stored as column even if just floats
 
+        # now add confounds to features
+        X = dataset.np_data[split][dataset.input_varname()]
+        features = dataset.ordered_features
+        for var in self.confounds:
+            one_hots = dataset.np_data[split][var['name']]
+            for level, col_idx in dataset.class_to_id_map[var['name']].items():
+                new_col = np.reshape(one_hots[:,col_idx], (-1, 1))
+                X = np.append(X, new_col, axis=1)
+                features.append('%s|%s' % (var['name'], level))
+
+        return X, y, features
+
+
+    def _data_to_numpy(self, dataset, target, ignored_vars, level=''):
         if level is not '':
             # turn response into 1's on the favored level, and 0 elsewhere
             df = self._make_binary(df, target['name'], level)

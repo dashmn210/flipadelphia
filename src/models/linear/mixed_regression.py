@@ -21,21 +21,37 @@ class MixedRegression(regression_base.Regression):
                 else:
                     self.confounds.append(var)
 
+    def _get_np_xy(self, dataset, target_name, level=None):
+        split = dataset.split
+        y = dataset.np_data[split][target_name]
+        if level is not None:
+            target_col = dataset.class_to_id_map[target_name][level]
+            y = y[:,target_col]
+        y = np.squeeze(y) # stored as column even if just floats
 
-    def _extract_r_params(self, model_name):
-        s = r("coef(%s)" % model_name)
-        out = defaultdict(float)
-        for i, x in enumerate(s[0].names):
-            if 'intercept' in x.lower():
-                x = 'intercept'
-            out[x] = np.mean(s[0][i])
-        return out
+        # now add confounds (NOT one-hot) to features
+        X = dataset.np_data[split][dataset.input_varname()]
+        features = dataset.ordered_features
+        idx_to_class = np.vectorize(lambda idx: dataset.id_to_class_map[idx])
+        for var in self.confounds:
+            # undo one-hot stuff
+            one_hots = dataset.np_data[split][var['name']]
+            levels = np.argmax(one_hots, axis=1)
+            new_col = idx_to_class(levels)
+            new_col = np.reshape(new_col, (-1, 1))  # turn into a column
+            X = np.append(X, new_col, axis=1)
+            features.append(var['name'])
+
+        return X, y, features
+
 
     def _fit_mixed_regression(self, dataset, target, ignored_vars):
         r_df_name = 'df_' + target['name']
         r_model_name = 'model_' + target['name']
 
-        df = dataset.to_pd_df()
+        X, y, features = self._get_np_xy(dataset, target['name'])
+        # TDO -- make pd df from this 
+
         # TODO - handle this feature gracefully
         if '...' in set(df.columns):
             df.drop('...', axis=1, inplace=True)
@@ -87,6 +103,16 @@ class MixedRegression(regression_base.Regression):
             model=model,
             weights=params,
             response_type='categorical')
+
+
+    def _extract_r_params(self, model_name):
+        s = r("coef(%s)" % model_name)
+        out = defaultdict(float)
+        for i, x in enumerate(s[0].names):
+            if 'intercept' in x.lower():
+                x = 'intercept'
+            out[x] = np.mean(s[0][i])
+        return out
 
 
     def train(self, dataset, model_dir):
