@@ -153,11 +153,11 @@ class Regression(Model):
         raise NotImplementedError
 
 
-    def _fit_ovr(self, dataset, target, ignored_vars, model_fitting_fn):
+    def _fit_ovr(self, dataset, target, model_fitting_fn):
         models = {}
         for level in dataset.class_to_id_map[target['name']].keys():
             models[level] = model_fitting_fn(
-                dataset, target, ignored_vars, level=level)
+                dataset, target, level=level)
         return models
 
 

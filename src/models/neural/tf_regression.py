@@ -46,7 +46,7 @@ class CausalRegression:
         with tf.variable_scope('input'):
             input_vector = tf.map_fn(
                 lambda seq: self._to_dense_vector(seq, self.dataset.vocab_size),
-                self.iter[self.config.data_spec[0]['name']][1])
+                self.iter[dataset.input_varname()][1])
             input_encoded = tf_utils.fc_tube(
                 inputs=tf.cast(input_vector, tf.float32),
                 num_outputs=1,

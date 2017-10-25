@@ -41,7 +41,7 @@ class CausalNetwork:
         self.global_step = tf.Variable(0, trainable=False)
         self.dropout = tf.placeholder(tf.float32, name='dropout')
 
-        source_name = self.config.data_spec[0]['name']
+        source_name = dataset.input_varname()
         self.input_text, self.input_ids, self.input_lens = self.iter[source_name]
 
         # use attention to encode the input

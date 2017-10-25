@@ -11,23 +11,24 @@ eos: "</s>"
 unk: "<unk>"
 
 
+# NOTE -- var names can't overlap with features
 data_spec:
   - name: "consumer-complaint"
     type: "text"
 
-  - name: "product"
+  - name: "product-in-question"
     type: "categorical"
     control: True
     skip: False
     weight: 1
 
-  - name: "issue"
+  - name: "issue-in-question"
     type: "categorical"
     control: True
     skip: False
     weight: 1
 
-  - name: "state"
+  - name: "state-of-origin"
     type: "categorical"
     control: True
     skip: True

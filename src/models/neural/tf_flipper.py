@@ -53,7 +53,7 @@ class Flipper:
         self.dropout = tf.placeholder(tf.float32, name='dropout')
         self.global_step = tf.Variable(0, trainable=False)
 
-        source_name = self.config.data_spec[0]['name']
+        source_name = dataset.input_varname()
         self.input_text, input_ids, input_lens = self.iter[source_name]
 
         # use attention to encode the source

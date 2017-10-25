@@ -1,7 +1,6 @@
-
 ########## DATA
-data_dir: "datasets/cfpb/"
-prefix: "cleaned_data.tsv"
+data_dir: "datasets/synthetic/leo_will_small/"
+prefix: "generated"
 train_suffix: ".train"
 dev_suffix: ".dev"
 test_suffix: ".test"
@@ -10,41 +9,36 @@ sos: "<s>"
 eos: "</s>"
 unk: "<unk>"
 
-# NOTE -- var names can't overlap with features
+# should be in left-right order
 data_spec:
-  - name: "consumer-complaint"
+  - name: "text-input"
     type: "text"
 
-  - name: "product-in-question"
+  - name: "continuous_1"
+    type: "continuous"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "continuous_2"
+    type: "continuous"
+    control: True
+    skip: False
+    weight: 1
+
+  - name: "categorical_1"
     type: "categorical"
     control: True
     skip: False
     weight: 1
 
-  - name: "issue-in-question"
-    type: "categorical"
-    control: True
-    skip: False
-    weight: 1
-
-  - name: "state-of-origin"
-    type: "categorical"
-    control: True
-    skip: True
-    weight: 1
-
-  - name: "company-response"
+  - name: "categorical_2"
     type: "categorical"
     control: False
     skip: False
     weight: 1
 
-  - name: "timely-response"
-    type: "categorical"
-    control: False
-    skip: False
-    weight: 1
-
+    
 
 ########## MODELING
 seed: 1

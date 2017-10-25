@@ -38,18 +38,17 @@ class Dataset(object):
         if self.config.vocab is None:
             start = time.time()
             print 'DATASET: generating vocab of %d tokens..' % self.config.top_n
-            input_text_name = config.data_spec[0]['name']
-            train_text_file = self.data_files[config.train_suffix][input_text_name]
+            train_text_file = self.data_files[config.train_suffix][self.input_varname()]
             self.vocab = self._gen_vocab(train_text_file)
             print 'DATASET: vocab done, took %.2fs' % (time.time() - start)
         else:
             self.vocab = self.config.vocab
 
         self.vocab_size = self._check_vocab(self.vocab)
-        self.features = defaultdict(lambda: UNK_ID)
-        for i, v in enumerate(open(self.vocab)):
-            self.features[v.strip()] = i
-
+        self.features = {v.strip(): i for i, v in enumerate(open(self.vocab))}
+        self.feature_ids = {i: f for f, i in self.features.items()}
+        self.ordered_features = [self.feature_ids[i] for i in range(self.vocab_size)]
+        print 'NUM FEATURES ', len(self.features)
         # class_to_id_map: {variable name: {'class': index}  }  for each categorical variable
         # (for tensorflow, and so that all the models can talk about 
         #  categorical classes the same way
@@ -66,17 +65,17 @@ class Dataset(object):
         # pandas df of the current split, lazily computed
         self.featurized_data_df = None
 
+        start = time.time()
         print 'DATASET: parsing data into np arrays...'
         self.np_data = defaultdict(dict)
         for split, variables in self.data_files.items():
             for varname, filepath in variables.items():
                 var = self.get_variable(varname)
-                print split, varname, filepath
                 if var['type'] == 'continuous':
                     self.np_data[split][varname] = self._datafile_to_np(
                         datafile=filepath)
                 else:
-                    if varname == input_text_name:
+                    if varname == self.input_varname():
                         self.np_data[split][varname] = self._datafile_to_np(
                             datafile=filepath,
                             feature_id_map=self.features,
@@ -85,6 +84,8 @@ class Dataset(object):
                         self.np_data[split][varname] = self._datafile_to_np(
                             datafile=filepath,
                             feature_id_map=self.class_to_id_map[varname])
+        print 'DATASET: np parsing done, took %.2fs' % (time.time() - start)
+
 
     def _datafile_to_np(self, datafile, feature_id_map=None, text_file=False):
         """ returns an np array of a 1-per-line datafile
@@ -103,13 +104,17 @@ class Dataset(object):
             line = line.strip()
             if text_file:
                 for feature in line.split():
-                    out[i][feature_id_map[feature]] += 1
+                    print len(feature_id_map), len(set(feature_id_map.values())), feature in feature_id_map
+                    out[i][feature_id_map.get(feature, UNK_ID)] += 1
             elif feature_id_map is not None:
                 out[i][feature_id_map[line]] += 1
             else:
                 out[i][0] = float(line)
         return out
 
+
+    def input_varname(self):
+        return self.config.data_spec[0]['name']
 
     def get_variable(self, varname):
         return next((v for v in self.config.data_spec if v['name'] == varname))
@@ -124,15 +129,13 @@ class Dataset(object):
     def num_examples(self):
         """ number of batches in current split
         """
-        input_variable_name = self.config.data_spec[0]['name']        
-        examples = sum(1 for _ in open(self.data_files[self.split][input_variable_name]))
+        examples = sum(1 for _ in open(self.data_files[self.split][self.input_varname()]))
         return examples
 
     def get_tokenized_input(self):
-        input_text_name = self.config.data_spec[0]['name']
         return [
             line.strip().split() \
-            for line in open(self.data_files[self.split][input_text_name])
+            for line in open(self.data_files[self.split][self.input_varname()])
         ]
 
 
@@ -169,9 +172,8 @@ class Dataset(object):
 
         # start with the input text features
         # TODO -- speed this up!!!
-        input_variable_name = self.config.data_spec[0]['name']
-        examples = sum(1 for _ in open(data_files[input_variable_name]))
-        for input_ex in tqdm(open(data_files[input_variable_name]), total=examples):
+        examples = sum(1 for _ in open(data_files[self.input_varname()]))
+        for input_ex in tqdm(open(data_files[self.input_varname()]), total=examples):
             input_words = set(input_ex.split())
             for feature in self.features:
                 data[feature].append(1 if feature in input_words else 0)

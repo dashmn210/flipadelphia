@@ -6,6 +6,7 @@ from rpy2.robjects import r, pandas2ri
 import rpy2.robjects
 
 import sklearn
+import numpy as np
 
 class RegularizedRegression(regression_base.Regression):
 
@@ -38,14 +39,10 @@ class RegularizedRegression(regression_base.Regression):
         return y, X.as_matrix(), features
 
 
+    def _fit_regression(self, dataset, target):
+        X, y, features = self._get_np_xy(dataset, target['name'])
 
-    def _fit_regression(self, dataset, target, ignored_vars):
-        r_df_name = 'df_' + target['name']
-        r_model_name = 'model_' + target['name']
-
-        print 'REGRESSION, getting numpy data for ', target['name']
-        y, X, feature_names = self._data_to_numpy(dataset, target, ignored_vars)
-
+        print 'REGRESSION: fitting target %s' % target['name']
         if self.regularizor:
             if self.regularizor == 'l1':
                 model_fitter = sklearn.linear_model.Lasso(alpha=self.lmbda)
@@ -53,43 +50,47 @@ class RegularizedRegression(regression_base.Regression):
                 model_fitter = sklearn.linear_model.Ridge(alpha=self.lmbda)
         else:
             model_fitter = sklearn.linear_model.LinearRegression()
-
-        print 'REGRESSION: fitting target %s'
         model = model_fitter.fit(X, y)
 
+        return regression_base.ModelResult(
+            model=model,
+            weights=self._sklearn_weights(model, features),
+            response_type='continuous')
+
+
+    def _fit_classifier(self, dataset, target, level=None):
+        X, y, features = self._get_np_xy(dataset, target['name'], level)
+
+        print 'REGRESSION: fitting target %s, level %s' % (target['name'], level)
+        model_fitter = sklearn.linear_model.LogisticRegression(
+            penalty=(self.regularizor or 'l2'),
+            C=(1.0/self.lmbda) if self.regularizor > 0 else 99999999)
+        model = model_fitter.fit(X, list(y))
+
+        return regression_base.ModelResult(
+            model=model,
+            weights=self._sklearn_weights(model, features),
+            response_type='categorical')
+
+
+    def _get_np_xy(self, dataset, target_name, level=None):
+        split = dataset.split
+        X = dataset.np_data[split][dataset.input_varname()]
+        y = dataset.np_data[split][target_name]
+        if level is not None:
+            target_col = dataset.class_to_id_map[target_name][level]
+            y = y[:,target_col]
+        y = np.squeeze(y) # stored as column even if just floats
+        return X, y, dataset.ordered_features
+
+
+
+    def _sklearn_weights(self, model, feature_names):
         weights = {}
         for w, f in zip(model.coef_, feature_names):
             weights[f] = w
         weights['intercept'] = model.intercept_
-
-        return regression_base.ModelResult(
-            model=model,
-            weights=weights,
-            response_type='continuous')
-
-
-    def _fit_classifier(self, dataset, target, ignored_vars, level=''):
-        r_df_name = 'df_%s_%s' % (target['name'], level)
-        r_model_name = 'model_%s_%s' % (target['name'], level)
-
-        print 'REGRESSION, getting numpy data for ', target['name'], ' level ', level
-        y, X, feature_names = self._data_to_numpy(dataset, target, ignored_vars, level)
-
-        model_fitter = sklearn.linear_model.LogisticRegression(
-            penalty=(self.regularizor or 'l2'),
-            C=(1.0/self.lmbda) if self.regularizor > 0 else 99999999)
-        print 'REGRESSION: fitting target %s, level %s' % (target['name'], level)
-        model = model_fitter.fit(X, list(y))
-        weights = {}
-        for w, f in zip(model.coef_[0], feature_names):
-            weights[f] = w
-        weights['intercept'] = model.intercept_
-
-        return regression_base.ModelResult(
-            model=model,
-            weights=weights,
-            response_type='categorical')
-
+        return weights
 
 
     def train(self, dataset, model_dir):
@@ -97,10 +98,6 @@ class RegularizedRegression(regression_base.Regression):
             saves model-specific metrics (loss, etc) into self.report
         """
         for i, target in enumerate(self.targets):
-            ignored = self.targets[:i] + self.targets[i+1:]
-            # ignore the confounds as well as off-target targets
-            ignored += self.confounds
-
             if target['type']== 'continuous':
                 fitting_function = self._fit_regression
             else:
@@ -109,8 +106,7 @@ class RegularizedRegression(regression_base.Regression):
 
             self.models[target['name']] = fitting_function(
                 dataset=dataset,
-                target=target,
-                ignored_vars=ignored)
+                target=target)
 
 
 
