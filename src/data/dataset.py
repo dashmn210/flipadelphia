@@ -6,6 +6,11 @@ from tensorflow.python.ops import lookup_ops
 import tensorflow as tf
 import time
 from tqdm import tqdm
+import sys
+sys.path.append('..')
+import src.msc.utils as utils
+import numpy as np
+
 
 # assumes unk is at top of vocab file but we are enforcing that in _check_vocab()
 UNK_ID = 0
@@ -27,7 +32,7 @@ class Dataset(object):
 
         # this is {train/val/test: {variable name: filepath with just that variable on each line}  }
         print 'DATASET: making splits...'
-        self.data_files = self._cut_data()
+        self.data_files, self.split_sizes = self._cut_data()
 
         # vocab = filepath to vocab file
         if self.config.vocab is None:
@@ -40,8 +45,10 @@ class Dataset(object):
         else:
             self.vocab = self.config.vocab
 
-        self.features = sorted([v.strip() for v in open(self.vocab)])
         self.vocab_size = self._check_vocab(self.vocab)
+        self.features = defaultdict(lambda: UNK_ID)
+        for i, v in enumerate(open(self.vocab)):
+            self.features[v.strip()] = i
 
         # class_to_id_map: {variable name: {'class': index}  }  for each categorical variable
         # (for tensorflow, and so that all the models can talk about 
@@ -58,6 +65,54 @@ class Dataset(object):
 
         # pandas df of the current split, lazily computed
         self.featurized_data_df = None
+
+        print 'DATASET: parsing data into np arrays...'
+        self.np_data = defaultdict(dict)
+        for split, variables in self.data_files.items():
+            for varname, filepath in variables.items():
+                var = self.get_variable(varname)
+                print split, varname, filepath
+                if var['type'] == 'continuous':
+                    self.np_data[split][varname] = self._datafile_to_np(
+                        datafile=filepath)
+                else:
+                    if varname == input_text_name:
+                        self.np_data[split][varname] = self._datafile_to_np(
+                            datafile=filepath,
+                            feature_id_map=self.features,
+                            text_file=True)
+                    else:
+                        self.np_data[split][varname] = self._datafile_to_np(
+                            datafile=filepath,
+                            feature_id_map=self.class_to_id_map[varname])
+
+    def _datafile_to_np(self, datafile, feature_id_map=None, text_file=False):
+        """ returns an np array of a 1-per-line datafile
+            if feature_id_map is provided, the variable is assumed
+                to be categorical, and the returned array will
+                have one-hot rows whose ids correspond to the 
+                values of the provided feature_id_map
+
+            TODO -- binary? or word counts?
+        """
+        num_examples = utils.file_len(datafile)
+        num_features = len(feature_id_map) if feature_id_map else 1
+        out = np.zeros((num_examples, num_features))
+
+        for i, line in enumerate(open(datafile)):
+            line = line.strip()
+            if text_file:
+                for feature in line.split():
+                    out[i][feature_id_map[feature]] += 1
+            elif feature_id_map is not None:
+                out[i][feature_id_map[line]] += 1
+            else:
+                out[i][0] = float(line)
+        return out
+
+
+    def get_variable(self, varname):
+        return next((v for v in self.config.data_spec if v['name'] == varname))
 
 
     def set_active_split(self, split):
@@ -95,7 +150,7 @@ class Dataset(object):
         return len(self.class_to_id_map[name])
 
 
-    def to_pd_df(self, force=True):
+    def to_pd_df(self, force=False):
         """ convert a data split to a pandas df using bag-of-words text featurizatoin
         """
         # {variable_name: [values per example] }
@@ -113,7 +168,7 @@ class Dataset(object):
         data_files = self.data_files[self.split]
 
         # start with the input text features
-        # TODO -- speed this up>?
+        # TODO -- speed this up!!!
         input_variable_name = self.config.data_spec[0]['name']
         examples = sum(1 for _ in open(data_files[input_variable_name]))
         for input_ex in tqdm(open(data_files[input_variable_name]), total=examples):
@@ -132,7 +187,10 @@ class Dataset(object):
                 data[var_name].append(
                     str(x) if variable['type'] == 'categorical' else float(x))
 
+        print 'DATASET: generating pandas df...'
         self.featurized_data_df = pd.DataFrame.from_dict(data), self.split
+        print 'DATASET: pandas df done.'
+
         return self.featurized_data_df[0]
 
 
@@ -170,15 +228,19 @@ class Dataset(object):
                 to each file
         """
         c = self.config
+
+        split_sizes = {}
+
         data_prefix = os.path.join(c.data_dir, c.prefix)
         variable_paths = defaultdict(dict)
         for split_suffix in [c.train_suffix, c.dev_suffix, c.test_suffix]:
             file = data_prefix + split_suffix
             assert os.path.exists(file), 'Split %s doesnt exist' % file
 
+            split_sizes[split_suffix] = utils.file_len(file)
+
             for i, variable in enumerate(c.data_spec):
                 variable_path = data_prefix + '.' + variable['name'] + split_suffix
-
 
                 variable_paths[split_suffix][variable['name']] = variable_path
 
@@ -186,7 +248,7 @@ class Dataset(object):
                     os.system('cat %s | cut -f%d > %s' % (
                         file, i+1, variable_path))
 
-        return variable_paths
+        return variable_paths, split_sizes
 
 
     def cleanup(self):

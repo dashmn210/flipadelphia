@@ -52,7 +52,7 @@ working_dir: "test_run"
 
 # points to a 1-per-line file of tokens, or null (generate with top_n words)
 vocab: null 
-top_n: 100
+top_n: 1000
 
 # all of these will be run
 model_spec:
