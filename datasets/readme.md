@@ -3,7 +3,7 @@
 ## **COURSE DESCRIPTIONS**
 * **idea**: take course description, predict enrollement, control for professor, subject/dept, (school, reqs met)
 * **progress**:
-  * raw XML files stored at [https://drive.google.com/drive/folders/0B5DfdyRTPhIudjk5VXRMdDk3aEU](https://drive.google.com/drive/folders/0B5DfdyRTPhIudjk5VXRMdDk3aEU)
+  * formatted TSV files and raw XML files stored at [https://drive.google.com/drive/folders/0B5DfdyRTPhIudjk5VXRMdDk3aEU](https://drive.google.com/drive/folders/0B5DfdyRTPhIudjk5VXRMdDk3aEU)
   * seems like crawling is our most likely bet. 
     * [example crawling script](https://github.com/rpryzant/flipadelphia/blob/master/datasets/course_catalog/Abhijeets_crawling_script.py)
     * [example crawler 2](https://github.com/rpryzant/SubCrawl/blob/master/code_release/corpus_generation/subscene_crawler.py)
@@ -16,17 +16,17 @@
     * Data from past years can be obtained by passing an additional flag such as "&academicYear=20162017"
     * This script converts it into JSON: https://gist.github.com/tummykung/cfa37c3be373a3da073ffb9b2de03d7e
     * reid meeting notes
-      * throw away attributes
-      * days => categorical
-      * keep nulls
-      * rm termid (dup of term)
-      * course => course_number
-      * make a new course_level feature (100, 200 etc)
-      * make sure there aren't any within-example newlines
-      * replace reqs with number of things the course satisfies
-      * rename id ==> courseid, classid ==> sectionid
-      * rm enrollStatus
-      * change startTime/endTIme to some kind of int
+      ~* throw away attributes~
+      ~* days => categorical~
+      ~* keep nulls~
+      ~* rm termid (dup of term)~
+      ~* course => course_number~
+      ~* make a new course_level feature (100, 200 etc)~
+      ~* make sure there aren't any within-example newlines~
+      ~* replace reqs with number of things the course satisfies~
+      ~* rename id ==> courseid, classid ==> sectionid~
+      ~* rm enrollStatus~
+      ~* change startTime/endTIme to some kind of int~
       * look into mapping instructure to some kind of importance
 * **papers**: 
 
@@ -41,6 +41,7 @@
 ## **FOOD/RESTURAUNTS**
 * **idea**: predict hygene independent of cuisine
 * **progress**:
+  * formatted TSV file and raw json stored at [https://drive.google.com/drive/folders/0B5DfdyRTPhIuYXAwVDNTM2FVQWM] (https://drive.google.com/drive/folders/0B5DfdyRTPhIuYXAwVDNTM2FVQWM)
   * http://www3.cs.stonybrook.edu/~junkang/hygiene/ woot!!!!
   * 1) dataset, which we used to run classification including inspection information and review contents. Please note that this dataset is per inspection period as we described in the paper. 
   * 2) restaurant meta data, which lists the restaurants and their meta information.
@@ -51,7 +52,7 @@
 ## **MORE FOOD**
 * **idea** predict rating from review, control by resturaunt type, price, etc
 * **progress**
-  * data is at https://nlp.stanford.edu/robvoigt/nis/, but unopenable
+  * data is at https://nlp.stanford.edu/robvoigt/nis/
   * emailed rob about this
 
 
