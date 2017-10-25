@@ -5,7 +5,7 @@ from rpy2.robjects import r, pandas2ri
 import rpy2.robjects
 import numpy as np
 from collections import defaultdict
-
+import pandas as pd
 
 class MixedRegression(regression_base.Regression):
     def __init__(self, config, params):
@@ -50,6 +50,15 @@ class MixedRegression(regression_base.Regression):
         r_model_name = 'model_' + target['name']
 
         X, y, features = self._get_np_xy(dataset, target['name'])
+        data = np.append(np.reshape(y, (-1,1)), X, 1)
+        col_names = [target['name']] + features
+        df = pd.DataFrame(
+            data=data,
+            columns=col_names)
+        print df.dtypes
+        # TODO keep everything but catigorical confounds as float
+        # (categorical confounds should be )
+        quit()
         # TDO -- make pd df from this 
 
         # TODO - handle this feature gracefully
