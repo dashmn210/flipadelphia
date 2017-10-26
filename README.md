@@ -20,7 +20,8 @@ https://www.youtube.com/watch?v=HMq7rTo7C6M
 * post-training summaries
 * progress bars, restarting experiments, etc etc
 * impose max length on input seqs
-* figure out why mixed regression is taking 4ever to train
+   * done for neural only
+* figure out why mixed regression takes 4ever to train
 * no lstm baseline?
 * **baseline:** f(confounds) => Y, take residual, learn g(text) => residual
 
