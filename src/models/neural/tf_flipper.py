@@ -66,6 +66,7 @@ class Flipper:
                 layers=self.params['encoder_layers'],
                 units=self.params['encoder_units'],
                 dropout=self.dropout)
+
         with tf.variable_scope('attention'):
             self.attn_scores, attn_context = tf_utils.attention(
                 states=rnn_outputs,
@@ -84,7 +85,7 @@ class Flipper:
                 if variable['control']:
                     prediction_input = self.reverse(attn_context)
                 else:
-                    prediction_input = attn_context
+                    prediction_input = tf.identity(attn_context)
 
                 if variable['type'] == 'categorical':
                     preds, mean_loss = tf_utils.classifier(
