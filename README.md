@@ -22,5 +22,5 @@ https://www.youtube.com/watch?v=HMq7rTo7C6M
 * impose max length on input seqs
 * figure out why mixed regression is taking 4ever to train
 * no lstm baseline?
-* f(confounds) => Y, take residual, learn g(text) => residual
+* **baseline:** f(confounds) => Y, take residual, learn g(text) => residual
 
