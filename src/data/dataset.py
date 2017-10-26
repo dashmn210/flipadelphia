@@ -32,40 +32,45 @@ class Dataset(object):
 
         # this is {train/val/test: {variable name: filepath with just that variable on each line}  }
         print 'DATASET: making splits...'
-        self.data_files, self.split_sizes = self._cut_data()
+        self.data_files, self.split_sizes, self.whole_data_files = self._cut_data()
 
         # vocab = filepath to vocab file
         if self.config.vocab is None:
             start = time.time()
             print 'DATASET: generating vocab of %d tokens..' % self.config.top_n
-            train_text_file = self.data_files[config.train_suffix][self.input_varname()]
-            self.vocab = self._gen_vocab(train_text_file)
+            input_seqs = self.whole_data_files[self.input_varname()]
+            self.vocab = self._gen_vocab(input_seqs)
             print 'DATASET: vocab done, took %.2fs' % (time.time() - start)
         else:
             self.vocab = self.config.vocab
 
         self.vocab_size = self._check_vocab(self.vocab)
         self.features = {v.strip(): i for i, v in enumerate(open(self.vocab))}
-        self.feature_ids = {i: f for f, i in self.features.items()}
-        self.ordered_features = [self.feature_ids[i] for i in range(self.vocab_size)]
+        self.ids_to_features = {i: f for f, i in self.features.items()}
+        self.ordered_features = [self.ids_to_features[i] for i in range(self.vocab_size)]
         print 'NUM FEATURES ', len(self.features)
+
+        # TODO -- REFACTOR THIS
         # class_to_id_map: {variable name: {'class': index}  }  for each categorical variable
         # (for tensorflow, and so that all the models can talk about 
         #  categorical classes the same way
         self.class_to_id_map = defaultdict(dict)
         self.id_to_class_map = defaultdict(dict)
         for variable in self.config.data_spec[1:]:
-            if variable['type'] == "categorical":
-                var_filename = self.data_files[config.train_suffix][variable['name']]
-                for i, level in enumerate(set(open(var_filename).read().split('\n'))):  # unique rows
-                    level = level.strip()
-                    if level == '': continue
-                    self.class_to_id_map[variable['name']][level] = i
-                    self.id_to_class_map[i] = level
+            if variable['type'] != "categorical": 
+                continue
+            i = 0
+            var_filename = self.whole_data_files[variable['name']]
+            for level in set(open(var_filename).read().split('\n')):  # unique rows
+                level = level.strip()
+                if level == '' or level in self.class_to_id_map[variable['name']]: 
+                    continue
+                level = level.replace(' ', '_') # whitespaces not allowed in class names
+                self.class_to_id_map[variable['name']][level] = i
+                self.id_to_class_map[variable['name']][i] = level
+                i += 1
 
-        # pandas df of the current split, lazily computed
-        self.featurized_data_df = None
-
+        # build {split {variable: np array with that var's data (columns indexed by level if categorical) } }
         start = time.time()
         print 'DATASET: parsing data into np arrays...'
         self.np_data = defaultdict(dict)
@@ -104,11 +109,14 @@ class Dataset(object):
         for i, line in enumerate(open(datafile)):
             line = line.strip()
             if text_file:
+                # text
                 for feature in line.split():
                     out[i][feature_id_map.get(feature, UNK_ID)] += 1
             elif feature_id_map is not None:
-                out[i][feature_id_map[line]] += 1
+                # categorical
+                out[i][feature_id_map[line.replace(' ', '_')]] += 1
             else:
+                # continuous
                 out[i][0] = float(line)
         return out
 
@@ -140,9 +148,10 @@ class Dataset(object):
 
 
     def data_for_var(self, var):
+        """ TODO -- REFACTOR AWAY SINCE REDUNDENT WITH SELF.NP_DATA STUFF"""
         eval_fn = str if var['type'] == 'categorical' else float
         return [
-            eval_fn(x.strip()) \
+            eval_fn(x.strip().replace(' ', '_')) \
             for x in open(self.data_files[self.split][var['name']])
         ]
 
@@ -151,49 +160,6 @@ class Dataset(object):
         """ num levels for some categorical var
         """
         return len(self.class_to_id_map[name])
-
-
-    # def to_pd_df(self, force=False):
-    #     """ convert a data split to a pandas df using bag-of-words text featurizatoin
-    #     """
-    #     # {variable_name: [values per example] }
-    #     # note that we're breaking each text feature into its own "variable"
-
-    #     #if we're not forcing, we have something, and it's for the current split
-    #     if not force and self.featurized_data_df is not None \
-    #             and self.featurized_data_df[1] == self.split:
-    #         print 'DATASET: reusing cached df...'
-    #         return self.featurized_data_df
-
-    #     print 'DATASET: featurizing data...'
-    #     data = defaultdict(list)
-
-    #     data_files = self.data_files[self.split]
-
-    #     # start with the input text features
-    #     # TODO -- speed this up!!!
-    #     examples = sum(1 for _ in open(data_files[self.input_varname()]))
-    #     for input_ex in tqdm(open(data_files[self.input_varname()]), total=examples):
-    #         input_words = set(input_ex.split())
-    #         for feature in self.features:
-    #             data[feature].append(1 if feature in input_words else 0)
-
-    #     # now do all the other variables
-    #     for variable in self.config.data_spec[1:]:
-    #         if variable.get('skip', False):
-    #             continue
-
-    #         var_name = variable['name']
-    #         for x in open(data_files[var_name]):
-    #             x = x.strip()
-    #             data[var_name].append(
-    #                 str(x) if variable['type'] == 'categorical' else float(x))
-
-    #     print 'DATASET: generating pandas df...'
-    #     self.featurized_data_df = pd.DataFrame.from_dict(data), self.split
-    #     print 'DATASET: pandas df done.'
-
-    #     return self.featurized_data_df[0]
 
 
     def num_classes(self, varname):
@@ -235,6 +201,7 @@ class Dataset(object):
 
         data_prefix = os.path.join(c.data_dir, c.prefix)
         variable_paths = defaultdict(dict)
+        whole_data_paths = {}
         for split_suffix in [c.train_suffix, c.dev_suffix, c.test_suffix]:
             file = data_prefix + split_suffix
             assert os.path.exists(file), 'Split %s doesnt exist' % file
@@ -243,14 +210,20 @@ class Dataset(object):
 
             for i, variable in enumerate(c.data_spec):
                 variable_path = data_prefix + '.' + variable['name'] + split_suffix
+                variable_path_nosplit = data_prefix + '.' + variable['name']
 
                 variable_paths[split_suffix][variable['name']] = variable_path
+                whole_data_paths[variable['name']] = variable_path_nosplit
 
                 if not os.path.exists(variable_path):
                     os.system('cat %s | cut -f%d > %s' % (
                         file, i+1, variable_path))
+                if not os.path.exists(variable_path_nosplit):
+                    os.system('cat %s | cut -f%d > %s' % (
+                        data_prefix, i+1, variable_path_nosplit))
 
-        return variable_paths, split_sizes
+
+        return variable_paths, split_sizes, whole_data_paths
 
 
     def cleanup(self):

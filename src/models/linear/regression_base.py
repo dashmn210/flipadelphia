@@ -25,6 +25,7 @@ import pickle
 import os
 import numpy as np
 import time
+from functools import partial
 
 #r("options(warn=-1)").  # TODO -- figure out how to silence warnings like rank-deficient
 r("library('lme4')") 
@@ -51,20 +52,28 @@ class Regression(Model):
                         if not v.get('skip', False)]
         self.targets = [
             variable for variable in variables \
-            if variable['control'] == False]
-        self.confounds = [
-            variable for variable in variables \
-            if variable['control']]
+            if variable['control'] == False and not variable['skip']]
+        self.confound_names = [
+            variable['name'] for variable in variables \
+            if variable['control'] and not variable['skip']]
 
 
     def save(self, model_dir):
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
 
-        for response_name, rmodel in self.models.iteritems():
-            response_file = os.path.join(model_dir, response_name)
-            utils.pickle(rmodel, response_file)
-        print 'REGRESSION: saved into ', model_dir
+        models_file = os.path.join(model_dir, 'models')
+        utils.pickle(self.models, models_file)
+        print 'REGRESSION: models saved into ', models_file
+
+
+    def load(self, dataset, model_dir):
+        start = time.time()
+        self.models = utils.depickle(os.path.join(model_dir, 'models'))
+        target_names = map(lambda x: x['name'], self.targets)
+        assert set(target_names) == set(self.models.keys())
+        print 'REGRESSION: loaded model parameters from %s, time %.2fs' % (
+            model_dir, time.time() - start)
 
 
     def _summarize_model_weights(self):
@@ -88,7 +97,8 @@ class Regression(Model):
 
 
     def inference(self, dataset, model_dir):
-        df = dataset.to_pd_df()
+        X, _, features = self._get_np_xy(dataset)
+
         predictions = defaultdict(dict)
         for response_name, val in self.models.iteritems():
             if isinstance(val, dict):
@@ -97,12 +107,12 @@ class Regression(Model):
                 # (where ordering is determined by the dataset)
                 response_levels = dataset.num_levels(response_name)
                 level_predictions = \
-                    lambda level: self._predict(df, val[dataset.id_to_class_map[level]])
+                    lambda level: self._predict(X, features, val[dataset.id_to_class_map[response_name][level]])
                 arr = np.array(
                     [level_predictions(l) for l in range(response_levels)])
                 predictions[response_name] = np.transpose(arr, [1, 0])
             else:
-                predictions[response_name] = self._predict(df, val)
+                predictions[response_name] = self._predict(X, features, val)
 
         average_coefs = self._summarize_model_weights()
 
@@ -111,15 +121,15 @@ class Regression(Model):
             feature_importance=average_coefs)
 
 
-    def _predict(self, df, model):
+    def _predict(self, X, feature_names, model):
         def score(example):
             s = 0
-            for f, w in model.weights.items():
-                s += float(example.get(f, 0) * w or 0)
+            for xi, feature in zip(example, feature_names):
+                s += model.weights.get(feature, 0) * xi
             return s + model.weights['intercept']
 
         out = []
-        for _, row in df.iterrows():
+        for row in X:
             s = score(row)
             if model.response_type == 'continuous':
                 out.append(s)
@@ -127,19 +137,6 @@ class Regression(Model):
                 out.append(1.0 / math.exp(-s))
         return out
 
-
-    def load(self, dataset, model_dir):
-        start_time = time.time()
-        target_names = map(lambda x: x['name'], self.targets)
-        for filename in os.listdir(model_dir):
-            if filename not in target_names:
-                continue
-            self.models[filename] = \
-                utils.depickle(os.path.join(model_dir, filename))
-
-        assert set(target_names) == set(self.models.keys())
-        print 'REGRESSION: loaded model parameters from %s, time %.2fs' % (
-            model_dir, time.time() - start)
 
 
     def _fit_regression(self, dataset, target, ignored_vars):
@@ -160,20 +157,35 @@ class Regression(Model):
                 dataset, target, level=level)
         return models
 
+    def _get_np_xy(self, dataset, target_name=None, level=None):
+        split = dataset.split
+        X = dataset.np_data[split][dataset.input_varname()]
 
-    def _make_binary(self, df, col_name, selected_level):
-        """ returns a copy of df where a categorical column (col_name)
-             is set to 1 where examples are the selected_level and 0 otherwise
-            TODO -- think of a better name for this
+        if not target_name:
+            return X, None, dataset.ordered_features
+
+        y = dataset.np_data[split][target_name]
+        if level is not None:
+            target_col = dataset.class_to_id_map[target_name][level]
+            y = y[:,target_col]
+        y = np.squeeze(y) # stored as column even if just floats
+        return X, y, dataset.ordered_features
+
+
+    def train(self, dataset, model_dir):
+        """ trains the model using a src.data.dataset.Dataset
+            saves model-specific metrics (loss, etc) into self.report
         """
-        assert selected_level != 0, '%s shouldnt be 0' % selected_level
+        for i, target in enumerate(self.targets):
+            if target['type'] == 'continuous':
+                self.models[target['name']] = self._fit_regression(
+                    dataset=dataset, 
+                    target=target)
+            else:
+                self.models[target['name']] = self._fit_ovr(
+                    dataset=dataset, 
+                    target=target, 
+                    model_fitting_fn=self._fit_classifier)
 
-        out = df.copy(deep=True)
-        # set off-selected to 0
-        out.loc[df[col_name] != selected_level, col_name] = 0
-        # set selected to 1
-        out.loc[df[col_name] == selected_level, col_name] = 1
 
-        return out
 
-    

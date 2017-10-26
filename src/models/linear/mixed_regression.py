@@ -10,67 +10,66 @@ import pandas as pd
 class MixedRegression(regression_base.Regression):
     def __init__(self, config, params):
         regression_base.Regression.__init__(self, config, params)
-        self.confounds = []
-        self.extra_ignored = []
+        self.confound_names = []
         for var in self.config.data_spec[1:]:
-            if var['control']:
-                self.extra_ignored.append(var)
+            if var['control'] and not var['skip']:
                 if var['type'] == 'continuous':
                     print 'WARNING: mixed regression is skipping confound %s (continuous)' % (
                         var['name'])
                 else:
-                    self.confounds.append(var)
+                    self.confound_names.append(var['name'])
 
-    def _get_np_xy(self, dataset, target_name, level=None):
+
+    def _get_pd_df(self, dataset, target_name, level=None):
+        df = pd.DataFrame()
+
+        # start with your targets
         split = dataset.split
         y = dataset.np_data[split][target_name]
         if level is not None:
             target_col = dataset.class_to_id_map[target_name][level]
             y = y[:,target_col]
+            target_name += '.' + level
         y = np.squeeze(y) # stored as column even if just floats
+        df[target_name] = y
 
-        # now add confounds (NOT one-hot) to features
+        # now add in text features
         X = dataset.np_data[split][dataset.input_varname()]
         features = dataset.ordered_features
+        for occurances, feature in zip(X.T, features):
+            df[feature] = occurances
+
+        # now add in all the confounds (undoing 1-hot)
         idx_to_class = np.vectorize(lambda idx: dataset.id_to_class_map[idx])
-        for var in self.confounds:
+        for varname in self.confound_names:
             # undo one-hot stuff
-            one_hots = dataset.np_data[split][var['name']]
+            one_hots = dataset.np_data[split][varname]
             levels = np.argmax(one_hots, axis=1)
             new_col = idx_to_class(levels)
             new_col = np.reshape(new_col, (-1, 1))  # turn into a column
-            X = np.append(X, new_col, axis=1)
-            features.append(var['name'])
+            df[varname] = new_col
 
-        return X, y, features
+        return df
 
 
-    def _fit_mixed_regression(self, dataset, target, ignored_vars):
+
+    def _fit_regression(self, dataset, target):
         r_df_name = 'df_' + target['name']
         r_model_name = 'model_' + target['name']
 
-        X, y, features = self._get_np_xy(dataset, target['name'])
-        data = np.append(np.reshape(y, (-1,1)), X, 1)
-        col_names = [target['name']] + features
-        df = pd.DataFrame(
-            data=data,
-            columns=col_names)
-        print df.dtypes
-        # TODO keep everything but catigorical confounds as float
-        # (categorical confounds should be )
-        quit()
-        # TDO -- make pd df from this 
-
+        df = self._get_pd_df(dataset, target['name'])
         # TODO - handle this feature gracefully
         if '...' in set(df.columns):
             df.drop('...', axis=1, inplace=True)
+
         rpy2.robjects.globalenv[r_df_name] = pandas2ri.pandas2ri(df)
 
         cmd = "lmer(%s, data=%s, REML=FALSE)"
         formula = '%s ~ . %s %s' % (
             target['name'],
-            ''.join(' + (1|%s)' % confound['name'] for confound in self.confounds),
-            ''.join(' - %s' % var['name'] for var in ignored_vars + self.confounds))
+            ''.join(' + (1|%s)' % varname for varname in self.confound_names),
+            ''.join(' - %s' % varname for varname in self.confound_names))
+
         print "MIXED: fitting ", cmd % (formula, r_df_name)
         model = r(cmd % (formula, r_df_name))
         rpy2.robjects.globalenv[r_model_name] = model
@@ -83,24 +82,22 @@ class MixedRegression(regression_base.Regression):
             response_type='continuous')
 
 
-    def _fit_mixed_classifier(self, dataset, target, ignored_vars, level=''):
+    def _fit_classifier(self, dataset, target, level=None):
         r_df_name = 'df_%s_%s' % (target['name'], level)
         r_model_name = 'model_%s_%s' % (target['name'], level)
 
-        df = dataset.to_pd_df()
-        # otherwise the datset is assumed to be binary
-        if level is not '':
-            df = self._make_binary(df, target['name'], level)
+        df = self._get_pd_df(dataset, target['name'], level)
         # TODO - handle this feature gracefully
         if '...' in set(df.columns):
             df.drop('...', axis=1, inplace=True)
+
         rpy2.robjects.globalenv[r_df_name] = pandas2ri.pandas2ri(df)
 
         cmd = "glmer(%s, family=binomial(link='logit'), data=%s, REML=FALSE)"
         formula = '%s ~ . %s %s' % (
-            target['name'],
-            ''.join(' + (1|%s)' % confound['name'] for confound in self.confounds),
-            ''.join(' - %s' % var['name'] for var in ignored_vars + self.confounds))
+            '%s.%s' % (target['name'], level) if level else target['name'],
+            ''.join(' + (1|%s)' % varname for varname in self.confound_names),
+            ''.join(' - %s' % varname for varname in self.confound_names))
 
         print "MIXED: fitting ", cmd % (formula, r_df_name)
         model = r(cmd % (formula, r_df_name))
@@ -124,23 +121,6 @@ class MixedRegression(regression_base.Regression):
         return out
 
 
-    def train(self, dataset, model_dir):
-        """ trains the model using a src.data.dataset.Dataset
-            saves model-specific metrics (loss, etc) into self.report
-        """
-        for i, target in enumerate(self.targets):
-            ignored = self.targets[:i] + self.targets[i+1:]
-
-            if target['type']== 'continuous':
-                fitting_function = self._fit_mixed_regression
-            else:
-                fitting_function = partial(
-                    self._fit_ovr, model_fitting_fn=self._fit_mixed_classifier)
-
-            self.models[target['name']] = fitting_function(
-                dataset=dataset,
-                target=target,
-                ignored_vars=ignored + self.extra_ignored)
 
 
 

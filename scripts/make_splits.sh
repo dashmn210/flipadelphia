@@ -6,8 +6,8 @@ FILE=$1
 FILENAME=$(basename ${FILE})
 
 
-TEST=3000
-DEV=3000
+TEST=1000
+DEV=1000
 BOTH=$((DEV+TEST))
 
 
