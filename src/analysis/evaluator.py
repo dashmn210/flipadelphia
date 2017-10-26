@@ -104,6 +104,8 @@ def evaluate(config, dataset, predictions, model_dir):
     ]
 
     for var in config.data_spec[1:]:
+        if var['skip']: continue
+
         labels = dataset.data_for_var(var)
 
         if var['control']:

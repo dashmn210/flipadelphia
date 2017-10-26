@@ -8,3 +8,4 @@ pandas
 sklearn
 scipy
 tqdm
+eventlet

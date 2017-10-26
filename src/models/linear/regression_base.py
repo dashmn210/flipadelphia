@@ -138,25 +138,6 @@ class Regression(Model):
         return out
 
 
-
-    def _fit_regression(self, dataset, target, ignored_vars):
-        raise NotImplementedError
-
-    def _fit_classifier(self, dataset, target, ignored_vars, level=''):
-        raise NotImplementedError
-
-
-    def train(self, dataset, model_dir):
-        raise NotImplementedError
-
-
-    def _fit_ovr(self, dataset, target, model_fitting_fn):
-        models = {}
-        for level in dataset.class_to_id_map[target['name']].keys():
-            models[level] = model_fitting_fn(
-                dataset, target, level=level)
-        return models
-
     def _get_np_xy(self, dataset, target_name=None, level=None):
         split = dataset.split
         X = dataset.np_data[split][dataset.input_varname()]
@@ -170,6 +151,23 @@ class Regression(Model):
             y = y[:,target_col]
         y = np.squeeze(y) # stored as column even if just floats
         return X, y, dataset.ordered_features
+
+
+    def _fit_regression(self, dataset, target, ignored_vars):
+        raise NotImplementedError
+
+
+    def _fit_classifier(self, dataset, target, ignored_vars, level=''):
+        raise NotImplementedError
+
+
+
+    def _fit_ovr(self, dataset, target, model_fitting_fn):
+        models = {}
+        for level in dataset.class_to_id_map[target['name']].keys():
+            models[level] = model_fitting_fn(
+                dataset, target, level=level)
+        return models
 
 
     def train(self, dataset, model_dir):

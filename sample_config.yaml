@@ -28,7 +28,7 @@ data_spec:
   - name: "issue_in_question"
     type: "categorical"
     control: True
-    skip: False
+    skip: True
     weight: 1
 
   - name: "state_of_origin"
@@ -40,7 +40,7 @@ data_spec:
   - name: "company_response"
     type: "categorical"
     control: False
-    skip: False
+    skip: True
     weight: 1
 
   - name: "timely_response"
@@ -62,11 +62,11 @@ top_n: 1000
 # all of these will be run
 model_spec:
   - type: "neural"
-    skip: True
+    skip: False
     params:
       batch_size: 128
       max_seq_len: 50
-      num_train_steps: 1000
+      num_train_steps: 10
       learning_rate: 0.001
       embedding_size: 10
       encoder_layers: 2
@@ -81,18 +81,18 @@ model_spec:
       dropout: 0.4
 
   - type: 'causal-regression'
-    skip: True
+    skip: False
     params:
       batch_size: 128
-      num_train_steps: 1000
+      num_train_steps: 10
       learning_rate: 0.01
 
   - type: "causal-neural"
-    skip: True
+    skip: False
     params:
       batch_size: 128
       max_seq_len: 50
-      num_train_steps: 1000
+      num_train_steps: 10
       learning_rate: 0.001
       embedding_size: 10
       encoder_layers: 2
@@ -108,7 +108,7 @@ model_spec:
 
 
   - type: "mixed-regression"
-    skip: True
+    skip: False
     params:
 
   - type: "fixed-regression"
