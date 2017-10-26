@@ -42,7 +42,7 @@ class MixedRegression(regression_base.Regression):
             print "MIXED: traceback:"
             print traceback.format_exc()
             model = None
-            params = defaultdict(lambda: 0.0)
+            params = defaultdict(float)
         finally:
             timeout.cancel()
 

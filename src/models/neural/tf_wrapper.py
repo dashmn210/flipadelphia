@@ -33,6 +33,7 @@ class TFModelWrapper(Model):
             self.sess,
             os.path.join(model_dir, 'model.ckpt'),
             global_step=self.global_step)
+        print 'TF WRAPPER: saved into ', model_dir
 
 
     def load(self, dataset, model_dir):

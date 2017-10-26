@@ -258,8 +258,9 @@ class Dataset(object):
                 txt, tf.cast(vocab_table.lookup(txt), tf.int32)))
 
             # now cut off
-            maxlen = params['max_seq_len']
-            dataset = dataset.map(lambda txt, ids: (txt[:maxlen], ids[:maxlen]))
+            if params.get('max_seq_len', False):
+                maxlen = params['max_seq_len']
+                dataset = dataset.map(lambda txt, ids: (txt[:maxlen], ids[:maxlen]))
 
             # add lengths
             dataset = dataset.map(lambda txt, ids: (txt, ids, tf.size(ids)))
@@ -274,11 +275,16 @@ class Dataset(object):
 
         def categorical_dataset(file, variable_name):
             dataset = tf.contrib.data.TextLineDataset(file)
+
             classes_ids = self.class_to_id_map[variable_name]
+            # include spaces because they're in raw mapping, but not
+            #    self.class_to_id_map
+            dict_with_spaces = {level.replace("_",' '): idx for level, idx in classes_ids.items()}
+            dict_with_spaces.update(classes_ids)
             class_lookup_table = tf.contrib.lookup.HashTable(
                 tf.contrib.lookup.KeyValueTensorInitializer(
-                    keys=classes_ids.keys(),
-                    values=classes_ids.values(),
+                    keys=dict_with_spaces.keys(),
+                    values=dict_with_spaces.values(),
                     key_dtype=tf.string,
                     value_dtype=tf.int32), -1)
             dataset = dataset.map(lambda x: class_lookup_table.lookup(x))
