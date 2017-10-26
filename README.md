@@ -20,3 +20,4 @@ https://www.youtube.com/watch?v=HMq7rTo7C6M
 * post-training summaries
 * progress bars, restarting experiments, etc etc
 * impose max length on input seqs
+* figure out why mixed regression is taking 4ever to train
