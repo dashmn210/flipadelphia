@@ -12,9 +12,9 @@ import numpy as np
 
 class FixedRegression(plain_regression.RegularizedRegression):
 
-    def _get_np_xy(self, dataset, target_name=None, level=None):
+    def _get_np_xy(self, dataset, target_name=None, level=None, features=None):
         X, y, features = plain_regression.RegularizedRegression._get_np_xy(
-            self, dataset, target_name, level)
+            self, dataset, target_name, level, features)
 
         # add 1-hot confounds to features
         for varname in self.confound_names:

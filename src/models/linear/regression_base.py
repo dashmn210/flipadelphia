@@ -134,43 +134,51 @@ class Regression(Model):
             if model.response_type == 'continuous':
                 out.append(s)
             else:
-                out.append(1.0 / math.exp(-s))
+                try:
+                    out.append(1.0 / (1 + math.exp(-s)))
+                except OverflowError:
+                    out.append(1.0 if s > 0 else 0)
         return out
 
 
-    def _get_np_xy(self, dataset, target_name=None, level=None):
+    def _get_np_xy(self, dataset, target_name=None, level=None, features=None):
         split = dataset.split
         X = dataset.np_data[split][dataset.input_varname()]
+        selected_features = dataset.ordered_features
+
+        if features is not None:
+            X = X[:, [i for i, f in enumerate(selected_features) if f in features]]
+            selected_features = features
 
         if not target_name:
-            return X, None, dataset.ordered_features
+            return X, None, selected_features
 
         y = dataset.np_data[split][target_name]
         if level is not None:
             target_col = dataset.class_to_id_map[target_name][level]
             y = y[:,target_col]
         y = np.squeeze(y) # stored as column even if just floats
-        return X, y, dataset.ordered_features
+        return X, y, selected_features
 
 
-    def _fit_regression(self, dataset, target, ignored_vars):
+    def _fit_regression(self, dataset, target, features=None):
         raise NotImplementedError
 
 
-    def _fit_classifier(self, dataset, target, ignored_vars, level=''):
+    def _fit_classifier(self, dataset, target, level='', features=None):
         raise NotImplementedError
 
 
 
-    def _fit_ovr(self, dataset, target, model_fitting_fn):
+    def _fit_ovr(self, dataset, target, features=None):
         models = {}
         for level in dataset.class_to_id_map[target['name']].keys():
-            models[level] = model_fitting_fn(
-                dataset, target, level=level)
+            models[level] = self._fit_classifier(
+                dataset, target, level=level, features=features)
         return models
 
 
-    def train(self, dataset, model_dir):
+    def train(self, dataset, model_dir, features=None):
         """ trains the model using a src.data.dataset.Dataset
             saves model-specific metrics (loss, etc) into self.report
         """
@@ -178,12 +186,13 @@ class Regression(Model):
             if target['type'] == 'continuous':
                 self.models[target['name']] = self._fit_regression(
                     dataset=dataset, 
-                    target=target)
+                    target=target,
+                    features=features)
             else:
                 self.models[target['name']] = self._fit_ovr(
                     dataset=dataset, 
-                    target=target, 
-                    model_fitting_fn=self._fit_classifier)
+                    target=target,
+                    features=features)
 
 
 

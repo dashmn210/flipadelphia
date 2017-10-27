@@ -8,17 +8,21 @@ import rpy2.robjects
 import sklearn
 import numpy as np
 
+
+
 class RegularizedRegression(regression_base.Regression):
 
     def __init__(self, config, params):
         regression_base.Regression.__init__(self, config, params)
-        self.alpha = 1 if self.params['regularizor'] == 'l1' else 0
-        self.lmbda = self.params['lambda']
+        self.lmbda = self.params.get('lambda', 0)
         self.regularizor = self.params['regularizor'] if self.lmbda > 0 else None
 
 
-    def _fit_regression(self, dataset, target):
-        X, y, features = self._get_np_xy(dataset, target['name'])
+    def _fit_regression(self, dataset, target, features=None):
+        X, y, features = self._get_np_xy(
+            dataset=dataset,
+            target_name=target['name'],
+            features=features)
 
         print 'REGRESSION: fitting target %s' % target['name']
         if self.regularizor:
@@ -36,8 +40,12 @@ class RegularizedRegression(regression_base.Regression):
             response_type='continuous')
 
 
-    def _fit_classifier(self, dataset, target, level=None):
-        X, y, features = self._get_np_xy(dataset, target['name'], level)
+    def _fit_classifier(self, dataset, target, level=None, features=None):
+        X, y, features = self._get_np_xy(
+            dataset=dataset, 
+            target_name=target['name'], 
+            level=level, 
+            features=features)
 
         print 'REGRESSION: fitting target %s, level %s' % (target['name'], level)
         model_fitter = sklearn.linear_model.LogisticRegression(

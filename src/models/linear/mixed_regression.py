@@ -82,7 +82,7 @@ class MixedRegression(regression_base.Regression):
         return df
 
 
-    def _fit_regression(self, dataset, target):
+    def _fit_regression(self, dataset, target, **kwargs):
         r_df_name = 'df_' + target['name']
         r_model_name = 'model_' + target['name']
 
@@ -108,7 +108,7 @@ class MixedRegression(regression_base.Regression):
             response_type='continuous')
 
 
-    def _fit_classifier(self, dataset, target, level=None):
+    def _fit_classifier(self, dataset, target, level=None, **kwargs):
         r_df_name = 'df_%s_%s' % (target['name'], level)
         r_model_name = 'model_%s_%s' % (target['name'], level)
 

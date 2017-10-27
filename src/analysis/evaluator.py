@@ -2,6 +2,8 @@ import numpy as np
 import sys
 sys.path.append('../..')
 import src.msc.utils as utils
+from src.models.linear.plain_regression import RegularizedRegression
+
 from correlations import cramers_v, pointwise_biserial
 import sklearn.metrics
 import os
@@ -80,9 +82,7 @@ def eval_performance(var, labels, preds, dataset):
 
 
 def evaluate(config, dataset, predictions, model_dir):
-    """ TODO -- some kind of plotting?
-
-        config: config object
+    """ config: config object
         dataset: data.dataset object
         predictions: models.abstract_model.Prediction
         model_dir: output dir
@@ -90,11 +90,11 @@ def evaluate(config, dataset, predictions, model_dir):
         produces evaluation metrics
             - feature correlations with confounds
             - target variable prediction qualtiy
-        
     """
     performance = {}
     correlations = {}
 
+    # select features
     importance_threshold = utils.percentile(
         predictions.feature_importance.values(),
         config.feature_importance_threshold)
@@ -102,7 +102,15 @@ def evaluate(config, dataset, predictions, model_dir):
         f for f in dataset.features \
         if predictions.feature_importance.get(f, 0) > importance_threshold
     ]
+    # use these selected features to train & test a new model
+    m = RegularizedRegression(config, {})
+    dataset.set_active_split(config.train_suffix)
+    m.train(dataset, '', features=features)
+    dataset.set_active_split(config.test_suffix)
+    feature_predictions = m.inference(dataset, '')
 
+    # now evaluate the selected features, both in terms of
+    #  correlation with confounds and ability to predict response
     for var in config.data_spec[1:]:
         if var['skip']: continue
 
@@ -117,8 +125,8 @@ def evaluate(config, dataset, predictions, model_dir):
                 dataset=dataset)
 
         else:
-            assert var['name'] in predictions.scores
-            preds = predictions.scores[var['name']]
+            assert var['name'] in feature_predictions.scores
+            preds = feature_predictions.scores[var['name']]
             assert len(preds) == len(labels)
 
             performance[var['name']] = eval_performance(

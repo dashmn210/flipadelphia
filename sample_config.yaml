@@ -69,7 +69,7 @@ model_spec:
       num_train_steps: 10
       learning_rate: 0.001
       embedding_size: 10
-      encoder_layers: 0  # set to 0 for no RNN
+      encoder_layers: 1  # set to 0 for no RNN
       encoder_units: 10
       attn_layers: 2
       attn_units: 10
@@ -81,7 +81,7 @@ model_spec:
       dropout: 0.4
 
   - type: 'causal-regression'
-    skip: True
+    skip: False
     params:
       batch_size: 128
       max_seq_len: 50
@@ -89,7 +89,7 @@ model_spec:
       learning_rate: 0.01
 
   - type: "causal-neural"
-    skip: True
+    skip: False
     params:
       batch_size: 128
       max_seq_len: 50
@@ -113,13 +113,13 @@ model_spec:
     params:
 
   - type: "fixed-regression"
-    skip: True
+    skip: False
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off
 
   - type: "regression"
-    skip: True
+    skip: False
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off
