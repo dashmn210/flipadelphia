@@ -62,7 +62,8 @@ top_n: 1000
 # all of these will be run
 model_spec:
   - type: "neural"
-    skip: False
+    name: "flip_1"
+    skip: True
     params:
       batch_size: 128
       max_seq_len: 50
@@ -81,7 +82,8 @@ model_spec:
       dropout: 0.4
 
   - type: 'causal-regression'
-    skip: False
+    name: 'causal_1'
+    skip: True
     params:
       batch_size: 128
       max_seq_len: 50
@@ -89,7 +91,8 @@ model_spec:
       learning_rate: 0.01
 
   - type: "causal-neural"
-    skip: False
+    name: 'causal_neural_1'
+    skip: True
     params:
       batch_size: 128
       max_seq_len: 50
@@ -109,16 +112,26 @@ model_spec:
 
 
   - type: "mixed-regression"
+    name: 'mixed_1'
     skip: True
     params:
 
+  - type: "double-regression"
+    name: 'double_1'
+    skip: False
+    params:
+      regularizor: 'l2'   # [l1, l2]
+      lambda: 0.0         # 0 turns regularization off
+
   - type: "fixed-regression"
+    name: 'fixed_1'
     skip: False
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off
 
   - type: "regression"
+    name: 'regression_1'
     skip: False
     params:
       regularizor: 'l2'   # [l1, l2]

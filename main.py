@@ -84,9 +84,9 @@ if __name__ == '__main__':
             if model_description.get('skip', False):
                 continue
 
-            print 'MAIN: training ', model_description['type']
+            print 'MAIN: training ', model_description['name']
             start_time = time.time()
-            model_dir = os.path.join(config.working_dir, model_description['type'])
+            model_dir = os.path.join(config.working_dir, model_description['name'])
             if not os.path.exists(model_dir):
                 os.makedirs(model_dir)
 
@@ -97,7 +97,7 @@ if __name__ == '__main__':
             model.train(d, model_dir)
             model.save(model_dir)
             print 'MAIN: training %s done, time %.2fs' % (
-                model_description['type'], time.time() - start_time)
+                model_description['name'], time.time() - start_time)
 
     # if test, switch thh datset to test, 
     #  and run inference + evaluation for each model
@@ -108,14 +108,14 @@ if __name__ == '__main__':
         for model_description in config.model_spec:
             if model_description.get('skip', False):
                 continue
-            print 'MAIN: inference with ', model_description['type']
+            print 'MAIN: inference with ', model_description['name']
             start_time = time.time()
 
             model = constants.MODEL_CLASSES[model_description['type']](
                 config=config, 
                 params=model_description['params'])
 
-            model_dir = os.path.join(config.working_dir, model_description['type'])
+            model_dir = os.path.join(config.working_dir, model_description['name'])
             model.load(d, model_dir)
 
             predictions = model.inference(d, model_dir)
@@ -128,7 +128,7 @@ if __name__ == '__main__':
             evaluator.write_summary(evaluation, model_dir)
 
             print 'MAIN: evaluation %s done, time %.2fs' % (
-                model_description['type'], time.time() - start_time)
+                model_description['name'], time.time() - start_time)
 
     # TODO maybe some kind of cleanup of temporrary files? like
     # datasets, etc etc

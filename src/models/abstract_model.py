@@ -53,11 +53,3 @@ class Model(object):
         """
         raise NotImplementedError
 
-
-    def report(self):
-        """ releases self.report, a summary of the last job this model
-                executed whether that be training, testing, etc
-
-            currently ignored
-        """
-        raise NotImplementedError
