@@ -102,8 +102,10 @@ def evaluate(config, dataset, predictions, model_dir):
         f for f in dataset.features \
         if predictions.feature_importance.get(f, 0) > importance_threshold
     ]
+
     # use these selected features to train & test a new model
-    m = RegularizedRegression(config, {})
+    print 'EVALUATOR: running regression with selected features'
+    m = RegularizedRegression(config, {}, intercept=False)
     dataset.set_active_split(config.train_suffix)
     m.train(dataset, '', features=features)
     dataset.set_active_split(config.test_suffix)

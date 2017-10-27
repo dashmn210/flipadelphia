@@ -42,11 +42,12 @@ class Regression(Model):
     """ base class for all regression-type models
 
     """
-    def __init__(self, config, params):
+    def __init__(self, config, params, intercept=True):
         Model.__init__(self, config, params)
         # target variable name (exploded if categorical)
         #     maps to ===>  R object with this model  
         self.models = {}
+        self.use_intercept = intercept
 
         variables = [v for v in self.config.data_spec[1:] \
                         if not v.get('skip', False)]
@@ -126,7 +127,8 @@ class Regression(Model):
             s = 0
             for xi, feature in zip(example, feature_names):
                 s += model.weights.get(feature, 0) * xi
-            return s + model.weights['intercept']
+            s += (model.weights['intercept'] if self.use_intercept else 0)
+            return s
 
         out = []
         for row in X:

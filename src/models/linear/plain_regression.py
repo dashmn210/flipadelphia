@@ -12,8 +12,8 @@ import numpy as np
 
 class RegularizedRegression(regression_base.Regression):
 
-    def __init__(self, config, params):
-        regression_base.Regression.__init__(self, config, params)
+    def __init__(self, config, params, intercept=True):
+        regression_base.Regression.__init__(self, config, params, intercept)
         self.lmbda = self.params.get('lambda', 0)
         self.regularizor = self.params['regularizor'] if self.lmbda > 0 else None
 
@@ -63,7 +63,8 @@ class RegularizedRegression(regression_base.Regression):
         weights = {}
         for w, f in zip(np.squeeze(model.coef_), feature_names):
             weights[f] = w
-        weights['intercept'] = model.intercept_
+        if self.use_intercept:
+            weights['intercept'] = model.intercept_
         return weights
 
 

@@ -9,8 +9,8 @@ import pandas as pd
 import traceback
 
 class MixedRegression(regression_base.Regression):
-    def __init__(self, config, params):
-        regression_base.Regression.__init__(self, config, params)
+    def __init__(self, config, params, intercept=False):
+        regression_base.Regression.__init__(self, config, params, intercept)
         self.confound_names = []
         for var in self.config.data_spec[1:]:
             if var['control'] and not var['skip']:
@@ -26,6 +26,8 @@ class MixedRegression(regression_base.Regression):
         for i, x in enumerate(s[0].names):
             if 'intercept' in x.lower():
                 x = 'intercept'
+            if x == 'intercept' and not self.use_intercept:
+                continue
             out[x] = np.mean(s[0][i])
         return out
 
