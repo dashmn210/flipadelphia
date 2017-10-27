@@ -29,8 +29,8 @@ from functools import partial
 
 #r("options(warn=-1)").  # TODO -- figure out how to silence warnings like rank-deficient
 r("library('lme4')") 
-r("library('MuMIn')")
-r("library('glmnet')")
+#r("library('MuMIn')")
+#r("library('glmnet')")
 pandas2ri.activate()
 
 
