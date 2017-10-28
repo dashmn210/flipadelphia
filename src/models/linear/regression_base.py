@@ -144,6 +144,7 @@ class Regression(Model):
 
 
     def _get_np_xy(self, dataset, target_name=None, level=None, features=None):
+        print 'REGRESSION BASE: getting x, y'
         split = dataset.split
         X = dataset.np_data[split][dataset.input_varname()]
         selected_features = dataset.ordered_features

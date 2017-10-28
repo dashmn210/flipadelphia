@@ -7,7 +7,7 @@ import rpy2.robjects
 
 import sklearn
 import numpy as np
-
+from tqdm import tqdm
 
 
 class RegularizedRegression(regression_base.Regression):
@@ -16,6 +16,27 @@ class RegularizedRegression(regression_base.Regression):
         regression_base.Regression.__init__(self, config, params, intercept)
         self.lmbda = self.params.get('lambda', 0)
         self.regularizor = self.params['regularizor'] if self.lmbda > 0 else None
+        self.batch_size = self.params['batch_size']
+
+
+    def _iter_minibatches(self, X, y):
+        assert len(X) == len(y)
+
+        i = 0
+        while True:
+            yield X[i:i+self.batch_size,:], y[i:i+self.batch_size]
+            i += self.batch_size
+            if i > len(X):
+                i = 0
+
+
+    def _sklearn_weights(self, model, feature_names):
+        weights = {}
+        for w, f in zip(np.squeeze(model.coef_), feature_names):
+            weights[f] = w
+        if self.use_intercept:
+            weights['intercept'] = model.intercept_
+        return weights
 
 
     def _fit_regression(self, dataset, target, features=None):
@@ -25,14 +46,15 @@ class RegularizedRegression(regression_base.Regression):
             features=features)
 
         print 'REGRESSION: fitting target %s' % target['name']
-        if self.regularizor:
-            if self.regularizor == 'l1':
-                model_fitter = sklearn.linear_model.Lasso(alpha=self.lmbda)
-            else:
-                model_fitter = sklearn.linear_model.Ridge(alpha=self.lmbda)
-        else:
-            model_fitter = sklearn.linear_model.LinearRegression()
-        model = model_fitter.fit(X, y)
+        model = sklearn.linear_model.SGDRegressor(
+            penalty=self.regularizor or 'none',
+            alpha=self.lmbda,
+            learning_rate='constant',
+            eta0=1.0)
+
+        for _ in tqdm(range(self.params['num_train_steps'])):
+            Xi, yi = next(self._iter_minibatches(X, y))
+            model.partial_fit(Xi, yi)
 
         return regression_base.ModelResult(
             model=model,
@@ -47,25 +69,20 @@ class RegularizedRegression(regression_base.Regression):
             level=level, 
             features=features)
 
-        print 'REGRESSION: fitting target %s, level %s' % (target['name'], level)
-        model_fitter = sklearn.linear_model.LogisticRegression(
-            penalty=(self.regularizor or 'l2'),
-            C=(1.0/self.lmbda) if self.regularizor > 0 else 99999999)
-        model = model_fitter.fit(X, list(y))
+        print 'CLASSIFICATION: fitting target %s, level %s' % (target['name'], level)
+        model = sklearn.linear_model.SGDClassifier(
+            loss='log',
+            penalty=(self.regularizor or 'none'),
+            alpha=self.lmbda,
+            learning_rate='constant',
+            eta0=1.0)
+
+        for _ in tqdm(range(self.params['num_train_steps'])):
+            Xi, yi = next(self._iter_minibatches(X, y))
+            model.partial_fit(Xi, yi, classes=np.unique(y))
 
         return regression_base.ModelResult(
             model=model,
             weights=self._sklearn_weights(model, features),
             response_type='categorical')
-
-
-    def _sklearn_weights(self, model, feature_names):
-        weights = {}
-        for w, f in zip(np.squeeze(model.coef_), feature_names):
-            weights[f] = w
-        if self.use_intercept:
-            weights['intercept'] = model.intercept_
-        return weights
-
-
 
