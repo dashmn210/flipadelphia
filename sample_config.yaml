@@ -118,10 +118,13 @@ model_spec:
 
   - type: "double-regression"
     name: 'double_1'
-    skip: False
+    skip: True
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off
+      batch_size: 128
+      num_train_steps: 10
+      
 
   - type: "fixed-regression"
     name: 'fixed_1'
@@ -129,6 +132,8 @@ model_spec:
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off
+      batch_size: 128
+      num_train_steps: 10
 
   - type: "regression"
     name: 'regression_1'
@@ -136,6 +141,8 @@ model_spec:
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off
+      batch_size: 128
+      num_train_steps: 10
 
 
 
