@@ -10,7 +10,7 @@ import sys
 sys.path.append('..')
 import src.msc.utils as utils
 import numpy as np
-
+from scipy import sparse
 
 # assumes unk is at top of vocab file but we are enforcing that in _check_vocab()
 UNK_ID = 0
@@ -118,7 +118,7 @@ class Dataset(object):
             else:
                 # continuous
                 out[i][0] = float(line)
-        return out
+        return sparse.csr_matrix(out)
 
 
     def input_varname(self):

@@ -26,6 +26,8 @@ import os
 import numpy as np
 import time
 from functools import partial
+from scipy import sparse
+
 
 #r("options(warn=-1)").  # TODO -- figure out how to silence warnings like rank-deficient
 r("library('lme4')") 
@@ -123,6 +125,8 @@ class Regression(Model):
 
 
     def _predict(self, X, feature_names, model):
+        assert isinstance(X, sparse.csr.csr_matrix)
+
         def score(example):
             s = 0
             for xi, feature in zip(example, feature_names):
@@ -132,7 +136,7 @@ class Regression(Model):
 
         out = []
         for row in X:
-            s = score(row)
+            s = score(np.squeeze(row.toarray()))
             if model.response_type == 'continuous':
                 out.append(s)
             else:
@@ -153,14 +157,18 @@ class Regression(Model):
             X = X[:, [i for i, f in enumerate(selected_features) if f in features]]
             selected_features = features
 
+        assert isinstance(X, sparse.csr.csr_matrix)
+
         if not target_name:
             return X, None, selected_features
 
         y = dataset.np_data[split][target_name]
+
         if level is not None:
             target_col = dataset.class_to_id_map[target_name][level]
             y = y[:,target_col]
-        y = np.squeeze(y) # stored as column even if just floats
+        y = np.squeeze(y.toarray()) # stored as column even if just floats
+
         return X, y, selected_features
 
 

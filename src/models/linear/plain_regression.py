@@ -8,6 +8,7 @@ import rpy2.robjects
 import sklearn
 import numpy as np
 from tqdm import tqdm
+from scipy import sparse
 
 
 class RegularizedRegression(regression_base.Regression):
@@ -20,7 +21,9 @@ class RegularizedRegression(regression_base.Regression):
 
 
     def _iter_minibatches(self, X, y):
-        assert len(X) == len(y)
+        assert isinstance(X, sparse.csr.csr_matrix)
+        assert isinstance(y, np.ndarray)
+        assert X.shape[0] == y.shape[0]
 
         i = 0
         while True:
