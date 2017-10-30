@@ -105,7 +105,7 @@ def evaluate(config, dataset, predictions, model_dir):
 
     # use these selected features to train & test a new model
     # TODO -- make batch size etc config params
-    print 'EVALUATOR: running regression with selected features'
+    print 'EVALUATOR: running linear model with selected features'
     m = RegularizedRegression(config, {'batch_size': 8, 'num_train_steps': 1000}, intercept=False)
     dataset.set_active_split(config.train_suffix)
     m.train(dataset, '', features=features)

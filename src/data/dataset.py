@@ -130,8 +130,7 @@ class Dataset(object):
         X = self.np_data[self.split][self.input_varname()][start:end]
         X_features = self.ordered_features or text_feature_subset
         if text_feature_subset is not None:
-            retain_indices = [i for i, f in enumerate(self.ordered_features) \
-                                if f in text_feature_subset]
+            retain_indices = map(lambda f: self.features[f], text_feature_subset)
             X = X[:, retain_indices]
 
         # now add in aux features for the requested chunk
