@@ -120,6 +120,7 @@ def evaluate(config, dataset, predictions, model_dir):
         labels = dataset.data_for_var(var)
 
         if var['control']:
+            print 'EVALUATOR: correlation of ', var['name']
             correlations[var['name']] = feature_correlation(
                 var=var,
                 features=features,
