@@ -13,6 +13,7 @@ import numpy as np
 import tensorflow as tf
 import time
 import sys
+import copy
 
 from src.data.dataset import Dataset
 import src.msc.constants as constants
@@ -42,9 +43,17 @@ def set_seed(seed):
     tf.set_random_seed(seed)  # only default graph
 
 
-def run_experiment(config, dataset, args):
+def run_experiment(config, args):
     # if train, switch the dataset to train, then
     #  train and save each model in the config spec
+    if not os.path.exists(config.working_dir):
+        os.makedirs(config.working_dir)
+    utils.write_config(config, os.path.join(config.working_dir, 'config.yaml'))
+
+    print 'MAIN: parsing dataset'
+    d = Dataset(config)
+    print 'MAIN: dataset done. took %.2fs' % (time.time() - start)
+
     if args.train:
         d.set_active_split(config.train_suffix)
 
@@ -112,9 +121,22 @@ def validate_config(config):
         return 1
     return num_expts
 
+
 def generate_experiment(parent_config, expt_id):
-    # choose a random thing from each config list
-    print parent_config
+    """ choose a random thing from each config list 
+    """
+    d = copy.deepcopy(dict(parent_config._asdict()))
+
+    assert not d['working_dir'].endswith('/')
+    d['working_dir'] = d['working_dir'] + '_%s' % expt_id
+
+    for model_config in d['model_spec']:
+        if not model_config['params']: 
+            continue
+        for k, v in model_config['params'].items():
+            if isinstance(v, list):
+                model_config['params'][k] = random.choice(v)
+    return namedtuple("config", d.keys())(**d)
 
 
 if __name__ == '__main__':
@@ -132,16 +154,13 @@ if __name__ == '__main__':
 
     # use config to preprocess data
     start = time.time()
-    print 'MAIN: parsing dataset'
-    d = Dataset(config)
-    print 'MAIN: dataset done. took %.2fs' % (time.time() - start)
 
     if num_experiments == 1:
-        run_experiment(config, d, args)
+        run_experiment(config, args)
     else:
         for i in range(num_experiments):
             expt = generate_experiment(config, i)
-            run_experiment(expt, d, args)
+            run_experiment(expt, args)
 
     # TODO maybe some kind of cleanup of temporrary files? like
     # datasets, etc etc

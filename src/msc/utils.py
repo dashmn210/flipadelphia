@@ -66,12 +66,11 @@ def load_config(filename):
 
 def write_config(config, path):
     """ writes a config object to path
+        TODO -- write in same order???
     """
     yaml_str = yaml.dump(dict(config._asdict()), default_flow_style=False)
     with open(path, 'w') as f:
         f.write(yaml_str)
-
-
 
 
 class Progbar(object):

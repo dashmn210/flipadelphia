@@ -40,7 +40,7 @@ class Dataset(object):
             print 'DATASET: generating vocab of %d tokens..' % self.config.top_n
             input_seqs = self.whole_data_files[self.input_varname()]
             self.vocab = self._gen_vocab(input_seqs)
-            print 'DATASET: vocab done, took %.2fs' % (time.time() - start)
+            print '\tdone, took %.2fs' % (time.time() - start)
         else:
             self.vocab = self.config.vocab
 
@@ -90,7 +90,7 @@ class Dataset(object):
                         self.np_data[split][varname] = self._datafile_to_np(
                             datafile=filepath,
                             feature_id_map=self.class_to_id_map[varname])
-        print 'DATASET: np parsing done, took %.2fs' % (time.time() - start)
+        print '\tdone, took %.2fs' % (time.time() - start)
 
 
     def _datafile_to_np(self, datafile, feature_id_map=None, text_file=False):
