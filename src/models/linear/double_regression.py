@@ -30,7 +30,7 @@ class DoubleRegression(plain_regression.RegularizedRegression):
         self.lmbda = self.params.get('lambda', 0)
         self.regularizor = self.params['regularizor'] if self.lmbda > 0 else None
 
-
+    # replace with iterator?
     def _get_np_xy(self, dataset, target_name, level=None, features=None):
         # TODO -- from here!!!!
         X, y, f = plain_regression.RegularizedRegression._get_np_xy(

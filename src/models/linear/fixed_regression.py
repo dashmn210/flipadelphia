@@ -12,36 +12,27 @@ import numpy as np
 from scipy import sparse
 
 
-def csr_vappend(a,b):
-    """ Takes in 2 csr_matrices and appends the second one to the bottom of the first one. 
-    Much faster than scipy.sparse.vstack but assumes the type to be csr and overwrites
-    the first matrix instead of copying it. The data, indices, and indptr still get copied."""
-
-    a.data = np.hstack((a.data,b.data))
-    a.indices = np.hstack((a.indices,b.indices))
-    a.indptr = np.hstack((a.indptr,(b.indptr + a.nnz)[1:]))
-    a._shape = (a.shape[0]+b.shape[0],b.shape[1])
-    return a
-
 
 class FixedRegression(plain_regression.RegularizedRegression):
 
-    def _get_np_xy(self, dataset, target_name=None, level=None, features=None):
-        X, y, features = plain_regression.RegularizedRegression._get_np_xy(
-            self, dataset, target_name, level, features)
+    def _iter_minibatches(self, dataset, target_name=None, features=None, 
+                                level=None, batch_size=None):
+        i = 0
+        while True:
+            yield dataset.chunk(
+                target_name=target_name,
+                target_level=level,
+                text_feature_subset=features,
+                start=i,
+                end=(i+batch_size if batch_size else None),
+                aux_features=self.confound_names)  # new!!!
 
-        # add 1-hot confounds to features
-        new_cols = []
-        for varname in self.confound_names:
-            one_hots = dataset.np_data[dataset.split][varname]
-            for var_level, col_idx in dataset.class_to_id_map[varname].items():
-                new_col = np.reshape(one_hots[:,col_idx].toarray(), (-1, 1))
-                new_cols.append(new_col)
-                features.append('%s|%s' % (varname, var_level))
+            if batch_size is None:
+                break
 
-        X = sparse.hstack([X] + new_cols).tocsr()
-        assert isinstance(X, sparse.csr.csr_matrix)
-        return X, y, features
+            i += batch_size
+            if i + batch_size > dataset.split_sizes[dataset.split]:
+                i = 0
 
 
 

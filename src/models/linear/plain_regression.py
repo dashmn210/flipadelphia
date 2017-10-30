@@ -17,19 +17,24 @@ class RegularizedRegression(regression_base.Regression):
         regression_base.Regression.__init__(self, config, params, intercept)
         self.lmbda = self.params.get('lambda', 0)
         self.regularizor = self.params['regularizor'] if self.lmbda > 0 else None
-        self.batch_size = self.params['batch_size']
 
 
-    def _iter_minibatches(self, X, y):
-        assert isinstance(X, sparse.csr.csr_matrix)
-        assert isinstance(y, np.ndarray)
-        assert X.shape[0] == y.shape[0]
-
+    def _iter_minibatches(self, dataset, target_name=None, features=None, 
+                                level=None, batch_size=None):
         i = 0
         while True:
-            yield X[i:i+self.batch_size,:], y[i:i+self.batch_size]
-            i += self.batch_size
-            if i > len(X):
+            yield dataset.chunk(
+                target_name=target_name,
+                target_level=level,
+                text_feature_subset=features,
+                start=i,
+                end=(i+batch_size if batch_size else None))
+
+            if batch_size is None:
+                break
+
+            i += batch_size
+            if i + batch_size > dataset.split_sizes[dataset.split]:
                 i = 0
 
 
@@ -43,10 +48,11 @@ class RegularizedRegression(regression_base.Regression):
 
 
     def _fit_regression(self, dataset, target, features=None):
-        X, y, features = self._get_np_xy(
+        iterator = self._iter_minibatches(
             dataset=dataset,
             target_name=target['name'],
-            features=features)
+            features=features,
+            batch_size=self.params['batch_size'])
 
         print 'REGRESSION: fitting target %s' % target['name']
         model = sklearn.linear_model.SGDRegressor(
@@ -56,21 +62,23 @@ class RegularizedRegression(regression_base.Regression):
             eta0=1.0)
 
         for _ in tqdm(range(self.params['num_train_steps'])):
-            Xi, yi = next(self._iter_minibatches(X, y))
+            Xi, yi, X_features = next(iterator)
             model.partial_fit(Xi, yi)
 
         return regression_base.ModelResult(
             model=model,
-            weights=self._sklearn_weights(model, features),
+            weights=self._sklearn_weights(model, X_features),
             response_type='continuous')
 
 
     def _fit_classifier(self, dataset, target, level=None, features=None):
-        X, y, features = self._get_np_xy(
-            dataset=dataset, 
-            target_name=target['name'], 
-            level=level, 
-            features=features)
+        iterator = self._iter_minibatches(
+            dataset=dataset,
+            target_name=target['name'],
+            features=features,
+            level=level,
+            batch_size=self.params['batch_size'])
+
 
         print 'CLASSIFICATION: fitting target %s, level %s' % (target['name'], level)
         model = sklearn.linear_model.SGDClassifier(
@@ -81,11 +89,11 @@ class RegularizedRegression(regression_base.Regression):
             eta0=1.0)
 
         for _ in tqdm(range(self.params['num_train_steps'])):
-            Xi, yi = next(self._iter_minibatches(X, y))
-            model.partial_fit(Xi, yi, classes=np.unique(y))
+            Xi, yi, X_features = next(iterator)
+            model.partial_fit(Xi, yi, classes=[0., 1.])
 
         return regression_base.ModelResult(
             model=model,
-            weights=self._sklearn_weights(model, features),
+            weights=self._sklearn_weights(model, X_features),
             response_type='categorical')
 

@@ -100,7 +100,7 @@ class Regression(Model):
 
 
     def inference(self, dataset, model_dir):
-        X, _, features = self._get_np_xy(dataset)
+        X, _, features = next(self._iter_minibatches(dataset))
 
         predictions = defaultdict(dict)
         for response_name, val in self.models.iteritems():
@@ -145,31 +145,6 @@ class Regression(Model):
                 except OverflowError:
                     out.append(1.0 if s > 0 else 0)
         return out
-
-
-    def _get_np_xy(self, dataset, target_name=None, level=None, features=None):
-        print 'REGRESSION BASE: getting x, y'
-        split = dataset.split
-        X = dataset.np_data[split][dataset.input_varname()]
-        selected_features = dataset.ordered_features
-
-        if features is not None:
-            X = X[:, [i for i, f in enumerate(selected_features) if f in features]]
-            selected_features = features
-
-        assert isinstance(X, sparse.csr.csr_matrix)
-
-        if not target_name:
-            return X, None, selected_features
-
-        y = dataset.np_data[split][target_name]
-
-        if level is not None:
-            target_col = dataset.class_to_id_map[target_name][level]
-            y = y[:,target_col]
-        y = np.squeeze(y.toarray()) # stored as column even if just floats
-
-        return X, y, selected_features
 
 
     def _fit_regression(self, dataset, target, features=None):
