@@ -110,6 +110,7 @@ def evaluate(config, dataset, predictions, model_dir):
     dataset.set_active_split(config.train_suffix)
     m.train(dataset, '', features=features)
     dataset.set_active_split(config.test_suffix)
+    print 'EVALUATOR: inference on test...'
     feature_predictions = m.inference(dataset, '')
 
     # now evaluate the selected features, both in terms of

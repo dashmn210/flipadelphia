@@ -29,29 +29,30 @@ class DoubleRegression(plain_regression.RegularizedRegression):
         plain_regression.RegularizedRegression.__init__(self, config, params)
         self.lmbda = self.params.get('lambda', 0)
         self.regularizor = self.params['regularizor'] if self.lmbda > 0 else None
-        self.residuals = None # to be filled up between passes
+        # to be filled up between passes
+        # NOTE: if this isn't none, then we assume we are in the 2nd phase,
+        #       where we are predicting residuals from text
+        self.residuals = None 
+
 
     def _iter_minibatches(self, dataset, target_name=None, features=None, 
                                 level=None, batch_size=None):
-        plain_iterator = plain_regression.RegularizedRegression._iter_minibatches(
-            self, dataset, target_name, None, level, batch_size)
-
-
-        # TODO -- FIGURE THIS OUT!! 
-        # need to 
-        #    only give confounds for first training + inference
-        #    only give text for 2nd training
-
         i = 0
         while True:
             start = i
             end = (i+batch_size if batch_size else None)
 
+            # we are in the 2nd pass, so get text covariates and y from residuals
             if self.residuals is not None:
                 X, X_features = dataset.text_X_chunk(features, start, end)
                 y = self.residuals[target_name][start:end]
+                if level is not None:
+                    target_col = dataset.class_to_id_map[target_name][level]
+                    y = y[:, target_col]
+                y = np.squeeze(np.asarray(y))  # TODO -- why isn't squeeze working properly?
                 yield X, y, X_features
 
+            # otherwise, yield confounds-only
             else:
                 if target_name is not None:
                     y = dataset.y_chunk(target_name, level, start, end)
@@ -63,28 +64,46 @@ class DoubleRegression(plain_regression.RegularizedRegression):
                 yield X, y, X_features
 
 
-    def train_model(self, dataset, features=None):
+    def _ovr_regression(self, dataset, target, features=None):
+        """ run ovr-style regression (in lieu of classification)
+        """
         models = {}
+        for level in dataset.class_to_id_map[target['name']].keys():
+            models[level] = self._fit_regression(
+                dataset, target, level=level, features=features)
+        return models
+
+
+    def train_model(self, dataset, features=None):
+        """ train a bunch of models and RETURN the nested dict
+            instead of setting self.models
+        """
+        models = {}
+
         for i, target in enumerate(self.targets):
+            fitting_kwargs = {'dataset': dataset, 'target': target, 'features': features}
+            # fit a regression
             if target['type'] == 'continuous':
                 models[target['name']] = plain_regression.RegularizedRegression._fit_regression(
-                    self,
-                    dataset=dataset, 
-                    target=target,
-                    features=features)
+                    self, **fitting_kwargs)
+            # predict the residuals for each class if categorical 
+            elif self.residuals is not None:
+                models[target['name']] = self._ovr_regression(
+                    **fitting_kwargs)
+            # just fit a classification
             else:
                 models[target['name']] = plain_regression.RegularizedRegression._fit_ovr(
-                    self,
-                    dataset=dataset, 
-                    target=target,
-                    features=features)
+                    self, **fitting_kwargs)
         return models
 
     def train(self, dataset, model_dir):
+        # first train a model using the confounds only
         print "DOUBLE REGRESSION: first pass using confounds..."
         f = self.train_model(dataset)
         self.models = f
         start = time.time()
+
+        # then get the residuals
         print "DOUBLE REGRESSION: inference for residuals..."
         preds = self.inference(dataset, model_dir).scores
         print "\tDone. Took %.2fs" % (time.time() - start)
@@ -94,7 +113,8 @@ class DoubleRegression(plain_regression.RegularizedRegression):
             y = dataset.np_data[dataset.split][target['name']]
             self.residuals[target['name']] = y - y_hat
 
+        # now predict the residuals using the text
         print "DOUBLE REGRESSION: 2nd pass using text and residuals..."
-        g = self.train_model(dataset, features=None)
+        g = self.train_model(dataset)
         self.models = g
 

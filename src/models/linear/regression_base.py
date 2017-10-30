@@ -113,6 +113,8 @@ class Regression(Model):
                     lambda level: self._predict(X, features, val[dataset.id_to_class_map[response_name][level]])
                 arr = np.array(
                     [level_predictions(l) for l in range(response_levels)])
+                if len(arr.shape) > 2:
+                    arr = np.squeeze(arr, axis=2)
                 predictions[response_name] = np.transpose(arr, [1, 0])
             else:
                 predictions[response_name] = self._predict(X, features, val)
@@ -147,7 +149,7 @@ class Regression(Model):
         return out
 
 
-    def _fit_regression(self, dataset, target, features=None):
+    def _fit_regression(self, dataset, target, level=None, features=None):
         raise NotImplementedError
 
 

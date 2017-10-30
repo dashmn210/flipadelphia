@@ -51,12 +51,13 @@ class RegularizedRegression(regression_base.Regression):
         return weights
 
 
-    def _fit_regression(self, dataset, target, features=None):
+    def _fit_regression(self, dataset, target, level=None, features=None):
         iterator = self._iter_minibatches(
             dataset=dataset,
             target_name=target['name'],
             features=features,
-            batch_size=self.params['batch_size'])
+            batch_size=self.params['batch_size'],
+            level=level)
 
         print 'REGRESSION: fitting target %s' % target['name']
         model = sklearn.linear_model.SGDRegressor(
