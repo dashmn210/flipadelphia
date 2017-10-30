@@ -4,6 +4,21 @@ import time
 import tensorflow as tf
 import sys
 import numpy as np
+import yaml
+from collections import namedtuple
+from collections import OrderedDict
+
+class UnsortableList(list):
+    def sort(self, *args, **kwargs):
+        pass
+
+class UnsortableOrderedDict(OrderedDict):
+    def items(self, *args, **kwargs):
+        return UnsortableList(OrderedDict.items(self, *args, **kwargs))
+
+yaml.add_representer(UnsortableOrderedDict, yaml.representer.SafeRepresenter.represent_dict)
+
+
 
 def pickle(obj, path):
     with open(path, 'w') as f:
@@ -38,6 +53,24 @@ def add_summary(summary_writer, global_step, name, value):
   """
   summary = tf.Summary(value=[tf.Summary.Value(tag=name, simple_value=value)])
   summary_writer.add_summary(summary, global_step)
+
+
+
+def load_config(filename):
+    """ loads YAML config into a named tuple
+    """
+    d = yaml.load(open(filename).read())
+    d = namedtuple("config", d.keys())(**d)
+    return d
+
+
+def write_config(config, path):
+    """ writes a config object to path
+    """
+    yaml_str = yaml.dump(dict(config._asdict()), default_flow_style=False)
+    with open(path, 'w') as f:
+        f.write(yaml_str)
+
 
 
 

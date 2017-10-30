@@ -36,45 +36,13 @@ def process_command_line():
     return args
 
 
-def load_config(filename):
-    """ loads YAML config into a named tuple
-    """
-    d = yaml.load(open(filename).read())
-    d = namedtuple("config", d.keys())(**d)
-    return d
-
 def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
     tf.set_random_seed(seed)  # only default graph
 
 
-def validate_config(config):
-    # TODO
-    return True
-
-
-
-if __name__ == '__main__':
-    # parse args
-    args = process_command_line()
-    config = load_config(args.config)   
-    validate_config(config)
-
-    reload(sys)
-    sys.setdefaultencoding('utf8')
-
-    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
-    set_seed(config.seed)
-    if not os.path.exists(config.working_dir):
-        os.makedirs(config.working_dir)
-
-    # use config to preprocess data
-    start = time.time()
-    print 'MAIN: parsing dataset'
-    d = Dataset(config)
-    print 'MAIN: dataset done. took %.2fs' % (time.time() - start)
-
+def run_experiment(config, dataset, args):
     # if train, switch the dataset to train, then
     #  train and save each model in the config spec
     if args.train:
@@ -129,6 +97,51 @@ if __name__ == '__main__':
 
             print 'MAIN: evaluation %s done, time %.2fs' % (
                 model_description['name'], time.time() - start_time)
+
+
+def validate_config(config):
+    num_expts = config.num_experiments
+
+    model_params = [
+        x for m in config.model_spec \
+        for x in (m['params'] or {}).values()
+    ]
+    if not any(isinstance(x, list) for x in model_params):
+        if num_expts != 1:
+            print 'MAIN: falling back to 1 experiment...no randomizable values provided'
+        return 1
+    return num_expts
+
+def generate_experiment(parent_config, expt_id):
+    # choose a random thing from each config list
+    print parent_config
+
+
+if __name__ == '__main__':
+    # parse args
+    args = process_command_line()
+    config = utils.load_config(args.config)   
+    num_experiments = validate_config(config)
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
+    set_seed(config.seed)
+    if not os.path.exists(config.working_dir):
+        os.makedirs(config.working_dir)
+
+    # use config to preprocess data
+    start = time.time()
+    print 'MAIN: parsing dataset'
+    d = Dataset(config)
+    print 'MAIN: dataset done. took %.2fs' % (time.time() - start)
+
+    if num_experiments == 1:
+        run_experiment(config, d, args)
+    else:
+        for i in range(num_experiments):
+            expt = generate_experiment(config, i)
+            run_experiment(expt, d, args)
 
     # TODO maybe some kind of cleanup of temporrary files? like
     # datasets, etc etc

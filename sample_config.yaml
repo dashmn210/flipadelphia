@@ -1,3 +1,5 @@
+########## EXPERIMENT
+num_experiments: 3
 
 ########## DATA
 data_dir: "datasets/cfpb_small/"
@@ -65,7 +67,7 @@ model_spec:
     name: "flip_1"
     skip: True
     params:
-      batch_size: 128
+      batch_size: [128, 10]
       max_seq_len: 50
       num_train_steps: 10
       learning_rate: 0.001
@@ -145,7 +147,7 @@ model_spec:
       num_train_steps: 10
 
 
-
-
 ######### EVALUATION
 feature_importance_threshold: 0.9
+
+
