@@ -23,12 +23,16 @@ class RegularizedRegression(regression_base.Regression):
                                 level=None, batch_size=None):
         i = 0
         while True:
-            yield dataset.chunk(
-                target_name=target_name,
-                target_level=level,
-                text_feature_subset=features,
-                start=i,
-                end=(i+batch_size if batch_size else None))
+            start = i
+            end = (i+batch_size if batch_size else None)
+
+            if target_name is not None:
+                y = dataset.y_chunk(target_name, level, start, end)
+            else:
+                y = None
+
+            X, X_features = dataset.text_X_chunk(features, start, end)
+            yield X, y, X_features
 
             if batch_size is None:
                 break

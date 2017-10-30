@@ -121,42 +121,39 @@ class Dataset(object):
         return sparse.csr_matrix(out)
 
 
-    def chunk(self, target_name=None, target_level=None, 
-                    text_feature_subset=None, aux_features=None,
-                    start=0, end=None):
+    def y_chunk(self, target_name, target_level=None, start=0, end=None):
         end = end or self.split_sizes[self.split]
-
-        # start with all the text features for desired chunk
-        X = self.np_data[self.split][self.input_varname()][start:end]
-        X_features = self.ordered_features or text_feature_subset
-        if text_feature_subset is not None:
-            retain_indices = map(lambda f: self.features[f], text_feature_subset)
-            X = X[:, retain_indices]
-
-        # now add in aux features for the requested chunk
-        if aux_features is not None:
-            new_cols = []
-            for varname in aux_features:
-                one_hots = self.np_data[self.split][varname][start:end]
-                for level, idx in self.class_to_id_map[varname].items():
-                    new_col = np.reshape(one_hots[:, idx].toarray(), (-1, 1))
-                    new_cols.append(new_col)
-                    X_features.append('%s|%s' % (varname, level))
-            X = sparse.hstack([X] + new_cols).tocsr()
-
-        # if no target, return covariates only
-        if target_name is None:
-            return X, None, X_features
-
         # pull out the target for the chunk
         y = self.np_data[self.split][target_name][start:end]
         if target_level is not None:
             target_col = self.class_to_id_map[target_name][target_level]
             y = y[:, target_col]
         y = np.squeeze(y.toarray())
+        return y
 
-        return X, y, X_features
 
+    def text_X_chunk(self, feature_subset=None, start=0, end=None):
+        end = end or self.split_sizes[self.split]
+
+        # start with all the text features for desired chunk
+        X = self.np_data[self.split][self.input_varname()][start:end]
+        X_features = self.ordered_features or feature_subset
+        if feature_subset is not None:
+            retain_indices = map(lambda f: self.features[f], feature_subset)
+            X = X[:, retain_indices]
+        return X, X_features        
+
+
+    def nontext_X_chunk(self, features, start=0, end=None):
+        X_features = []
+        cols = []
+        for varname in features:
+            one_hots = self.np_data[self.split][varname][start:end]
+            for level, idx in self.class_to_id_map[varname].items():
+                cols.append(one_hots[:, idx])
+                X_features.append('%s|%s' % (varname, level))
+        X = sparse.hstack(cols).tocsr()
+        return X, X_features
 
 
     def input_varname(self):

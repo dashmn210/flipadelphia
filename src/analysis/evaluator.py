@@ -7,7 +7,7 @@ from src.models.linear.plain_regression import RegularizedRegression
 from correlations import cramers_v, pointwise_biserial
 import sklearn.metrics
 import os
-
+import time
 
 def write_summary(evaluation, model_dir):
     """ evaluation: product of evaluator.evaluate()
@@ -120,13 +120,15 @@ def evaluate(config, dataset, predictions, model_dir):
         labels = dataset.data_for_var(var)
 
         if var['control']:
-            print 'EVALUATOR: correlation of ', var['name']
+            start = time.time()
+            print 'EVALUATOR: computing %s correlation...' % var['name']
             correlations[var['name']] = feature_correlation(
                 var=var,
                 features=features,
                 input_text=dataset.get_tokenized_input(),
                 labels=labels,
                 dataset=dataset)
+            print '\t Done. took %.2fs' % (time.time() - start)
 
         else:
             assert var['name'] in feature_predictions.scores

@@ -10,7 +10,7 @@ def cramers_v(feature, text, targets, possible_labels):
         and target info (Y) and possible_labels (possible values for Y)
     """
     obs = np.zeros( (2, len(possible_labels)) )
-    for description, target in tqdm(zip(text, targets)):
+    for description, target in zip(text, targets):
         if feature in description:
             obs[1, possible_labels.index(target)] += 1
         else:
@@ -37,7 +37,7 @@ def pointwise_biserial(feature, text, targets):
 
     group0 = []
     group1 = []
-    for text_example, val in tqdm(zip(text, targets)):
+    for text_example, val in zip(text, targets):
         if val == -1:
             continue
         if feature in text_example:
