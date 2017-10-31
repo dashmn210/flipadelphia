@@ -14,6 +14,8 @@ import tensorflow as tf
 import time
 import sys
 import copy
+from collections import defaultdict
+import pandas as pd
 
 from src.data.dataset import Dataset
 import src.msc.constants as constants
@@ -81,7 +83,7 @@ def run_experiment(config, args):
     #  in the config spec
     if args.test:
         d.set_active_split(config.test_suffix)
-
+        results = defaultdict(list)  # items to be written in executive summary 
         for model_description in config.model_spec:
             if model_description.get('skip', False):
                 continue
@@ -103,10 +105,17 @@ def run_experiment(config, args):
             utils.pickle(
                 evaluation, os.path.join(model_dir, 'evaluation'))
             evaluator.write_summary(evaluation, model_dir)
+            # store info for executive summary
+            results['model-name'].append(model_description['name'])
+            results['params'].append(str(model_description['params']))
+            results['correlation'].append(evaluation['mu_corr'])
+            results['performance'].append(evaluation['mu_perf'])
+            results['model-dir'].append(model_dir)
 
             print 'MAIN: evaluation %s done, time %.2fs' % (
                 model_description['name'], time.time() - start_time)
 
+        return results
 
 def validate_config(config):
     num_expts = config.num_experiments
@@ -155,14 +164,26 @@ if __name__ == '__main__':
     # use config to preprocess data
     start = time.time()
 
-    if num_experiments == 1:
-        run_experiment(config, args)
-    else:
+    try:
+        results = None
         for i in range(num_experiments):
             expt = generate_experiment(config, i)
             if os.path.exists(os.path.join(expt.working_dir, 'config.yaml')):
                 print 'MAIN: skipping expt ', i
-            run_experiment(expt, args)
+            result = run_experiment(expt, args)
+            if results is None:
+                results = result
+            else:
+                for k in results:
+                    results[k] = results[k] + result[k]
+    except KeyboardInterrupt:
+        pass
+    finally:
+        executive_summary_df = pd.DataFrame.from_dict(results)
+
+    summary_path = os.path.join(config.working_dir, 'summary.csv')
+    executive_summary_df.to_csv(summary_path)
+    print 'MAIN: wrote summary to ', summary_path
 
     # TODO maybe some kind of cleanup of temporrary files? like
     # datasets, etc etc

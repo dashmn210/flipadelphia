@@ -67,10 +67,11 @@ def eval_performance(var, labels, preds, dataset):
             labels)
         labels_hat = np.argmax(preds, axis=1)
         report = sklearn.metrics.classification_report(labels, labels_hat)
+        f1 = sklearn.metrics.f1_score(labels, labels_hat, average='weighted')
         # TODO verify that cols of preds are ordered correctly for sklearn
         xentropy = sklearn.metrics.log_loss(labels, preds,
             labels=sorted(dataset.id_to_class_map[var['name']].keys()))
-        return {'report': report, 'xenropy': xentropy}
+        return {'report': report, 'xenropy': xentropy, 'stat': f1}
 
     else:
         # filter out nans
@@ -79,7 +80,7 @@ def eval_performance(var, labels, preds, dataset):
             if not np.isnan(pred)])
         MSE = sklearn.metrics.mean_squared_error(labels, preds)
         r2 = sklearn.metrics.r2_score(labels, preds)
-        return { 'MSE': MSE, 'R^2': r2 }
+        return { 'MSE': MSE, 'R^2': r2, 'stat': r2}
 
 
 def evaluate(config, dataset, predictions, model_dir):
@@ -143,6 +144,11 @@ def evaluate(config, dataset, predictions, model_dir):
                 preds=preds,
                 dataset=dataset)
 
-    return {'correlations': correlations, 'performance': performance}
+    mean_correlation = np.mean(correlations.values())
+    mean_performance = np.mean([d['stat'] for d in performance.values()])
+    return {'correlations': correlations, 
+            'performance': performance, 
+            'mu_corr': mean_correlation, 
+            'mu_perf': mean_performance}
 
 

@@ -1,5 +1,5 @@
 ########## EXPERIMENT
-num_experiments: 3
+num_experiments: 2
 
 ########## DATA
 data_dir: "datasets/cfpb_small/"
@@ -76,7 +76,7 @@ model_spec:
       encoder_units: 10
       attn_layers: 2
       attn_units: 10
-      classifier_layers: 1
+      classifier_layers: [2, 3, 9, 10, 11]
       classifier_units: 10
       regressor_layers: 1
       regressor_units: 10
@@ -120,7 +120,7 @@ model_spec:
 
   - type: "double-regression"
     name: 'double_1'
-    skip: False
+    skip: True
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off
@@ -130,7 +130,7 @@ model_spec:
 
   - type: "fixed-regression"
     name: 'fixed_1'
-    skip: True
+    skip: False
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off
@@ -139,7 +139,7 @@ model_spec:
 
   - type: "regression"
     name: 'regression_1'
-    skip: True
+    skip: False
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off

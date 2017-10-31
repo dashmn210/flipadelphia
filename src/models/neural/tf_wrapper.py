@@ -49,7 +49,9 @@ class TFModelWrapper(Model):
 
         model = self.model_builder_class.build_model_graph(
             self.config, self.params, dataset)
-        sess = tf.Session(graph=model.graph)
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth=True
+        sess = tf.Session(graph=model.graph, config=config)
 
         with model.graph.as_default():
             tf.set_random_seed(self.config.seed)
