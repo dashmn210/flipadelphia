@@ -182,8 +182,13 @@ if __name__ == '__main__':
     finally:
         executive_summary_df = pd.DataFrame.from_dict(results)
 
+    # now write the summary to a csv at the parent's working dir
     summary_path = os.path.join(config.working_dir, 'summary.csv')
-    executive_summary_df.to_csv(summary_path)
+    if os.path.exists(summary_path):
+        with open(summary_path, 'a') as f:
+            executive_summary_df.to_csv(summary_path, header=False)
+    else:
+        executive_summary_df.to_csv(summary_path)
     print 'MAIN: wrote summary to ', summary_path
 
     # TODO maybe some kind of cleanup of temporrary files? like
