@@ -160,6 +160,8 @@ if __name__ == '__main__':
     else:
         for i in range(num_experiments):
             expt = generate_experiment(config, i)
+            if os.path.exists(os.path.join(expt.working_dir, 'summart.txt')):
+                print 'MAIN: skipping expt ', i
             run_experiment(expt, args)
 
     # TODO maybe some kind of cleanup of temporrary files? like
