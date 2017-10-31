@@ -170,6 +170,7 @@ if __name__ == '__main__':
             expt = generate_experiment(config, i)
             if os.path.exists(os.path.join(expt.working_dir, 'config.yaml')):
                 print 'MAIN: skipping expt ', i
+                continue
             result = run_experiment(expt, args)
             if results is None:
                 results = result
