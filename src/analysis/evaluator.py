@@ -68,7 +68,8 @@ def eval_performance(var, labels, preds, dataset):
         labels_hat = np.argmax(preds, axis=1)
         report = sklearn.metrics.classification_report(labels, labels_hat)
         # TODO verify that cols of preds are ordered correctly for sklearn
-        xentropy = sklearn.metrics.log_loss(labels, preds)
+        xentropy = sklearn.metrics.log_loss(labels, preds,
+            labels=sorted(dataset.id_to_class_map[var['name']].keys()))
         return {'report': report, 'xenropy': xentropy}
 
     else:
