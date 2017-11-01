@@ -85,7 +85,7 @@ model_spec:
 
   - type: 'causal-regression'
     name: 'causal_1'
-    skip: False
+    skip: True
     params:
       batch_size: 128
       max_seq_len: 50
@@ -148,10 +148,11 @@ model_spec:
       batch_size: 128
       num_train_steps: 10
 
-  - type: "odds-ratio-regression"
-    name: 'or'
-    skip: True
+  - type: "odds-ratio"
+    name: 'odds-ratio_1'
+    skip: False
     params:
+
 
 ######### EVALUATION
 feature_importance_threshold: 0.9

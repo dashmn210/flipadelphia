@@ -10,6 +10,7 @@ from src.models.linear.plain_regression import RegularizedRegression
 from src.models.linear.fixed_regression import FixedRegression
 from src.models.linear.double_regression import DoubleRegression
 
+from src.models.msc.odds_ratio import OddsRatio
 
 
 MODEL_CLASSES = {
@@ -19,5 +20,6 @@ MODEL_CLASSES = {
     'mixed-regression': MixedRegression,
     'fixed-regression': FixedRegression,
     'regression': RegularizedRegression,
-    'double-regression': DoubleRegression
+    'double-regression': DoubleRegression,
+    'odds-ratio': OddsRatio
 }
