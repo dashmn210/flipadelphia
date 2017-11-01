@@ -108,6 +108,7 @@ def run_experiment(config, args):
             evaluator.write_summary(evaluation, model_dir)
             # store info for executive summary
             results['model-name'].append(model_description['name'])
+            results['model-type'].append(model_description['type'])
             results['params'].append(str(model_description['params']))
             results['correlation'].append(evaluation['mu_corr'])
             results['performance'].append(evaluation['mu_perf'])

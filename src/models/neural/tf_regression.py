@@ -94,11 +94,8 @@ class CausalRegression:
             self.final_output[var['name']]['pred'] = final_preds
             self.final_output[var['name']]['loss'] = final_loss
 
-
-        print 'HERE!!!!!'
         # regularize if need be
         if self.params['lambda'] > 0:
-            print 'here'
             if self.params['regularizor'] == 'l2':
                 reg = tf.contrib.layers.l2_regularizer(self.params['lambda'])
             else:
