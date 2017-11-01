@@ -85,12 +85,14 @@ model_spec:
 
   - type: 'causal-regression'
     name: 'causal_1'
-    skip: True
+    skip: False
     params:
       batch_size: 128
       max_seq_len: 50
       num_train_steps: 10
       learning_rate: 0.01
+      regularizor: 'l2'   # [l1, l2]
+      lambda: 0.1         # 0 turns regularization off
 
   - type: "causal-neural"
     name: 'causal_neural_1'
@@ -130,7 +132,7 @@ model_spec:
 
   - type: "fixed-regression"
     name: 'fixed_1'
-    skip: False
+    skip: True
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off
@@ -139,13 +141,17 @@ model_spec:
 
   - type: "regression"
     name: 'regression_1'
-    skip: False
+    skip: True
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off
       batch_size: 128
       num_train_steps: 10
 
+  - type: "odds-ratio-regression"
+    name: 'or'
+    skip: True
+    params:
 
 ######### EVALUATION
 feature_importance_threshold: 0.9

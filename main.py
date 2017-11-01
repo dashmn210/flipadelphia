@@ -16,6 +16,7 @@ import sys
 import copy
 from collections import defaultdict
 import pandas as pd
+import traceback
 
 from src.data.dataset import Dataset
 import src.msc.constants as constants
@@ -177,19 +178,22 @@ if __name__ == '__main__':
             else:
                 for k in results:
                     results[k] = results[k] + result[k]
-    except KeyboardInterrupt:
-        pass
+    except:
+        print 'MAIN: stopped with exception'
+        traceback.print_exc()
     finally:
         executive_summary_df = pd.DataFrame.from_dict(results)
 
-    # now write the summary to a csv at the parent's working dir
-    summary_path = os.path.join(config.working_dir, 'summary.csv')
-    if os.path.exists(summary_path):
-        with open(summary_path, 'a') as f:
-            executive_summary_df.to_csv(summary_path, header=False)
-    else:
-        executive_summary_df.to_csv(summary_path)
-    print 'MAIN: wrote summary to ', summary_path
+        # now write the summary to a csv at the parent's working dir
+        summary_path = os.path.join(config.working_dir, 'summary.csv')
+        if os.path.exists(summary_path):
+            # append if csv is already there
+            with open(summary_path, 'a') as f:
+                executive_summary_df.to_csv(summary_path, header=False)
+        else:
+            # otherwise write a new csv
+            executive_summary_df.to_csv(summary_path)
+        print 'MAIN: wrote summary to ', summary_path
 
     # TODO maybe some kind of cleanup of temporrary files? like
     # datasets, etc etc

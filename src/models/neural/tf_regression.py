@@ -94,6 +94,19 @@ class CausalRegression:
             self.final_output[var['name']]['pred'] = final_preds
             self.final_output[var['name']]['loss'] = final_loss
 
+
+        print 'HERE!!!!!'
+        # regularize if need be
+        if self.params['lambda'] > 0:
+            print 'here'
+            if self.params['regularizor'] == 'l2':
+                reg = tf.contrib.layers.l2_regularizer(self.params['lambda'])
+            else:
+                reg = tf.contrib.layers.l1_regularizer(self.params['lambda'])
+            reg_term = tf.contrib.layers.apply_regularization(reg, tf.trainable_variables())
+        else:
+            reg_term = 0
+
         # add all yer losses up
         self.cum_confound_loss = tf.reduce_sum(
             [x['loss'] for x in self.confound_output.values()])
@@ -101,7 +114,9 @@ class CausalRegression:
             [x['loss'] for x in self.final_output.values()])
         self.cumulative_loss = tf.reduce_sum(
             [self.cum_confound_loss, self.cum_final_loss])
+        self.cumulative_loss += reg_term
 
+        tf.summary.scalar('regularization_loss', reg_term)
         tf.summary.scalar('cum_confound_loss', self.cum_confound_loss)
         tf.summary.scalar('cum_final_loss', self.cum_final_loss)
         tf.summary.scalar('cum_loss', self.cumulative_loss)

@@ -115,6 +115,13 @@ def evaluate(config, dataset, predictions, model_dir):
     print 'EVALUATOR: inference on test...'
     feature_predictions = m.inference(dataset, '')
 
+    print 'EVALUATOR: writing selected features + weights...'
+    s = ''
+    for f, v in feature_predictions.feature_importance.items():
+        s += '%s\t%s\n' % (f, str(v))
+    with open(os.path.join(model_dir, 'words.txt'), 'w') as f:
+        f.write(s)
+
     # now evaluate the selected features, both in terms of
     #  correlation with confounds and ability to predict response
     for var in config.data_spec[1:]:
