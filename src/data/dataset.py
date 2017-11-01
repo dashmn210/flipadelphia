@@ -35,14 +35,14 @@ class Dataset(object):
         self.data_files, self.split_sizes, self.whole_data_files = self._cut_data()
 
         # vocab = filepath to vocab file
-        if self.config.vocab is None:
+        if self.config.vocab['vocab_file'] is None:
             start = time.time()
-            print 'DATASET: generating vocab of %d tokens..' % self.config.top_n
+            print 'DATASET: generating vocab of %d tokens..' % self.config.vocab['top_n']
             input_seqs = self.whole_data_files[self.input_varname()]
             self.vocab = self._gen_vocab(input_seqs)
             print '\tdone, took %.2fs' % (time.time() - start)
         else:
-            self.vocab = self.config.vocab
+            self.vocab = self.config.vocab['vocab_file']
 
         self.vocab_size = self._check_vocab(self.vocab)
         self.features = {v.strip(): i for i, v in enumerate(open(self.vocab))}
@@ -91,6 +91,12 @@ class Dataset(object):
                             datafile=filepath,
                             feature_id_map=self.class_to_id_map[varname])
         print '\tdone, took %.2fs' % (time.time() - start)
+
+        # pre-select a subset of features if teh user asked for it
+        if self.config.vocab['preselection_features'] > 0:
+            print 'DATASET: pre-selecting a subset of features using method ', self.config.vocab['selection_algo']
+            # TODO - run feature selection, replace vocab stuff
+            
 
 
     def _datafile_to_np(self, datafile, feature_id_map=None, text_file=False):
@@ -206,8 +212,8 @@ class Dataset(object):
 
         lines = map(lambda x: x.strip(), open(vocab_file).readlines())
 
-        assert lines[0] == self.config.unk and lines[1] == self.config.sos and lines[2] == self.config.eos, \
-            "The first words in %s are not %s, %s, %s" % (vocab_file, unk, sos, eos)
+        assert lines[0] == self.config.unk, \
+            "The first words in %s is not %s" % (vocab_file)
 
         return len(lines)
 
@@ -218,7 +224,7 @@ class Dataset(object):
             return vocab_file
 
         word_ctr = Counter(open(text_file).read().split())
-        vocab = map(lambda x: x[0], word_ctr.most_common(self.config.top_n))
+        vocab = map(lambda x: x[0], word_ctr.most_common(self.config.vocab['top_n']))
         vocab = [self.config.unk, self.config.sos, self.config.eos] + vocab
 
         with open(vocab_file, 'w') as f:

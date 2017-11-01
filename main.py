@@ -125,6 +125,8 @@ def validate_config(config):
     model_params = [
         x for m in config.model_spec \
         for x in (m['params'] or {}).values()
+    ] + [
+        v for k, v in config.vocab.iteritems()
     ]
     if not any(isinstance(x, list) for x in model_params):
         if num_expts != 1:
@@ -140,6 +142,10 @@ def generate_experiment(parent_config, expt_id):
 
     assert not d['working_dir'].endswith('/')
     d['working_dir'] = d['working_dir'] + '_%s' % expt_id
+
+    for k, v in d['vocab']:
+        if isinstance(v, list):
+            d['vocab'][k] = random.choice(v)
 
     for model_config in d['model_spec']:
         if not model_config['params']: 

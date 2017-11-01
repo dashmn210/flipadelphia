@@ -84,7 +84,6 @@ class RegularizedRegression(regression_base.Regression):
             level=level,
             batch_size=self.params['batch_size'])
 
-
         print 'CLASSIFICATION: fitting target %s, level %s' % (target['name'], level)
         model = sklearn.linear_model.SGDClassifier(
             loss='log',

@@ -96,14 +96,21 @@ def evaluate(config, dataset, predictions, model_dir):
     performance = {}
     correlations = {}
 
-    # select features
-    importance_threshold = utils.percentile(
+    # select K largest features
+    importance_threshold = utils.rank_threshold(
         predictions.feature_importance.values(),
-        config.feature_importance_threshold)
+        config.num_eval_features)
     features = [
         f for f in dataset.features \
-        if predictions.feature_importance.get(f, 0) > importance_threshold
+        if  f in predictions.feature_importance \
+        and predictions.feature_importance[f] > importance_threshold
     ]
+    print 'EVALUATOR: writing selected features + weights...'
+    s = ''
+    for f in sorted(features, key=lambda f: predictions.feature_importance[f])[::-11]:
+        s += '%s\t%.4f\n' % (f, predictions.feature_importance[f])
+    with open(os.path.join(model_dir, 'selected-words-and-importance.txt'), 'w') as f:
+        f.write(s)
 
     # use these selected features to train & test a new model
     # TODO -- make batch size etc config params
@@ -114,13 +121,6 @@ def evaluate(config, dataset, predictions, model_dir):
     dataset.set_active_split(config.test_suffix)
     print 'EVALUATOR: inference on test...'
     feature_predictions = m.inference(dataset, '')
-
-    print 'EVALUATOR: writing selected features + weights...'
-    s = ''
-    for f, v in feature_predictions.feature_importance.items():
-        s += '%s\t%s\n' % (f, str(v))
-    with open(os.path.join(model_dir, 'words.txt'), 'w') as f:
-        f.write(s)
 
     # now evaluate the selected features, both in terms of
     #  correlation with confounds and ability to predict response

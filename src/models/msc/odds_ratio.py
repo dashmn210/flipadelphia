@@ -4,7 +4,6 @@ sys.path.append('../..')
 from collections import defaultdict, namedtuple
 import rpy2.robjects
 from rpy2.robjects import r, pandas2ri
-from src.models.abstract_model import Model, Prediction
 import src.msc.utils as utils
 import src.msc.utils as utils
 import math
@@ -13,92 +12,89 @@ import os
 import numpy as np
 import time
 from functools import partial
+from tqdm import tqdm
 
+from src.models.abstract_model import Model, Prediction
+from selection_model import SelectionModel
 
-class OddsRatio(Model):
+class OddsRatio(SelectionModel):
     def __init__(self, config, params):
-        Model.__init__(self, config, params)
-        # target variable name (exploded if categorical)
-        #     maps to ===>  R object with this model  
-        self.models = {}
-
-        variables = [v for v in self.config.data_spec[1:] \
-                        if not v.get('skip', False)]
-        self.targets = [
-            variable for variable in variables \
-            if variable['control'] == False and not variable['skip']]
-        self.confounds = [
-            variable for variable in variables \
-            if variable['control'] and not variable['skip']]
+        SelectionModel.__init__(self, config, params)
 
 
-    def save(self, model_dir):
-        if not os.path.exists(model_dir):
-            os.makedirs(model_dir)
-
-        models_file = os.path.join(model_dir, 'models')
-        utils.pickle(self.models, models_file)
-        print 'ODDS_RATIO: models saved into ', models_file
-
-
-    def load(self, dataset, model_dir):
-        start = time.time()
-        self.models = utils.depickle(os.path.join(model_dir, 'models'))
-        target_names = map(lambda x: x['name'], self.targets)
-        assert set(target_names) == set(self.models.keys())
-        print 'ODDS_RATIO: loaded model parameters from %s, time %.2fs' % (
-            model_dir, time.time() - start)
-
-    def _compute_ratios(self, dataset, target_name, ratios_dict, feature_indices, level=None):
+    def _compute_ratios(self, dataset, target_name, feature_indices, level=None):
         """ computes odds ratios, returning a dict of each feature's ratio
             uses a subset of features, defined by feature_indices
         """
         if not level:
             # bucket based on bottom/top 30%
-            # TODO
-            response = dataset.np_data[dataset.split][target_name]
-            print response
-            quit()
+            response = np.copy(dataset.np_data[dataset.split][target_name].toarray())
+            low_threshold = utils.percentile(response, 0.3)
+            high_threshold = utils.percentile(response, 0.7)
+            response[response < low_threshold] = 0
+            response[response > high_threshold] = 1
         else:
             level_idx = dataset.class_to_id_map[target_name][level]
-            response = dataset.np_data[dataset.split][target_name][:, level_idx]
-            print response; quit()
+            response = dataset.np_data[dataset.split][target_name][:, level_idx].toarray()
 
-    def train(self, dataset, model_dir):
-        """ trains the model using a src.data.dataset.Dataset
-            saves model-specific metrics (loss, etc) into self.report
-        """
-        print 'ODDS_RATIO: computing initial featureset'
+        feature_indices = set(feature_indices)
+        feature_counts = defaultdict(lambda: {0: 0, 1: 0})
+
+        covariates = dataset.np_data[dataset.split][dataset.input_varname()]
+        rows, cols = covariates.nonzero()
+        for example, feature_idx in zip(rows, cols):
+            if not feature_idx in feature_indices:  continue
+            if not response[example][0] in [0, 1]: continue
+
+            feature = dataset.ids_to_features[feature_idx]
+            feature_counts[feature][response[example][0]] += 1
+
+        ratios = {}
+        for feature, counts in feature_counts.iteritems():
+            # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2938757/
+            a = feature_counts[feature][0]
+            b = feature_counts[feature][1]
+            c = len(response[response == 0]) - a
+            d = len(response[response == 1]) - b
+            try:
+                ratios[feature] = float(a * d) / (b * c)
+            except ZeroDivisionError:
+                pass
+
+        return ratios
+
+
+    def _select_features(self, dataset, model_dir):
+        start = time.time()
+        print 'ODDS_RATIO: selecting initial featureset'
         # {feature: [odds ratio for each confound]}
         feature_ratios = defaultdict(list)
-        for var in self.confounds:
+        for var in tqdm(self.confounds):
             if var['type'] == 'categorical':
-                for level in dataset.class_to_id_map[var['name']]:
+                for level in tqdm(dataset.class_to_id_map[var['name']]):
                     ratios = self._compute_ratios(
                         dataset=dataset,
                         target_name=var['name'],
                         level=level,
-                        ratios_dict= feature_ratios,
                         feature_indices=dataset.ids_to_features.keys())
             else:
                 ratios = self._compute_ratios(
                     dataset=dataset,
                     target_name=var['name'],
-                    ratios_dict= feature_ratios,
                     feature_indices=dataset.ids_to_features.keys())
             for f, r in ratios.items():
                 feature_ratios[f].append(r)
 
+        feature_importance = sorted(
+            map(lambda (f, ors): (np.mean(ors), f), feature_ratios.items()))
+        # write this to output
+        with open(os.path.join(model_dir, 'odds-ratio-scores-before-selection.txt'), 'w') as f:
+            s = '\n'.join('%s\t%s' % (f, str(o)) for o, f in feature_importance)
+            f.write(s)
 
-        for i, target in enumerate(self.targets):
-            if target['type'] == 'continuous':
-                self.models[target['name']] = self._fit_regression(
-                    dataset=dataset, 
-                    target=target,
-                    features=features)
-            else:
-                self.models[target['name']] = self._fit_ovr(
-                    dataset=dataset, 
-                    target=target,
-                    features=features)
+        # choose K features with smallest odds ratio
+        selected_features = feature_importance[:self.params['selection_features']]
+        selected_features = map(lambda (ors, f): f, selected_features)
+        print '\n\tdone. Took %.2fs' % (time.time() - start)
+        return selected_features
 

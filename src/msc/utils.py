@@ -33,6 +33,15 @@ def percentile(x, threshold):
     idx = int(threshold * len(x))
     return sorted(x)[idx]
 
+
+def rank_threshold(x, rank, largest=True):
+    # return the threshold for the "rank" largest numbers in x
+    if largest:
+        return sorted(x)[::-1][rank]
+    else:
+        return sorted(x)[rank]
+
+
 def nested_iter(obj):
     """ recursively iterate through nested dict
     """

@@ -30,7 +30,7 @@ data_spec:
   - name: "issue_in_question"
     type: "categorical"
     control: True
-    skip: False
+    skip: True
     weight: 1
 
   - name: "state_of_origin"
@@ -57,10 +57,15 @@ data_spec:
 seed: 1
 working_dir: "test_run"
 
-# points to a 1-per-line file of tokens, or null (generate with top_n words)
-vocab: null 
-top_n: 1000
+# NOTE: can be randomized
+vocab:
+  # points to a 1-per-line file of tokens, or null (generate with top_n words)
+  vocab_file: null 
+  top_n: 1000
+  selection_algo: 'identity' # odds-ratio, mutual-information, identity
+  preselection_features: 0 # set to 0 to turn pre-selection off
 
+# NOTE: params can be randomized
 # all of these will be run
 model_spec:
   - type: "neural"
@@ -148,13 +153,9 @@ model_spec:
       batch_size: 128
       num_train_steps: 10
 
-  - type: "odds-ratio"
-    name: 'odds-ratio_1'
-    skip: False
-    params:
 
 
 ######### EVALUATION
-feature_importance_threshold: 0.9
+num_eval_features: 150
 
 

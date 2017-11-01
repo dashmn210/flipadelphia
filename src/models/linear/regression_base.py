@@ -56,9 +56,11 @@ class Regression(Model):
         self.targets = [
             variable for variable in variables \
             if variable['control'] == False and not variable['skip']]
-        self.confound_names = [
-            variable['name'] for variable in variables \
+        self.confounds = [
+            variable for variable in variables \
             if variable['control'] and not variable['skip']]
+        self.confound_names = [
+            variable['name'] for variable in self.confounds]
 
 
     def save(self, model_dir):
