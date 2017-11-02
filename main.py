@@ -37,8 +37,8 @@ def process_command_line():
                         help='run training')
     parser.add_argument('--model', dest='model', type=str, default=None,
                         help='force a single model to be run (turns off multiple expts)')
-    parser.add_argument('--ignore-skips', dest='ignore_skips', action='store_true', 
-                        help='ignore skipping')
+    parser.add_argument('--redo', dest='redo', action='store_true', 
+                        help='redo an experiment')
     parser.add_argument('--gpu', dest='gpu', type=str, default='0', help='gpu')
     args = parser.parse_args()
     return args
@@ -186,8 +186,8 @@ if __name__ == '__main__':
     try:
         results = None
         for i in range(num_experiments):
-            expt = generate_experiment(config, i)
-            if not args.ignore_skips and os.path.exists(os.path.join(expt.working_dir, 'config.yaml')):
+            expt = generate_experiment(config, i) if not args.redo else expt
+            if not args.redo and os.path.exists(os.path.join(expt.working_dir, 'config.yaml')):
                 print 'MAIN: skipping expt ', i
                 continue
             result = run_experiment(expt, args, config.working_dir)
