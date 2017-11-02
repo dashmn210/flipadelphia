@@ -51,7 +51,8 @@
 ## **MORE FOOD**
 * **idea** predict rating from review, control by resturaunt type, price, etc
 * **progress**
-  * formatted TSV file and raw json stored at https://drive.google.com/drive/folders/0B5DfdyRTPhIuYXAwVDNTM2FVQWM 
+  * formatted TSV file and raw json stored at https://drive.google.com/drive/u/1/folders/0B5DfdyRTPhIuYXAwVDNTM2FVQWM
+  * tsv used to train is reviews_formatted.tsv
   * data is at https://nlp.stanford.edu/robvoigt/nis/
   * emailed rob about this
 
