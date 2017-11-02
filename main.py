@@ -35,6 +35,8 @@ def process_command_line():
                         help='run test')
     parser.add_argument('--train', dest='train', action='store_true', 
                         help='run training')
+    parser.add_argument('--model', dest='model', type=str, default=None,
+                        help='force a single model to be run (turns off multiple expts)')
     parser.add_argument('--gpu', dest='gpu', type=str, default='0', help='gpu')
     args = parser.parse_args()
     return args
@@ -63,6 +65,8 @@ def run_experiment(config, args, base_dir):
         for model_description in config.model_spec:
             if model_description.get('skip', False):
                 continue
+            if args.model is not None and args.model != model_description['type']:
+                continue
 
             print 'MAIN: training ', model_description['name']
             start_time = time.time()
@@ -88,6 +92,9 @@ def run_experiment(config, args, base_dir):
         for model_description in config.model_spec:
             if model_description.get('skip', False):
                 continue
+            if args.model is not None and args.model != model_description['type']:
+                continue
+
             print 'MAIN: inference with ', model_description['name']
             start_time = time.time()
 
@@ -161,6 +168,8 @@ if __name__ == '__main__':
     args = process_command_line()
     config = utils.load_config(args.config)   
     num_experiments = validate_config(config)
+    if args.model is not None:
+        num_experiments = 1
     reload(sys)
     sys.setdefaultencoding('utf8')
 
