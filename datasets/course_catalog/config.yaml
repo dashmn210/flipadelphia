@@ -1,0 +1,166 @@
+########## EXPERIMENT
+num_experiments: 2
+
+########## DATA
+data_dir: "datasets/course_catalog"
+prefix: "reviews_formatted.tsv"
+train_suffix: ".train"
+dev_suffix: ".dev"
+test_suffix: ".test"
+
+sos: "<s>"
+eos: "</s>"
+unk: "<unk>"
+
+
+# NOTE -- var names can't 
+#              1) overlap with features
+#              2) contain spaces
+#              3) contain dashes
+data_spec:
+  - name: "description"
+    type: "text"
+
+  - name: "title"
+    type: "text"
+    control: True
+    skip: True
+    weight: 1
+
+  - name: "subject"
+    type: "categorical"
+    control: True
+    skip: False
+    weight: 1
+
+  - name: "course_number"
+    type: "categorical"
+    control: True
+    skip: True
+    weight: 1
+
+  - name: "course_level"
+    type: "categorical"
+    control: True
+    skip: False
+    weight: 1
+
+  - name: "num_reqs"
+    type: "categorical"
+    control: True
+    skip: False
+    weight: 1
+
+  - name: "repeatable"
+    type: "categorical"
+    control: True
+    skip: True
+    weight: 1
+
+  - name: "grading"
+    type: "categorical"
+    control: True
+    skip: True
+    weight: 1
+
+  - name: "units_min"
+    type: "categorical"
+    control: False
+    skip: True
+    weight: 1
+
+  - name: "units_max"
+    type: "categorical"
+    control: False
+    skip: True
+    weight: 1
+
+  - name: "level"
+    type: "categorical"
+    control: True
+    skip: False
+    weight: 1
+
+  - name: "final"
+    type: "categorical"
+    control: True
+    skip: False
+    weight: 1
+
+  - name: "course_id"
+    type: "categorical"
+    control: False
+    skip: True
+    weight: 1
+
+  - name: "term"
+    type: "categorical"
+    control: True
+    skip: True
+    weight: 1
+
+  - name: "component"
+    type: "categorical"
+    control: True
+    skip: True
+    weight: 1
+
+  - name: "num_enrolled"
+    type: "continuous"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "max_enrolled"
+    type: "continuous"
+    control: False
+    skip: True
+    weight: 1
+
+  - name: "num_waitlist"
+    type: "continuous"
+    control: False
+    skip: True
+    weight: 1
+
+  - name: "max_waitlist"
+    type: "continuous"
+    control: False
+    skip: True
+    weight: 1
+
+  - name: "add_consent"
+    type: "categorical"
+    control: False
+    skip: True
+    weight: 1
+
+  - name: "start_time"
+    type: "continuous"
+    control: True
+    skip: True
+    weight: 1
+
+  - name: "end_time"
+    type: "continuous"
+    control: True
+    skip: True
+    weight: 1
+
+  - name: "location"
+    type: "categorical"
+    control: False
+    skip: True
+    weight: 1
+
+  - name: "days"
+    type: "categorical"
+    control: True
+    skip: True
+    weight: 1
+
+  - name: "instructors"
+    type: "categorical"
+    control: True
+    skip: True
+    weight: 1
