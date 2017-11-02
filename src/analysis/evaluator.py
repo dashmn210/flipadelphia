@@ -95,19 +95,16 @@ def evaluate(config, dataset, predictions, model_dir):
     """
     performance = {}
     correlations = {}
+    # select K largest features that are in the dataset
+    #   (i.e. ignoring fixed features, intercepts, etc)
+    features = sorted(
+        predictions.feature_importance.items(),
+        key=lambda x: x[1])[::-1][:config.num_eval_features]
+    features = [x[0] for x in features if x[0] in dataset.features]
 
-    # select K largest features
-    importance_threshold = utils.rank_threshold(
-        predictions.feature_importance.values(),
-        config.num_eval_features)
-    features = [
-        f for f in dataset.features \
-        if  f in predictions.feature_importance \
-        and predictions.feature_importance[f] > importance_threshold
-    ]
     print 'EVALUATOR: writing selected features + weights...'
     s = ''
-    for f in sorted(features, key=lambda f: predictions.feature_importance[f])[::-11]:
+    for f in features:
         s += '%s\t%.4f\n' % (f, predictions.feature_importance[f])
     with open(os.path.join(model_dir, 'selected-words-and-importance.txt'), 'w') as f:
         f.write(s)

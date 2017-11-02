@@ -215,6 +215,8 @@ class CausalNetwork:
         attn_scores = defaultdict(list)
         for text, attn in zip(inputs, scores):
             for word, score in zip(text, attn):
+                if word not in self.dataset.features:
+                    continue
                 attn_scores[word].append(score)
         mean_attn_scores = {k: np.mean(v) for k, v in attn_scores.items()}
 

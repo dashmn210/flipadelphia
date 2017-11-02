@@ -50,7 +50,7 @@ def set_seed(seed):
     tf.set_random_seed(seed)  # only default graph
 
 
-def run_experiment(config, args, base_dir):
+def run_experiment(config, args):
     # if train, switch the dataset to train, then
     #  train and save each model in the config spec
     if not os.path.exists(config.working_dir):
@@ -58,7 +58,7 @@ def run_experiment(config, args, base_dir):
     utils.write_config(config, os.path.join(config.working_dir, 'config.yaml'))
 
     print 'MAIN: parsing dataset'
-    d = Dataset(config, base_dir)
+    d = Dataset(config, config.base_dir)
     print 'MAIN: dataset done. took %.2fs' % (time.time() - start)
 
     if args.train:
@@ -152,6 +152,8 @@ def generate_experiment(parent_config, expt_id):
     assert not d['working_dir'].endswith('/')
     d['working_dir'] = d['working_dir'] + '_%s' % expt_id
 
+    d['base_dir'] = parent_config.working_dir
+
     for k, v in d['vocab'].items():
         if isinstance(v, list):
             d['vocab'][k] = random.choice(v)
@@ -190,7 +192,7 @@ if __name__ == '__main__':
             if not args.redo and os.path.exists(os.path.join(expt.working_dir, 'config.yaml')):
                 print 'MAIN: skipping expt ', i
                 continue
-            result = run_experiment(expt, args, config.working_dir)
+            result = run_experiment(expt, args)
             if results is None:
                 results = result
             else:

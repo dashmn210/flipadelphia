@@ -30,7 +30,7 @@ class FixedRegression(plain_regression.RegularizedRegression):
             X_confounds, confound_features = dataset.nontext_X_chunk(
                 self.confound_names, start, end)
 
-            X = sparse.hstack([X_text, X_confounds]).tocsr()
+            X = np.column_stack([X_text, X_confounds])
             X_features = text_features + confound_features
 
             yield X, y, X_features

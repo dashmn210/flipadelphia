@@ -54,10 +54,15 @@ class Dataset(object):
 
         # build {split {variable: np array with that var's data (columns indexed by level if categorical) } }
         start = time.time()
-        print 'DATASET: parsing data into np arrays...'
-        self.np_data = self._get_np_data()
+        np_path = os.path.join(config.working_dir, 'np_data')
+        if not os.path.exists(np_path):
+            print 'DATASET: parsing data into np arrays...'
+            self.np_data = self._get_np_data()
+            # self._write_np_data(np_path, self.np_data)
+        else:
+            print 'DATASET: restoring np_arrays from ', np_path
+            # self._read_np_data(np_path)
         print '\tdone, took %.2fs' % (time.time() - start)
-
 
 
     def datafile_to_np(self, datafile, feature_id_map=None, text_file=False):
@@ -133,23 +138,24 @@ class Dataset(object):
     def y_chunk(self, target_name, target_level=None, start=0, end=None):
         end = end or self.split_sizes[self.split]
         # pull out the target for the chunk
-        y = self.np_data[self.split][target_name][start:end]
+        y = self.np_data[self.split][target_name][start:end].toarray()
         if target_level is not None:
             target_col = self.class_to_id_map[target_name][target_level]
             y = y[:, target_col]
-        y = np.squeeze(y.toarray())
+        y = np.squeeze(y)
         return y
 
 
     def text_X_chunk(self, feature_subset=None, start=0, end=None):
         end = end or self.split_sizes[self.split]
-
         # start with all the text features for desired chunk
-        X = self.np_data[self.split][self.input_varname()][start:end]
-        X_features = self.ordered_features or feature_subset
+        X = self.np_data[self.split][self.input_varname()][start:end].toarray()
+        X_features = self.ordered_features
         if feature_subset is not None:
+            assert len(feature_subset) > 0
             retain_indices = map(lambda f: self.features[f], feature_subset)
             X = X[:, retain_indices]
+            X_features = feature_subset
         return X, X_features        
 
 
@@ -157,11 +163,11 @@ class Dataset(object):
         X_features = []
         cols = []
         for varname in features:
-            one_hots = self.np_data[self.split][varname][start:end]
+            one_hots = self.np_data[self.split][varname][start:end].toarray()
             for level, idx in self.class_to_id_map[varname].items():
                 cols.append(one_hots[:, idx])
                 X_features.append('%s|%s' % (varname, level))
-        X = sparse.hstack(cols).tocsr()
+        X = np.column_stack(cols)
         return X, X_features
 
 
@@ -214,6 +220,14 @@ class Dataset(object):
         assert os.path.exists(vocab_file), "The vocab file %s does not exist" % vocab_file
 
         lines = map(lambda x: x.strip(), open(vocab_file).readlines())
+    
+        if len(lines) != len(set(lines)):
+            print 'DATASET: vocab %s contains dups!! fixing.' % vocab_file
+            unk = self.config.unk
+            os.system('rm %s' % vocab_file)
+            s = unk + '\n' + '\n'.join([x for x in set(lines) if x != unk])
+            with open(vocab_file, 'w') as f: f.write(s)
+            lines = map(lambda x: x.strip(), open(vocab_file).readlines())
 
         assert lines[0] == self.config.unk, \
             "The first words in %s is not %s" % (vocab_file)
@@ -232,6 +246,7 @@ class Dataset(object):
                 f.write('\n'.join(vocab))
             print '\tdone. took %.fs' % (time.time() - start)
         else:
+            print 'DATASET: restoring vocab from ', vocab_path
             vocab = [x.strip() for x in open(vocab_path).readlines()][1:] # unk is 0th elem
 
         if self.config.vocab['preselection_algo'] == 'identity':

@@ -129,8 +129,6 @@ class Regression(Model):
 
 
     def _predict(self, X, feature_names, model):
-        assert isinstance(X, sparse.csr.csr_matrix)
-
         def score(example):
             s = 0
             for xi, feature in zip(example, feature_names):
@@ -140,7 +138,7 @@ class Regression(Model):
 
         out = []
         for row in X:
-            s = score(np.squeeze(row.toarray()))
+            s = score(np.squeeze(row))
             if model.response_type == 'continuous':
                 out.append(s)
             else:
