@@ -1,0 +1,293 @@
+########## EXPERIMENT
+num_experiments: 2
+
+########## DATA
+data_dir: "datasets/"
+prefix: "reviews_formatted.tsv"
+train_suffix: ".train"
+dev_suffix: ".dev"
+test_suffix: ".test"
+
+sos: "<s>"
+eos: "</s>"
+unk: "<unk>"
+
+
+# NOTE -- var names can't 
+#              1) overlap with features
+#              2) contain spaces
+#              3) contain dashes
+data_spec:
+  - name: "customer_review_segmented"
+    type: "text"
+
+  - name: "customer_review_raw"
+    type: "categorical"
+    control: True
+    skip: True
+    weight: 1
+
+  - name: "review_id"
+    type: "categorical"
+    control: True
+    skip: True
+    weight: 1
+
+  - name: "date_raw"
+    type: "categorical"
+    control: True
+    skip: True
+    weight: 1
+
+  - name: "month"
+    type: "categorical"
+    control: True
+    skip: False
+    weight: 1
+
+  - name: "season"
+    type: "categorical"
+    control: True
+    skip: True
+    weight: 1
+
+  - name: "member_id"
+    type: "categorical"
+    control: True
+    skip: True
+    weight: 1
+
+  - name: "member_name"
+    type: "categorical"
+    control: True
+    skip: True
+    weight: 1
+
+  - name: "review_type"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "service_rating"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "rank_rating"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "ambience_rating"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "taste_rating"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "cost_rating"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "restaurant_id"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "restaurant_name"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "restaurant_full_name"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "breadcrumb"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "city"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "district"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "address"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "branch"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "cuisine_type"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "avg_service_rating"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "avg_rank_rating"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "avg_ambience_rating"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "avg_taste_rating"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "avg_cost_rating"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+########## MODELING
+seed: 3
+working_dir: "test_run"
+
+# NOTE: can be randomized
+vocab:
+  # points to a 1-per-line file of tokens, or null (generate with top_n words)
+  vocab_file: null 
+  top_n: 1000
+  preselection_algo: ['mutual-information', 'odds-ratio'] # odds-ratio, mutual-information, identity
+  preselection_features: 500 # set to 0 to turn pre-selection off
+
+
+
+# NOTE: params can be randomized
+# all of these will be run
+model_spec:
+  - type: "neural"
+    name: "flip_1"
+    skip: True
+    params:
+      batch_size: 128
+      max_seq_len: 50
+      num_train_steps: 10
+      learning_rate: 0.001
+      embedding_size: 10
+      encoder_layers: 1  # set to 0 for no RNN
+      encoder_units: 10
+      attn_layers: 2
+      attn_units: 10
+      classifier_layers: [2, 3, 9, 10, 11]
+      classifier_units: 10
+      regressor_layers: 1
+      regressor_units: 10
+      gradient_clip: 5.0
+      dropout: 0.4
+
+  - type: 'causal-regression'
+    name: 'causal_1'
+    skip: True
+    params:
+      batch_size: 128
+      max_seq_len: 50
+      num_train_steps: 10
+      learning_rate: 0.01
+      regularizor: 'l2'   # [l1, l2]
+      lambda: 0.1         # 0 turns regularization off
+
+  - type: "causal-neural"
+    name: 'causal_neural_1'
+    skip: True
+    params:
+      batch_size: 128
+      max_seq_len: 50
+      num_train_steps: 10
+      learning_rate: 0.001
+      embedding_size: 10
+      encoder_layers: 2
+      encoder_units: 10
+      attn_layers: 2
+      attn_units: 10
+      classifier_layers: 1
+      classifier_units: 10
+      regressor_layers: 1
+      regressor_units: 10
+      gradient_clip: 5.0
+      dropout: 0.4
+
+
+  - type: "mixed-regression"
+    name: 'mixed_1'
+    skip: True
+    params:
+
+  - type: "double-regression"
+    name: 'double_1'
+    skip: True
+    params:
+      regularizor: 'l2'   # [l1, l2]
+      lambda: 0.0         # 0 turns regularization off
+      batch_size: [8, 128, 1000]
+      num_train_steps: [1, 10, 50]
+      
+
+  - type: "fixed-regression"
+    name: 'fixed_1'
+    skip: True
+    params:
+      regularizor: 'l2'   # [l1, l2]
+      lambda: 0.0         # 0 turns regularization off
+      batch_size: 128
+      num_train_steps: 10
+
+  - type: "regression"
+    name: 'regression_1'
+    skip: True
+    params:
+      regularizor: 'l2'   # [l1, l2]
+      lambda: 0.0         # 0 turns regularization off
+      batch_size: 128
+      num_train_steps: 10
+
+
+
+######### EVALUATION
+num_eval_features: 150
+
+
