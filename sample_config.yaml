@@ -2,8 +2,8 @@
 num_experiments: 2
 
 ########## DATA
-data_dir: "datasets/cfpb_small/"
-prefix: "subset.tsv"
+data_dir: "datasets/food/"
+prefix: "reviews_formatted.partial.filtered.tsv"
 train_suffix: ".train"
 dev_suffix: ".dev"
 test_suffix: ".test"
@@ -18,40 +18,43 @@ unk: "<unk>"
 #              2) contain spaces
 #              3) contain dashes
 data_spec:
-  - name: "consumer_complaint"
+  #1
+  - name: "customer_review"
     type: "text"
 
-  - name: "product_in_question"
+  #6
+  - name: "season"
     type: "categorical"
     control: True
     skip: False
     weight: 1
 
-  - name: "issue_in_question"
-    type: "categorical"
-    control: True
-    skip: True
-    weight: 1
-
-  - name: "state_of_origin"
-    type: "categorical"
-    control: True
-    skip: True
-    weight: 1
-
-  - name: "company_response"
+  #10
+  - name: "service_rating"
     type: "categorical"
     control: False
     skip: False
     weight: 1
 
-  - name: "timely_response"
+  #19
+  - name: "city"
     type: "categorical"
-    control: False
+    control: True
     skip: False
     weight: 1
 
-    
+
+  #23
+  - name: "cuisine_type"
+    type: "categorical"
+    control: True
+    skip: False
+    weight: 1
+
+
+
+
+
 
 ########## MODELING
 seed: 3
@@ -62,7 +65,7 @@ vocab:
   # points to a 1-per-line file of tokens, or null (generate with top_n words)
   vocab_file: null 
   top_n: 1000
-  preselection_algo: ['mutual-information', 'odds-ratio'] # odds-ratio, mutual-information, identity
+  preselection_algo: 'identity' # odds-ratio, mutual-information, identity
   preselection_features: 500 # set to 0 to turn pre-selection off
 
 
@@ -148,7 +151,7 @@ model_spec:
 
   - type: "regression"
     name: 'regression_1'
-    skip: True
+    skip: False
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off
