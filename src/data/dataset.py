@@ -264,7 +264,7 @@ class Dataset(object):
                 print '\n\tdone. Took %.2fs' % (time.time() - start)
             else:
                 print 'ODDS_RATIO: recoveing from ', out_path
-                vocab = [x.strip() for x in open(out).readlines()]
+                vocab = [x.strip() for x in open(out_path).readlines()]
 
         elif self.config.vocab['preselection_algo'] == 'mutual-information':
             out_path = os.path.join(self.base_dir, 'mi_vocab.txt')
