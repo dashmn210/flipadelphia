@@ -186,7 +186,7 @@ if __name__ == '__main__':
     try:
         results = None
         for i in range(num_experiments):
-            expt = generate_experiment(config, i) if not args.redo else expt
+            expt = generate_experiment(config, i) if not args.redo else config
             if not args.redo and os.path.exists(os.path.join(expt.working_dir, 'config.yaml')):
                 print 'MAIN: skipping expt ', i
                 continue
