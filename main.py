@@ -133,7 +133,7 @@ def validate_config(config):
             print 'MAIN: falling back to 1 experiment...no randomizable values provided'
         return 1
     return num_expts
-
+    
 
 def generate_experiment(parent_config, expt_id):
     """ choose a random thing from each config list 
@@ -143,7 +143,7 @@ def generate_experiment(parent_config, expt_id):
     assert not d['working_dir'].endswith('/')
     d['working_dir'] = d['working_dir'] + '_%s' % expt_id
 
-    for k, v in d['vocab']:
+    for k, v in d['vocab'].items():
         if isinstance(v, list):
             d['vocab'][k] = random.choice(v)
 

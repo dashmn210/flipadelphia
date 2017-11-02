@@ -18,6 +18,10 @@ class UnsortableOrderedDict(OrderedDict):
 
 yaml.add_representer(UnsortableOrderedDict, yaml.representer.SafeRepresenter.represent_dict)
 
+def swap(a, i, j):
+    tmp = a[i]
+    a[i] = a[j]
+    a[j] = tmp
 
 
 def pickle(obj, path):

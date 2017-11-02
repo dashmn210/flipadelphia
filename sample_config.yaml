@@ -62,8 +62,10 @@ vocab:
   # points to a 1-per-line file of tokens, or null (generate with top_n words)
   vocab_file: null 
   top_n: 1000
-  selection_algo: 'identity' # odds-ratio, mutual-information, identity
-  preselection_features: 0 # set to 0 to turn pre-selection off
+  preselection_algo: 'mutual-information' # odds-ratio, mutual-information, identity
+  preselection_features: 500 # set to 0 to turn pre-selection off
+
+
 
 # NOTE: params can be randomized
 # all of these will be run

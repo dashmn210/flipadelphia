@@ -7,10 +7,12 @@ import tensorflow as tf
 import time
 from tqdm import tqdm
 import sys
-sys.path.append('..')
+sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 import src.msc.utils as utils
 import numpy as np
 from scipy import sparse
+import src.feature_selectors.odds_ratio as odds_ratio
+import src.feature_selectors.mutual_information as mutual_information
 
 # assumes unk is at top of vocab file but we are enforcing that in _check_vocab()
 UNK_ID = 0
@@ -34,7 +36,10 @@ class Dataset(object):
         print 'DATASET: making splits...'
         self.data_files, self.split_sizes, self.whole_data_files = self._cut_data()
 
-        # vocab = filepath to vocab file
+        # class_to_id_map: {variable name: {'class': index}  }  for each categorical variable
+        self.class_to_id_map, self.id_to_class_map = self._get_categorical_tables()
+
+        # self.vocab = filepath to vocab file
         if self.config.vocab['vocab_file'] is None:
             start = time.time()
             print 'DATASET: generating vocab of %d tokens..' % self.config.vocab['top_n']
@@ -43,70 +48,25 @@ class Dataset(object):
             print '\tdone, took %.2fs' % (time.time() - start)
         else:
             self.vocab = self.config.vocab['vocab_file']
-
         self.vocab_size = self._check_vocab(self.vocab)
         self.features = {v.strip(): i for i, v in enumerate(open(self.vocab))}
         self.ids_to_features = {i: f for f, i in self.features.items()}
         self.ordered_features = [self.ids_to_features[i] for i in range(self.vocab_size)]
-        print 'NUM FEATURES ', len(self.features)
-
-        # TODO -- REFACTOR THIS
-        # class_to_id_map: {variable name: {'class': index}  }  for each categorical variable
-        # (for tensorflow, and so that all the models can talk about 
-        #  categorical classes the same way
-        self.class_to_id_map = defaultdict(dict)
-        self.id_to_class_map = defaultdict(dict)
-        for variable in self.config.data_spec[1:]:
-            if variable['type'] != "categorical": 
-                continue
-            i = 0
-            var_filename = self.whole_data_files[variable['name']]
-            for level in set(open(var_filename).read().split('\n')):  # unique rows
-                level = level.strip()
-                if level == '' or level in self.class_to_id_map[variable['name']]: 
-                    continue
-                level = level.replace(' ', '_') # whitespaces not allowed in class names
-                self.class_to_id_map[variable['name']][level] = i
-                self.id_to_class_map[variable['name']][i] = level
-                i += 1
 
         # build {split {variable: np array with that var's data (columns indexed by level if categorical) } }
         start = time.time()
         print 'DATASET: parsing data into np arrays...'
-        self.np_data = defaultdict(dict)
-        for split, variables in self.data_files.items():
-            for varname, filepath in variables.items():
-                var = self.get_variable(varname)
-                if var['type'] == 'continuous':
-                    self.np_data[split][varname] = self._datafile_to_np(
-                        datafile=filepath)
-                else:
-                    if varname == self.input_varname():
-                        self.np_data[split][varname] = self._datafile_to_np(
-                            datafile=filepath,
-                            feature_id_map=self.features,
-                            text_file=True)
-                    else:
-                        self.np_data[split][varname] = self._datafile_to_np(
-                            datafile=filepath,
-                            feature_id_map=self.class_to_id_map[varname])
+        self.np_data = self._get_np_data()
         print '\tdone, took %.2fs' % (time.time() - start)
 
-        # pre-select a subset of features if teh user asked for it
-        if self.config.vocab['preselection_features'] > 0:
-            print 'DATASET: pre-selecting a subset of features using method ', self.config.vocab['selection_algo']
-            # TODO - run feature selection, replace vocab stuff
-            
 
 
-    def _datafile_to_np(self, datafile, feature_id_map=None, text_file=False):
+    def datafile_to_np(self, datafile, feature_id_map=None, text_file=False):
         """ returns an np array of a 1-per-line datafile
             if feature_id_map is provided, the variable is assumed
                 to be categorical, and the returned array will
                 have one-hot rows whose ids correspond to the 
                 values of the provided feature_id_map
-
-            TODO -- binary? or word counts?
         """
         num_examples = utils.file_len(datafile)
         num_features = len(feature_id_map) if feature_id_map else 1
@@ -125,6 +85,50 @@ class Dataset(object):
                 # continuous
                 out[i][0] = float(line)
         return sparse.csr_matrix(out)
+
+
+    def _get_np_data(self):
+        np_data = defaultdict(dict)
+        for split, variables in self.data_files.items():
+            for varname, filepath in variables.items():
+                var = self.get_variable(varname)
+                if var['type'] == 'continuous':
+                    np_data[split][varname] = self.datafile_to_np(
+                        datafile=filepath)
+                else:
+                    if varname == self.input_varname():
+                        np_data[split][varname] = self.datafile_to_np(
+                            datafile=filepath,
+                            feature_id_map=self.features,
+                            text_file=True)
+                    else:
+                        np_data[split][varname] = datafile_to_np(
+                            datafile=filepath,
+                            feature_id_map=self.class_to_id_map[varname])
+        return np_data
+
+
+
+    def _get_categorical_tables(self):
+        """ generate ids for each categorical variable
+        """
+        class_to_id_map = defaultdict(dict)
+        id_to_class_map = defaultdict(dict)
+        for variable in self.config.data_spec[1:]:
+            if variable['type'] != "categorical": 
+                continue
+            i = 0
+            var_filename = self.whole_data_files[variable['name']]
+            for level in set(open(var_filename).read().split('\n')):  # unique rows
+                level = level.strip()
+                if level == '' or level in class_to_id_map[variable['name']]: 
+                    continue
+                level = level.replace(' ', '_') # whitespaces not allowed in class names
+                class_to_id_map[variable['name']][level] = i
+                id_to_class_map[variable['name']][i] = level
+                i += 1
+        return class_to_id_map, id_to_class_map
+
 
 
     def y_chunk(self, target_name, target_level=None, start=0, end=None):
@@ -219,13 +223,30 @@ class Dataset(object):
 
 
     def _gen_vocab(self, text_file):
-        vocab_file = os.path.join(self.config.working_dir, 'generated_vocab')
+        vocab_file = os.path.join(self.config.working_dir, 'vocab.txt')
         if os.path.exists(vocab_file):
             return vocab_file
 
         word_ctr = Counter(open(text_file).read().split())
         vocab = map(lambda x: x[0], word_ctr.most_common(self.config.vocab['top_n']))
-        vocab = [self.config.unk, self.config.sos, self.config.eos] + vocab
+
+        if self.config.vocab['preselection_algo'] == 'identity':
+            pass
+        elif self.config.vocab['preselection_algo'] == 'odds-ratio':
+            start = time.time()
+            print 'ODDS_RATIO: selecting initial featureset'
+            vocab = odds_ratio.select_features(
+                dataset=self, 
+                vocab=vocab, 
+                k=self.config.vocab['preselection_features'])
+            print '\n\tdone. Took %.2fs' % (time.time() - start)
+        elif self.config.vocab['preselection_algo'] == 'mutual-information':
+            vocab = mutual_information.select_features(
+                dataset=self, 
+                vocab=vocab, 
+                k=self.config.vocab['preselection_features'])
+
+        vocab = [self.config.unk] + vocab
 
         with open(vocab_file, 'w') as f:
             f.write('\n'.join(vocab))
