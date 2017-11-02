@@ -92,6 +92,12 @@ data_spec:
     control: False
     skip: True
     weight: 1
+  
+  - name: "section_id"
+    type: "categorical"
+    control: False
+    skip: True
+    weight: 1
 
   - name: "term"
     type: "categorical"
