@@ -27,8 +27,9 @@ class Dataset(object):
             needed to run an experiment from start to finish
     """
 
-    def __init__(self, config):
+    def __init__(self, config, base_dir):
         self.config = config
+        self.base_dir = base_dir
         assert self.config.data_spec[0]['type'] == 'text', \
             'text input must be first element of data spec!'
 
@@ -221,40 +222,53 @@ class Dataset(object):
 
 
     def _gen_vocab(self, text_file):
-        vocab_file = os.path.join(self.config.working_dir, 'vocab.txt')
-        if os.path.exists(vocab_file):
-            return vocab_file
-        start = time.time()
-        print 'DATASET: generating vocab of %d tokens..' % self.config.vocab['top_n']
-        word_ctr = Counter(open(text_file).read().split())
-        vocab = map(lambda x: x[0], word_ctr.most_common(self.config.vocab['top_n']))
-        print '\tdone. took %.fs' % (time.time() - start)
+        vocab_path = os.path.join(self.base_dir, 'freq_vocab.txt')
+        if not os.path.exists(vocab_path):
+            print 'DATASET: generating vocab of %d tokens..' % self.config.vocab['top_n']
+            start = time.time()
+            word_ctr = Counter(open(text_file).read().split())
+            vocab = map(lambda x: x[0], word_ctr.most_common(self.config.vocab['top_n']))
+            with open(vocab_path, 'w') as f:
+                f.write('\n'.join(vocab))
+            print '\tdone. took %.fs' % (time.time() - start)
+        else:
+            vocab = [x.strip() for x in open(vocab_path).readlines()][1:] # unk is 0th elem
 
         if self.config.vocab['preselection_algo'] == 'identity':
-            pass
+            out_path = vocab_path
 
         elif self.config.vocab['preselection_algo'] == 'odds-ratio':
-            start = time.time()
-            print 'ODDS_RATIO: selecting initial featureset'
-            vocab = odds_ratio.select_features(
-                dataset=self, 
-                vocab=vocab, 
-                k=self.config.vocab['preselection_features'])
-            print '\n\tdone. Took %.2fs' % (time.time() - start)
+            out_path = os.path.join(self.base_dir, 'or_vocab.txt')
+            if not os.path.exists(out_path):
+                start = time.time()
+                print 'ODDS_RATIO: selecting initial featureset'
+                vocab = odds_ratio.select_features(
+                    dataset=self, 
+                    vocab=vocab, 
+                    k=self.config.vocab['preselection_features'])
+                print '\n\tdone. Took %.2fs' % (time.time() - start)
+            else:
+                print 'ODDS_RATIO: recoveing from ', out_path
+                vocab = [x.strip() for x in open(out).readlines()]
 
         elif self.config.vocab['preselection_algo'] == 'mutual-information':
-            print 'MUTUAL_INFORMATION: selecting initial featureset'
-            vocab = mutual_information.select_features(
-                dataset=self, 
-                vocab=vocab, 
-                k=self.config.vocab['preselection_features'])
-            print '\n\tdone. Took %.2fs' % (time.time() - start)
+            out_path = os.path.join(self.base_dir, 'mi_vocab.txt')
+            if not os.path.exists(out_path):
+                print 'MUTUAL_INFORMATION: selecting initial featureset'
+                vocab = mutual_information.select_features(
+                    dataset=self, 
+                    vocab=vocab, 
+                    k=self.config.vocab['preselection_features'])
+                print 'MUTUAL_INFORMATION: recoveing from ', out_path
+                print '\n\tdone. Took %.2fs' % (time.time() - start)
+            else:
+                vocab = [x.strip() for x in open(out_path).readlines()]
 
         vocab = [self.config.unk] + vocab
 
-        with open(vocab_file, 'w') as f:
+        with open(out_path, 'w') as f:
             f.write('\n'.join(vocab))
-        return vocab_file
+        return out_path
 
 
     def _cut_data(self):
