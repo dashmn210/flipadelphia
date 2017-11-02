@@ -4,6 +4,7 @@
 * **idea**: take course description, predict enrollement, control for professor, subject/dept, (school, reqs met)
 * **progress**:
   * formatted TSV files and raw XML files stored at [https://drive.google.com/drive/folders/0B5DfdyRTPhIudjk5VXRMdDk3aEU](https://drive.google.com/drive/folders/0B5DfdyRTPhIudjk5VXRMdDk3aEU)
+  * courses_all.tsv contains data from 2010-2018, or run [YEAR]no_header.tsv
   * seems like crawling is our most likely bet. 
     * [example crawling script](https://github.com/rpryzant/flipadelphia/blob/master/datasets/course_catalog/Abhijeets_crawling_script.py)
     * [example crawler 2](https://github.com/rpryzant/SubCrawl/blob/master/code_release/corpus_generation/subscene_crawler.py)
@@ -52,7 +53,7 @@
 * **idea** predict rating from review, control by resturaunt type, price, etc
 * **progress**
   * formatted TSV file and raw json stored at https://drive.google.com/drive/u/1/folders/0B5DfdyRTPhIuYXAwVDNTM2FVQWM
-  * tsv used to train is reviews_formatted.tsv
+  * run on reviews_formatted.tsv
   * data is at https://nlp.stanford.edu/robvoigt/nis/
   * emailed rob about this
 
