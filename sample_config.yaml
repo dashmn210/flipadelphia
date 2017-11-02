@@ -54,7 +54,7 @@ data_spec:
     
 
 ########## MODELING
-seed: 1
+seed: 3
 working_dir: "test_run"
 
 # NOTE: can be randomized
@@ -62,7 +62,7 @@ vocab:
   # points to a 1-per-line file of tokens, or null (generate with top_n words)
   vocab_file: null 
   top_n: 1000
-  preselection_algo: 'mutual-information' # odds-ratio, mutual-information, identity
+  preselection_algo: ['mutual-information', 'odds-ratio'] # odds-ratio, mutual-information, identity
   preselection_features: 500 # set to 0 to turn pre-selection off
 
 

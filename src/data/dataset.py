@@ -42,10 +42,8 @@ class Dataset(object):
         # self.vocab = filepath to vocab file
         if self.config.vocab['vocab_file'] is None:
             start = time.time()
-            print 'DATASET: generating vocab of %d tokens..' % self.config.vocab['top_n']
             input_seqs = self.whole_data_files[self.input_varname()]
             self.vocab = self._gen_vocab(input_seqs)
-            print '\tdone, took %.2fs' % (time.time() - start)
         else:
             self.vocab = self.config.vocab['vocab_file']
         self.vocab_size = self._check_vocab(self.vocab)
@@ -102,7 +100,7 @@ class Dataset(object):
                             feature_id_map=self.features,
                             text_file=True)
                     else:
-                        np_data[split][varname] = datafile_to_np(
+                        np_data[split][varname] = self.datafile_to_np(
                             datafile=filepath,
                             feature_id_map=self.class_to_id_map[varname])
         return np_data
@@ -226,12 +224,15 @@ class Dataset(object):
         vocab_file = os.path.join(self.config.working_dir, 'vocab.txt')
         if os.path.exists(vocab_file):
             return vocab_file
-
+        start = time.time()
+        print 'DATASET: generating vocab of %d tokens..' % self.config.vocab['top_n']
         word_ctr = Counter(open(text_file).read().split())
         vocab = map(lambda x: x[0], word_ctr.most_common(self.config.vocab['top_n']))
+        print '\tdone. took %.fs' % (time.time() - start)
 
         if self.config.vocab['preselection_algo'] == 'identity':
             pass
+
         elif self.config.vocab['preselection_algo'] == 'odds-ratio':
             start = time.time()
             print 'ODDS_RATIO: selecting initial featureset'
@@ -240,11 +241,14 @@ class Dataset(object):
                 vocab=vocab, 
                 k=self.config.vocab['preselection_features'])
             print '\n\tdone. Took %.2fs' % (time.time() - start)
+
         elif self.config.vocab['preselection_algo'] == 'mutual-information':
+            print 'MUTUAL_INFORMATION: selecting initial featureset'
             vocab = mutual_information.select_features(
                 dataset=self, 
                 vocab=vocab, 
                 k=self.config.vocab['preselection_features'])
+            print '\n\tdone. Took %.2fs' % (time.time() - start)
 
         vocab = [self.config.unk] + vocab
 
