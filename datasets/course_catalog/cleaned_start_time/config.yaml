@@ -2,8 +2,8 @@
 num_experiments: 2
 
 ########## DATA
-data_dir: "datasets/course_catalog"
-prefix: "courses_all.cleaned.tsv"
+data_dir: "datasets/course_catalog/cleaned_start_time/"
+prefix: "courses_all.tsv"
 train_suffix: ".train"
 dev_suffix: ".dev"
 test_suffix: ".test"
@@ -117,7 +117,7 @@ data_spec:
   - name: "term"
     type: "categorical"
     control: True
-    skip: False
+    skip: True
     weight: 1
 
   #16
@@ -174,7 +174,7 @@ data_spec:
   - name: "start_time"
     type: "continuous"
     control: True
-    skip: True
+    skip: False
     weight: 1
 
   #24
@@ -204,118 +204,3 @@ data_spec:
     control: True
     skip: True
     weight: 1
-
-
-
-
-
-
-
-########## MODELING
-seed: 3
-working_dir: "test_run"
-
-# NOTE: can be randomized
-vocab:
-  # points to a 1-per-line file of tokens, or null (generate with top_n words)
-  vocab_file: null 
-  top_n: 1000
-  preselection_algo: 'identity' # odds-ratio, mutual-information, identity
-  preselection_features: 500 # set to 0 to turn pre-selection off
-
-
-
-# NOTE: params can be randomized
-# all of these will be run
-model_spec:
-  - type: "neural"
-    name: "flip_1"
-    skip: True
-    params:
-      batch_size: 128
-      max_seq_len: 50
-      num_train_steps: 10
-      learning_rate: 0.001
-      embedding_size: 10
-      encoder_layers: 1  # set to 0 for no RNN
-      encoder_units: 10
-      attn_layers: 2
-      attn_units: 10
-      classifier_layers: [2, 3, 9, 10, 11]
-      classifier_units: 10
-      regressor_layers: 1
-      regressor_units: 10
-      gradient_clip: 5.0
-      dropout: 0.4
-
-  - type: 'causal-regression'
-    name: 'causal_1'
-    skip: True
-    params:
-      batch_size: 128
-      max_seq_len: 50
-      num_train_steps: 10
-      learning_rate: 0.01
-      regularizor: 'l2'   # [l1, l2]
-      lambda: 0.1         # 0 turns regularization off
-
-  - type: "causal-neural"
-    name: 'causal_neural_1'
-    skip: True
-    params:
-      batch_size: 128
-      max_seq_len: 50
-      num_train_steps: 10
-      learning_rate: 0.001
-      embedding_size: 10
-      encoder_layers: 2
-      encoder_units: 10
-      attn_layers: 2
-      attn_units: 10
-      classifier_layers: 1
-      classifier_units: 10
-      regressor_layers: 1
-      regressor_units: 10
-      gradient_clip: 5.0
-      dropout: 0.4
-
-
-  - type: "mixed-regression"
-    name: 'mixed_1'
-    skip: True
-    params:
-
-  - type: "double-regression"
-    name: 'double_1'
-    skip: True
-    params:
-      regularizor: 'l2'   # [l1, l2]
-      lambda: 0.0         # 0 turns regularization off
-      batch_size: [8, 128, 1000]
-      num_train_steps: [1, 10, 50]
-      
-
-  - type: "fixed-regression"
-    name: 'fixed_1'
-    skip: True
-    params:
-      regularizor: 'l2'   # [l1, l2]
-      lambda: 0.0         # 0 turns regularization off
-      batch_size: 128
-      num_train_steps: 10
-
-  - type: "regression"
-    name: 'regression_1'
-    skip: False
-    params:
-      regularizor: 'l2'   # [l1, l2]
-      lambda: 0.0         # 0 turns regularization off
-      batch_size: 128
-      num_train_steps: 10
-
-
-
-######### EVALUATION
-num_eval_features: 150
-
-

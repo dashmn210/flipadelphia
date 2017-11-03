@@ -2,8 +2,8 @@
 num_experiments: 2
 
 ########## DATA
-data_dir: "datasets/course_catalog"
-prefix: "courses_all.cleaned.tsv"
+data_dir: "datasets/food/original"
+prefix: "reviews_formatted.tsv"
 train_suffix: ".train"
 dev_suffix: ".dev"
 test_suffix: ".test"
@@ -19,188 +19,196 @@ unk: "<unk>"
 #              3) contain dashes
 data_spec:
   #1
-  - name: "description"
+  - name: "customer_review_segmented"
     type: "text"
 
   #2
-  - name: "title"
-    type: "text"
+  - name: "customer_review_raw"
+    type: "categorical"
     control: True
     skip: True
     weight: 1
 
   #3
-  - name: "subject"
+  - name: "review_id"
     type: "categorical"
     control: True
-    skip: False
+    skip: True
     weight: 1
 
   #4
-  - name: "course_number"
+  - name: "date_raw"
     type: "categorical"
     control: True
     skip: True
     weight: 1
 
   #5
-  - name: "course_level"
+  - name: "month"
     type: "categorical"
     control: True
     skip: False
     weight: 1
 
   #6
-  - name: "num_reqs"
+  - name: "season"
     type: "categorical"
     control: True
-    skip: False
+    skip: True
     weight: 1
 
   #7
-  - name: "repeatable"
+  - name: "member_id"
     type: "categorical"
     control: True
     skip: True
     weight: 1
 
   #8
-  - name: "grading"
+  - name: "member_name"
     type: "categorical"
     control: True
     skip: True
     weight: 1
 
   #9
-  - name: "units_min"
+  - name: "review_type"
     type: "categorical"
     control: False
-    skip: True
+    skip: False
     weight: 1
 
   #10
-  - name: "units_max"
+  - name: "service_rating"
     type: "categorical"
     control: False
-    skip: True
+    skip: False
     weight: 1
 
   #11
-  - name: "level"
+  - name: "rank_rating"
     type: "categorical"
-    control: True
-    skip: True
+    control: False
+    skip: False
     weight: 1
 
   #12
-  - name: "final"
+  - name: "ambience_rating"
     type: "categorical"
-    control: True
+    control: False
     skip: False
     weight: 1
 
   #13
-  - name: "course_id"
+  - name: "taste_rating"
     type: "categorical"
     control: False
-    skip: True
+    skip: False
     weight: 1
-  
+
   #14
-  - name: "section_id"
+  - name: "cost_rating"
     type: "categorical"
     control: False
-    skip: True
+    skip: False
     weight: 1
 
   #15
-  - name: "term"
+  - name: "restaurant_id"
     type: "categorical"
-    control: True
-    skip: True
+    control: False
+    skip: False
     weight: 1
 
   #16
-  - name: "component"
+  - name: "restaurant_name"
     type: "categorical"
-    control: True
-    skip: True
+    control: False
+    skip: False
     weight: 1
 
   #17
-  - name: "num_enrolled"
-    type: "continuous"
+  - name: "restaurant_full_name"
+    type: "categorical"
     control: False
     skip: False
     weight: 1
 
   #18
-  - name: "max_enrolled"
-    type: "continuous"
+  - name: "breadcrumb"
+    type: "categorical"
     control: False
-    skip: True
+    skip: False
     weight: 1
 
   #19
-  - name: "num_waitlist"
-    type: "continuous"
+  - name: "city"
+    type: "categorical"
     control: False
-    skip: True
+    skip: False
     weight: 1
 
   #20
-  - name: "max_waitlist"
-    type: "continuous"
+  - name: "district"
+    type: "categorical"
     control: False
-    skip: True
+    skip: False
     weight: 1
 
   #21
-  - name: "add_consent"
+  - name: "address"
     type: "categorical"
     control: False
-    skip: True
+    skip: False
     weight: 1
 
   #22
-  - name: "drop_consent"
+  - name: "branch"
     type: "categorical"
     control: False
-    skip: True
+    skip: False
     weight: 1
 
-
   #23
-  - name: "start_time"
-    type: "continuous"
-    control: True
+  - name: "cuisine_type"
+    type: "categorical"
+    control: False
     skip: False
     weight: 1
 
   #24
-  - name: "end_time"
+  - name: "avg_service_rating"
     type: "continuous"
-    control: True
-    skip: True
-    weight: 1
+    control: False
+    skip: False
+    weighlet: 1
 
   #25
-  - name: "location"
-    type: "categorical"
+  - name: "avg_rank_rating"
+    type: "continuous"
     control: False
-    skip: True
+    skip: False
     weight: 1
 
   #26
-  - name: "days"
-    type: "categorical"
-    control: True
-    skip: True
+  - name: "avg_ambience_rating"
+    type: "continuous"
+    control: False
+    skip: False
     weight: 1
 
   #27
-  - name: "instructors"
-    type: "categorical"
-    control: True
-    skip: True
+  - name: "avg_taste_rating"
+    type: "continuous"
+    control: False
+    skip: False
     weight: 1
+
+  #28
+  - name: "avg_cost_rating"
+    type: "continuous"
+    control: False
+    skip: False
+    weight: 1
+
+

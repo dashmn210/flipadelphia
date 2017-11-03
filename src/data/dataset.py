@@ -75,7 +75,6 @@ class Dataset(object):
         num_examples = utils.file_len(datafile)
         num_features = len(feature_id_map) if feature_id_map else 1
         out = np.zeros((num_examples, num_features))
-
         for i, line in enumerate(open(datafile)):
             line = line.strip()
             if text_file:
@@ -119,7 +118,7 @@ class Dataset(object):
         class_to_id_map = defaultdict(dict)
         id_to_class_map = defaultdict(dict)
         for variable in self.config.data_spec[1:]:
-            if variable['type'] != "categorical": 
+            if variable['type'] != "categorical" or variable['skip']: 
                 continue
             i = 0
             var_filename = self.whole_data_files[variable['name']]
@@ -304,6 +303,8 @@ class Dataset(object):
             split_sizes[split_suffix] = utils.file_len(file)
 
             for i, variable in enumerate(c.data_spec):
+                if i > 0 and variable['skip']: 
+                    continue
                 variable_path = data_prefix + '.' + variable['name'] + split_suffix
                 variable_path_nosplit = data_prefix + '.' + variable['name']
 

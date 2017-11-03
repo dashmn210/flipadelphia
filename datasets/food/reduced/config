@@ -1,0 +1,130 @@
+########## EXPERIMENT
+num_experiments: 2
+
+########## DATA
+data_dir: "datasets/food/cleaned"
+prefix: "reviews.tsv"
+train_suffix: ".train"
+dev_suffix: ".dev"
+test_suffix: ".test"
+
+sos: "<s>"
+eos: "</s>"
+unk: "<unk>"
+
+
+# NOTE -- var names can't 
+#              1) overlap with features
+#              2) contain spaces
+#              3) contain dashes
+data_spec:
+  #1
+  - name: "customer_review_segmented"
+    type: "text"
+
+  #5
+  - name: "month"
+    type: "categorical"
+    control: True
+    skip: False
+    weight: 1
+
+  #6
+  - name: "season"
+    type: "categorical"
+    control: True
+    skip: True
+    weight: 1
+
+  #10
+  - name: "service_rating"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  #11
+  - name: "rank_rating"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  #12
+  - name: "ambience_rating"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  #13
+  - name: "taste_rating"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  #14
+  - name: "cost_rating"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  #19
+  - name: "city"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  #20
+  - name: "district"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  #23
+  - name: "cuisine_type"
+    type: "categorical"
+    control: False
+    skip: False
+    weight: 1
+
+  #24
+  - name: "avg_service_rating"
+    type: "continuous"
+    control: False
+    skip: False
+    weighlet: 1
+
+  #25
+  - name: "avg_rank_rating"
+    type: "continuous"
+    control: False
+    skip: False
+    weight: 1
+
+  #26
+  - name: "avg_ambience_rating"
+    type: "continuous"
+    control: False
+    skip: False
+    weight: 1
+
+  #27
+  - name: "avg_taste_rating"
+    type: "continuous"
+    control: False
+    skip: False
+    weight: 1
+
+  #28
+  - name: "avg_cost_rating"
+    type: "continuous"
+    control: False
+    skip: False
+    weight: 1
+
+
