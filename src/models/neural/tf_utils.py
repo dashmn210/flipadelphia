@@ -69,6 +69,8 @@ def classifier(inputs, labels, layers, num_classes, hidden=128, dropout=0.0, spa
         activation_fn=None,
         scope='classifier_preds')
 
+    labels = tf.cast(labels, tf.int32)
+
     # mean log perplexity per batch
     if sparse_labels:
         losses = tf.nn.sparse_softmax_cross_entropy_with_logits(

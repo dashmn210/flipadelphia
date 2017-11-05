@@ -435,7 +435,7 @@ class Dataset(object):
 
         out = {}
         iterator = dataset.make_initializable_iterator()
-        data_spec = self.config.data_spec
+        data_spec = [v for v in self.config.data_spec if not v.get('skip', False)]
         placeholders = iterator.get_next()        
         for i, (placeholder, variable) in enumerate(zip(placeholders, data_spec)):
             out[variable['name']] = placeholder

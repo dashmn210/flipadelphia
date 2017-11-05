@@ -233,7 +233,7 @@ vocab:
 model_spec:
   - type: "neural"
     name: "flip_1"
-    skip: True
+    skip: False
     params:
       batch_size: 128
       num_train_steps: 10
