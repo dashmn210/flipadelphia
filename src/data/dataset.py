@@ -414,8 +414,8 @@ class Dataset(object):
                 padding_values=padding_values)
 
         datasets = []
-        for variable in self.config.data_spec:
-            if variable['skip']:
+        for i, variable in enumerate(self.config.data_spec):
+            if i > 0 and variable['skip']:
                 continue
 
             data_file = self.data_files[self.split][variable['name']]
