@@ -2,11 +2,12 @@
 num_experiments: 2
 
 ########## DATA
-data_dir: "datasets/course_catalog"
-prefix: "courses_all.cleaned.tsv"
+data_dir: "datasets/course_catalog/cleaned"
+prefix: "courses.tsv"
 train_suffix: ".train"
 dev_suffix: ".dev"
 test_suffix: ".test"
+max_seq_len: 50
 
 sos: "<s>"
 eos: "</s>"
@@ -117,7 +118,7 @@ data_spec:
   - name: "term"
     type: "categorical"
     control: True
-    skip: False
+    skip: True
     weight: 1
 
   #16
@@ -211,6 +212,8 @@ data_spec:
 
 
 
+
+
 ########## MODELING
 seed: 3
 working_dir: "test_run"
@@ -233,7 +236,6 @@ model_spec:
     skip: True
     params:
       batch_size: 128
-      max_seq_len: 50
       num_train_steps: 10
       learning_rate: 0.001
       embedding_size: 10
@@ -253,7 +255,6 @@ model_spec:
     skip: True
     params:
       batch_size: 128
-      max_seq_len: 50
       num_train_steps: 10
       learning_rate: 0.01
       regularizor: 'l2'   # [l1, l2]
@@ -264,7 +265,6 @@ model_spec:
     skip: True
     params:
       batch_size: 128
-      max_seq_len: 50
       num_train_steps: 10
       learning_rate: 0.001
       embedding_size: 10

@@ -7,6 +7,7 @@ prefix: "reviews.tsv"
 train_suffix: ".train"
 dev_suffix: ".dev"
 test_suffix: ".test"
+max_seq_len: 50
 
 sos: "<s>"
 eos: "</s>"
@@ -54,7 +55,7 @@ data_spec:
   - name: "season"
     type: "categorical"
     control: True
-    skip: True
+    skip: False
     weight: 1
 
   #7
@@ -75,14 +76,14 @@ data_spec:
   - name: "review_type"
     type: "categorical"
     control: False
-    skip: False
+    skip: True
     weight: 1
 
   #10
   - name: "service_rating"
     type: "categorical"
     control: False
-    skip: False
+    skip: True
     weight: 1
 
   #11
@@ -96,55 +97,55 @@ data_spec:
   - name: "ambience_rating"
     type: "categorical"
     control: False
-    skip: False
+    skip: True
     weight: 1
 
   #13
   - name: "taste_rating"
     type: "categorical"
     control: False
-    skip: False
+    skip: True
     weight: 1
 
   #14
   - name: "cost_rating"
     type: "categorical"
     control: False
-    skip: False
+    skip: True
     weight: 1
 
   #15
   - name: "restaurant_id"
     type: "categorical"
     control: False
-    skip: False
+    skip: True
     weight: 1
 
   #16
   - name: "restaurant_name"
     type: "categorical"
     control: False
-    skip: False
+    skip: True
     weight: 1
 
   #17
   - name: "restaurant_full_name"
     type: "categorical"
     control: False
-    skip: False
+    skip: True
     weight: 1
 
   #18
   - name: "breadcrumb"
     type: "categorical"
     control: False
-    skip: False
+    skip: True
     weight: 1
 
   #19
   - name: "city"
     type: "categorical"
-    control: False
+    control: True
     skip: False
     weight: 1
 
@@ -152,27 +153,27 @@ data_spec:
   - name: "district"
     type: "categorical"
     control: False
-    skip: False
+    skip: True
     weight: 1
 
   #21
   - name: "address"
     type: "categorical"
     control: False
-    skip: False
+    skip: True
     weight: 1
 
   #22
   - name: "branch"
     type: "categorical"
     control: False
-    skip: False
+    skip: True
     weight: 1
 
   #23
   - name: "cuisine_type"
     type: "categorical"
-    control: False
+    control: True
     skip: False
     weight: 1
 
@@ -180,34 +181,34 @@ data_spec:
   - name: "avg_service_rating"
     type: "continuous"
     control: False
-    skip: False
+    skip: True
     weighlet: 1
 
   #25
   - name: "avg_rank_rating"
     type: "continuous"
     control: False
-    skip: False
+    skip: True
     weight: 1
 
   #26
   - name: "avg_ambience_rating"
     type: "continuous"
     control: False
-    skip: False
+    skip: True
     weight: 1
 
   #27
   - name: "avg_taste_rating"
     type: "continuous"
     control: False
-    skip: False
+    skip: True
     weight: 1
 
   #28
   - name: "avg_cost_rating"
     type: "continuous"
-    control: False
+    control: True
     skip: False
     weight: 1
 

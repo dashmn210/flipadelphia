@@ -77,9 +77,11 @@ class Dataset(object):
         out = np.zeros((num_examples, num_features))
         for i, line in enumerate(open(datafile)):
             line = line.strip()
+            if line == '':
+                line = 'BLANK'
             if text_file:
                 # text
-                for feature in line.split():
+                for feature in line.split()[:self.config.max_seq_len]:
                     out[i][feature_id_map.get(feature, UNK_ID)] += 1
             elif feature_id_map is not None:
                 # categorical
@@ -124,7 +126,9 @@ class Dataset(object):
             var_filename = self.whole_data_files[variable['name']]
             for level in set(open(var_filename).read().split('\n')):  # unique rows
                 level = level.strip()
-                if level == '' or level in class_to_id_map[variable['name']]: 
+                if level == '':
+                    level = 'BLANK'
+                if level in class_to_id_map[variable['name']]: 
                     continue
                 level = level.replace(' ', '_') # whitespaces not allowed in class names
                 class_to_id_map[variable['name']][level] = i
@@ -354,9 +358,8 @@ class Dataset(object):
                 txt, tf.cast(vocab_table.lookup(txt), tf.int32)))
 
             # now cut off
-            if params.get('max_seq_len', False):
-                maxlen = params['max_seq_len']
-                dataset = dataset.map(lambda txt, ids: (txt[:maxlen], ids[:maxlen]))
+            maxlen = self.config.max_seq_len
+            dataset = dataset.map(lambda txt, ids: (txt[:maxlen], ids[:maxlen]))
 
             # add lengths
             dataset = dataset.map(lambda txt, ids: (txt, ids, tf.size(ids)))

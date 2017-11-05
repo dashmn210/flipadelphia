@@ -2,11 +2,12 @@
 num_experiments: 2
 
 ########## DATA
-data_dir: "datasets/course_catalog/cleaned_start_time/"
-prefix: "courses_all.tsv"
+data_dir: "datasets/course_catalog/cleaned_start_time"
+prefix: "courses.tsv"
 train_suffix: ".train"
 dev_suffix: ".dev"
 test_suffix: ".test"
+max_seq_len: 50
 
 sos: "<s>"
 eos: "</s>"
