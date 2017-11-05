@@ -83,7 +83,7 @@ class Dataset(object):
                     out[i][feature_id_map.get(feature, UNK_ID)] += 1
             elif feature_id_map is not None:
                 if line == '':
-                    line = 'BLANK'
+                    line = self.config.unk
                 # categorical
                 out[i][feature_id_map[line.replace(' ', '_')]] += 1
             else:
