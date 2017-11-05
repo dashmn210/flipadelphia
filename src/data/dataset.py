@@ -415,6 +415,9 @@ class Dataset(object):
 
         datasets = []
         for variable in self.config.data_spec:
+            if variable['skip']:
+                continue
+
             data_file = self.data_files[self.split][variable['name']]
             if variable['type'] == 'text':
                 dataset = text_dataset(data_file)
