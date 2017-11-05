@@ -402,6 +402,9 @@ class Dataset(object):
             # but hast to be 0.0 for tf.float32 (aka scalars) and 0 for tf.int32
             # (aka categorical)
             for var in self.config.data_spec[1:]:
+                if var['skip']:
+                    continue
+
                 if var['type'] == 'categorical':
                     padding_values.append(0)
                 else:
