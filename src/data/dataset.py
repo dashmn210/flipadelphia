@@ -77,16 +77,18 @@ class Dataset(object):
         out = np.zeros((num_examples, num_features))
         for i, line in enumerate(open(datafile)):
             line = line.strip()
-            if line == '':
-                line = 'BLANK'
             if text_file:
                 # text
                 for feature in line.split()[:self.config.max_seq_len]:
                     out[i][feature_id_map.get(feature, UNK_ID)] += 1
             elif feature_id_map is not None:
+                if line == '':
+                    line = 'BLANK'
                 # categorical
                 out[i][feature_id_map[line.replace(' ', '_')]] += 1
             else:
+                if line == '':
+                    line = 0
                 # continuous
                 out[i][0] = float(line)
         return sparse.csr_matrix(out)
