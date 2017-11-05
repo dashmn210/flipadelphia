@@ -85,7 +85,7 @@ class Dataset(object):
                 if line == '':
                     line = self.config.unk
                 # categorical
-                out[i][feature_id_map[line.replace(' ', '_')]] += 1
+                out[i][feature_id_map.get(line.replace(' ', '_'), UNK_ID)] += 1
             else:
                 if line == '':
                     line = 0
@@ -129,7 +129,7 @@ class Dataset(object):
             for level in set(open(var_filename).read().split('\n')):  # unique rows
                 level = level.strip()
                 if level == '':
-                    level = 'BLANK'
+                    level = self.config.unk
                 if level in class_to_id_map[variable['name']]: 
                     continue
                 level = level.replace(' ', '_') # whitespaces not allowed in class names
