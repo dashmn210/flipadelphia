@@ -392,10 +392,10 @@ class Dataset(object):
 
         def batch_up(datset):
             # first element is (text, text, text len), followed by all other vars
-            num_variables = len(self.config.data_spec)
+            num_variables = len([v for v in self.config.data_spec[1:] if not v['skip']])
             padded_shapes = tuple(
                 [(tf.TensorShape([None]), tf.TensorShape([None]), tf.TensorShape([]))] + [
-                tf.TensorShape([]) for _ in range(num_variables - 1)])
+                tf.TensorShape([]) for _ in range(num_variables)])
 
             # pad text with eos, otherwise 0 (means unused)
             padding_values = [(self.config.eos, eos_id, 0)]
