@@ -274,6 +274,7 @@ class Dataset(object):
         elif self.config.vocab['preselection_algo'] == 'mutual-information':
             out_path = os.path.join(self.base_dir, 'mi_vocab.txt')
             if not os.path.exists(out_path):
+                start = time.time()
                 print 'MUTUAL_INFORMATION: selecting initial featureset'
                 vocab = mutual_information.select_features(
                     dataset=self, 
