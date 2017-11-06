@@ -21,6 +21,7 @@ def compute_mi(dataset, target_name, vocab, level=None):
         # bucket based on bottom/top 30%
         response = dataset.datafile_to_np(
             datafile=dataset.whole_data_files[target_name])
+        response = response.toarray()
         low_threshold = utils.percentile(response, 0.3)
         high_threshold = utils.percentile(response, 0.7)
         response[response < low_threshold] = 0
