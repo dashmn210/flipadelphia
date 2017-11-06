@@ -5,6 +5,7 @@ compute the mutual information for each token in a lexicon
 python mutual_information.py [vocab] [binary labels] [source]
 """
 import sys
+import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 import src.msc.utils as utils
 import math

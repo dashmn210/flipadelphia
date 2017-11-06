@@ -7,6 +7,7 @@ import tensorflow as tf
 import time
 from tqdm import tqdm
 import sys
+import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 import src.msc.utils as utils
 import numpy as np
