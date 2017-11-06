@@ -389,7 +389,7 @@ class Dataset(object):
                     keys=dict_with_spaces.keys(),
                     values=dict_with_spaces.values(),
                     key_dtype=tf.string,
-                    value_dtype=tf.int32), -1)
+                    value_dtype=tf.int32), UNK_ID)
             dataset = dataset.map(lambda x: class_lookup_table.lookup(x))
             return dataset
 
@@ -444,7 +444,6 @@ class Dataset(object):
         for i, (placeholder, variable) in enumerate(zip(placeholders, data_spec)):
             out[variable['name']] = placeholder
         out['initializer'] = iterator.initializer
-
         return out
 
 

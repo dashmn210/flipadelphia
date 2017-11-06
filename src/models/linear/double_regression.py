@@ -110,7 +110,7 @@ class DoubleRegression(plain_regression.RegularizedRegression):
         self.residuals = {}
         for i, target in enumerate(self.targets):
             y_hat = preds[target['name']]
-            y = dataset.np_data[dataset.split][target['name']]
+            y = dataset.np_data[dataset.split][target['name']].toarray()
             self.residuals[target['name']] = y - y_hat
 
         # now predict the residuals using the text

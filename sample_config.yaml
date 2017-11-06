@@ -2,7 +2,7 @@
 num_experiments: 2
 
 ########## DATA
-data_dir: "datasets/course_catalog/cleaned"
+data_dir: "datasets/course_catalog/cleaned_start_time"
 prefix: "courses.tsv"
 train_suffix: ".train"
 dev_suffix: ".dev"
@@ -175,7 +175,7 @@ data_spec:
   - name: "start_time"
     type: "continuous"
     control: True
-    skip: True
+    skip: False
     weight: 1
 
   #24
@@ -205,10 +205,6 @@ data_spec:
     control: True
     skip: True
     weight: 1
-
-
-
-
 
 
 
@@ -252,7 +248,7 @@ model_spec:
 
   - type: 'causal-regression'
     name: 'causal_1'
-    skip: True
+    skip: False
     params:
       batch_size: 128
       num_train_steps: 10
@@ -262,7 +258,7 @@ model_spec:
 
   - type: "causal-neural"
     name: 'causal_neural_1'
-    skip: True
+    skip: False
     params:
       batch_size: 128
       num_train_steps: 10
@@ -287,7 +283,7 @@ model_spec:
 
   - type: "double-regression"
     name: 'double_1'
-    skip: True
+    skip: False
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off
@@ -297,7 +293,7 @@ model_spec:
 
   - type: "fixed-regression"
     name: 'fixed_1'
-    skip: True
+    skip: False
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off

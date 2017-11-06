@@ -91,12 +91,9 @@ class TFModelWrapper(Model):
         prog = utils.Progbar(target=self.params['num_train_steps'])
         while self.global_step < self.params['num_train_steps']:
             try:
-                try:
-                    self.global_step, loss, summary = self.loaded_model.model.train(self.sess)
-                    prog.update(self.global_step, [('train loss', loss)])
-                    summary_writer.add_summary(summary, self.global_step)
-                except tf.errors.InvalidArgumentError:
-                    print 'BATCH BROKE :( skipping'
+                self.global_step, loss, summary = self.loaded_model.model.train(self.sess)
+                prog.update(self.global_step, [('train loss', loss)])
+                summary_writer.add_summary(summary, self.global_step)
             except tf.errors.OutOfRangeError:
                 epochs += 1
 #                print 'epoch ', epochs, ' took %.2fs' % (time.time() - start_time)

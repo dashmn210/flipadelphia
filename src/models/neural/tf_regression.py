@@ -189,7 +189,6 @@ class CausalRegression:
         for var in self.config.data_spec[1:]:
             if var['skip'] or not var['control']:
                 continue
-
             if var['type'] == 'continuous':
                 confounds.append(tf.expand_dims(self.iter[var['name']], 1))
             else:
