@@ -96,7 +96,7 @@ class TFModelWrapper(Model):
                     prog.update(self.global_step, [('train loss', loss)])
                     summary_writer.add_summary(summary, self.global_step)
                 except tf.errors.InvalidArgumentError:
-                    'print BATCH BROKE :( skipping'
+                    print 'BATCH BROKE :( skipping'
             except tf.errors.OutOfRangeError:
                 epochs += 1
 #                print 'epoch ', epochs, ' took %.2fs' % (time.time() - start_time)
