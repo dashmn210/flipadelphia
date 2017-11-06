@@ -1,3 +1,5 @@
+sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
+import src.msc.utils as utils
 import time
 from collections import defaultdict
 import numpy as np

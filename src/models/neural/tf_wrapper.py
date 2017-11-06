@@ -99,7 +99,7 @@ class TFModelWrapper(Model):
                     'print BATCH BROKE :( skipping'
             except tf.errors.OutOfRangeError:
                 epochs += 1
-                print 'epoch ', epochs, ' took %.2fs' % (time.time() - start_time)
+#                print 'epoch ', epochs, ' took %.2fs' % (time.time() - start_time)
                 start_time = time.time()
                 self.sess.run(self.loaded_model.model.iter['initializer'])
 

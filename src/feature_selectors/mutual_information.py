@@ -5,12 +5,15 @@ compute the mutual information for each token in a lexicon
 python mutual_information.py [vocab] [binary labels] [source]
 """
 import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
+import src.msc.utils as utils
 import math
 import os
 import time
 from tqdm import tqdm
 from collections import Counter, defaultdict
 import numpy as np
+
 
 def compute_mi(dataset, target_name, vocab, level=None):
     if not level:
