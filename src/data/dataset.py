@@ -373,7 +373,9 @@ class Dataset(object):
 
         def continuous_dataset(file):
             dataset = tf.contrib.data.TextLineDataset(file)
-            dataset = dataset.map(lambda x: tf.string_to_number(x))            
+            # apend 0 to start in case there's blank rows
+            dataset = dataset.map(lambda x: tf.string_to_number(
+                tf.string_join(inputs=[tf.convert_to_tensor("0"),x])))
             return dataset
 
         def categorical_dataset(file, variable_name):
