@@ -231,6 +231,7 @@ model_spec:
     name: "flip_1"
     skip: False
     params:
+      attn_importance_strategy: 'mean'  #[mean, max]
       batch_size: 2
       num_train_steps: 10
       learning_rate: 0.001
@@ -260,6 +261,7 @@ model_spec:
     name: 'causal_neural_1'
     skip: False
     params:
+      attn_importance_strategy: 'mean'  #[mean, max]
       batch_size: 128
       num_train_steps: 10
       learning_rate: 0.001

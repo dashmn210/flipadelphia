@@ -202,7 +202,7 @@ class CausalNetwork:
         ops = [
             self.global_step,
             self.train_step,
-            self.summaries,
+            self.summaries
         ]
         return sess.run(ops, feed_dict={self.dropout: self.params['dropout']})
 
@@ -222,10 +222,14 @@ class CausalNetwork:
                 if word not in self.dataset.features:
                     continue
                 attn_scores[word].append(score)
-        mean_attn_scores = {k: np.mean(v) for k, v in attn_scores.items()}
+
+        if self.params['attn_importance_strategy'] == 'mean':
+            attn_scores = {k: np.mean(v) for k, v in attn_scores.items()}
+        elif self.params['attn_importance_strategy'] == 'max':
+            attn_scores = {k: np.max(v) for k, v in attn_scores.items()}
 
         output_scores = {
             response: output['pred'] \
             for response, output in outputs.items()}
 
-        return output_scores, mean_attn_scores
+        return output_scores, attn_scores

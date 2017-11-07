@@ -123,11 +123,14 @@ class TFModelWrapper(Model):
         except tf.errors.OutOfRangeError:
             pass
 
-        mean_feature_importance = {k: np.mean(v) for k, v in all_feature_importance.items()}
+        if self.params['attn_importance_strategy'] == 'mean':
+            feature_importance = {k: np.mean(v) for k, v in all_feature_importance.items()}
+        elif self.params['attn_importance_strategy'] == 'max':
+            feature_importance = {k: np.max(v) for k, v in all_feature_importance.items()}
 
         return Prediction(
             scores=predictions,
-            feature_importance=mean_feature_importance)
+            feature_importance=feature_importance)
 
     def report(self):
         """ releases self.report, a summary of the last job this model
