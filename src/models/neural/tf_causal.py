@@ -154,8 +154,13 @@ class CausalNetwork:
         # force this into [batch size, embedding width + 1]
         final_input = tf.concat(
             [tf.expand_dims(confound_preds, 1), x_input], axis=1)
-        final_input = tf.reshape(
-            final_input, [-1, self.params['encoder_units'] * 2 + 1])
+
+        if self.params['encoder_layers'] == 0:
+            x_input_dim = self.params['embedding_size'] + 1
+        else:
+            x_input_dim = self.params['encoder_units'] * 2 + 1
+
+        final_input = tf.reshape(final_input, [-1, x_input_dim])
 
         with tf.variable_scope('final_pred'):
             final_preds, final_loss = tf_utils.regressor(
