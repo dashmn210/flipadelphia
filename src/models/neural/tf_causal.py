@@ -46,7 +46,6 @@ class CausalNetwork:
 
         # use attention to encode the input
         self.attn_scores, attn_context = self.attentional_encoder()
-
         # now get all the confounds into one vector
         confound_vector = self.vectorize_confounds()
 
@@ -152,11 +151,11 @@ class CausalNetwork:
                 hidden=self.params['regressor_units'],
                 dropout=self.dropout)
         
-        # force this into [batch size, attn width + 1]
+        # force this into [batch size, embedding width + 1]
         final_input = tf.concat(
             [tf.expand_dims(confound_preds, 1), x_input], axis=1)
         final_input = tf.reshape(
-            final_input, [self.params['batch_size'], -1])
+            final_input, [-1, self.params['encoder_units'] * 2 + 1])
 
         with tf.variable_scope('final_pred'):
             final_preds, final_loss = tf_utils.regressor(
