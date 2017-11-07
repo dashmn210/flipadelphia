@@ -156,7 +156,7 @@ class CausalNetwork:
         final_input = tf.concat(
             [tf.expand_dims(confound_preds, 1), x_input], axis=1)
         final_input = tf.reshape(
-            final_input, [-1, self.params['attn_units'] * 2 + 1])
+            final_input, [self.params['batch_size'], -1])
 
         with tf.variable_scope('final_pred'):
             final_preds, final_loss = tf_utils.regressor(
