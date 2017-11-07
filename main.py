@@ -51,7 +51,7 @@ def set_seed(seed):
     tf.set_random_seed(seed)  # only default graph
 
 
-def run_experiment(config, args):
+def run_experiment(config, args, expt_id):
     # if train, switch the dataset to train, then
     #  train and save each model in the config spec
     if not os.path.exists(config.working_dir):
@@ -91,7 +91,7 @@ def run_experiment(config, args):
     #  in the config spec
     if args.test:
         d.set_active_split(config.test_suffix)
-        results = defaultdict(list)  # items to be written in executive summary 
+        results = []  # items to be written in executive summary 
         for model_description in config.model_spec:
             if model_description.get('skip', False):
                 continue
@@ -117,12 +117,15 @@ def run_experiment(config, args):
                 evaluation, os.path.join(model_dir, 'evaluation'))
             evaluator.write_summary(evaluation, model_dir)
             # store info for executive summary
-            results['model-name'].append(model_description['name'])
-            results['model-type'].append(model_description['type'])
-            results['params'].append(str(model_description['params']))
-            results['correlation'].append(evaluation['mu_corr'])
-            results['performance'].append(evaluation['mu_perf'])
-            results['model-dir'].append(model_dir)
+            results.append({
+                'model-name': model_description['name'],
+                'model-type': model_description['type'],
+                'params': str(model_description['params']),
+                'correlation': evaluation['mu_corr'],
+                'performance': evaluation['mu_perf'],
+                'model_dir': model_dir,
+                'expt_id': expt_id
+            })
 
             print 'MAIN: evaluation %s done, time %.2fs' % (
                 model_description['name'], time.time() - start_time)
@@ -197,14 +200,15 @@ if __name__ == '__main__':
                 print 'MAIN: skipping expt ', i
                 summary_file.close()
                 continue
-            result = run_experiment(expt, args)
+            results = run_experiment(expt, args, i)
 
             if i == 0:
-                csv_writer.writerow(result.keys())
+                csv_writer.writerow(results[0].keys())
             print 'MAIN: writing summary to ', summary_path
-            csv_writer.writerow(result.values())
-
+            for res in results:
+                csv_writer.writerow(res.values())
             summary_file.close()
+
     except:
         print 'MAIN: stopped with exception'
         traceback.print_exc()
