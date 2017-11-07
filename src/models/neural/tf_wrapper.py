@@ -123,7 +123,7 @@ class TFModelWrapper(Model):
         except tf.errors.OutOfRangeError:
             pass
 
-        if self.params['attn_importance_strategy'] == 'mean':
+        if self.params.get('attn_importance_strategy', 'mean') == 'mean':
             feature_importance = {k: np.mean(v) for k, v in all_feature_importance.items()}
         elif self.params['attn_importance_strategy'] == 'max':
             feature_importance = {k: np.max(v) for k, v in all_feature_importance.items()}
