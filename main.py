@@ -5,6 +5,7 @@ TODO -- automatically divvy up data for continuous
 """
 import yaml
 import os
+import csv
 import argparse
 from collections import namedtuple
 import pickle
@@ -184,20 +185,25 @@ if __name__ == '__main__':
 
     # use config to preprocess data
     start = time.time()
-
+    summary_path = os.path.join(config.working_dir, 'summary.csv')
     try:
         results = None
         for i in range(num_experiments):
+            summary_file = open(summary_path, 'a')
+            csv_writer = csv.writer(summary_file)
+
             expt = generate_experiment(config, i) if not args.redo else config
             if not args.redo and os.path.exists(os.path.join(expt.working_dir, 'config.yaml')):
                 print 'MAIN: skipping expt ', i
+                summary_file.close()
                 continue
             result = run_experiment(expt, args)
-            if results is None:
-                results = result
-            else:
-                for k in results:
-                    results[k] = results[k] + result[k]
+
+            if i == 0:
+                csv_writer.writerow(result.keys())
+            csv_writer.writerow(result.values())
+
+            summary_file.close()
     except:
         print 'MAIN: stopped with exception'
         traceback.print_exc()
