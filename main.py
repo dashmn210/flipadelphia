@@ -148,6 +148,45 @@ def validate_config(config):
     return num_expts
 
 
+def validate_data(config):
+    skipped_lines = 0
+    data_spec = config.data_spec
+
+    d = copy.deepcopy(dict(config._asdict()))
+    data_prefix = os.path.join(config.data_dir, config.prefix)
+    for split_suffix in [config.train_suffix, config.dev_suffix, config.test_suffix, '']:
+        in_path = data_prefix + split_suffix
+        assert os.path.exists(in_path), 'Split %s doesnt exist' % in_path
+
+        out_path = data_prefix + '.validated' + split_suffix
+        out_file = open(out_path, 'w')
+
+        for l in open(in_path):
+            parts = l.strip().split('\t')
+            # invalid number of cells
+            if len(data_spec) != len(parts): 
+                skipped_lines += 1
+                continue
+            skip = False
+            for x, var in zip(parts, data_spec):
+                if var.get('skip', False): continue
+
+                if var['type'] == 'continuous' and not utils.is_number(x):
+                    skip = True; break
+                if x == '':
+                    skip = True; break
+            if skip:
+                skipped_lines += 1
+                continue
+
+            out_file.write(l)
+
+        out_file.close()
+
+    d['prefix'] = d['prefix'] + '.validated'
+    return namedtuple("config", d.keys())(**d), skipped_lines
+
+
 def generate_experiment(parent_config, expt_id):
     """ choose a random thing from each config list 
     """
@@ -175,6 +214,13 @@ if __name__ == '__main__':
     # parse args
     args = process_command_line()
     config = utils.load_config(args.config)   
+
+    print 'MAIN: validating data...'
+    start = time.time()
+    config, skipped = validate_data(config)
+    print '\t done. Took %.2fs, found %d invalid rows' % (
+        time.time() - start, skipped)
+
     num_experiments = validate_config(config)
     if args.model is not None:
         num_experiments = 1

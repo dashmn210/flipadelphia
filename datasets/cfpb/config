@@ -1,3 +1,4 @@
+num_experiments: 200
 
 ########## DATA
 data_dir: "datasets/cfpb/"
@@ -5,7 +6,7 @@ prefix: "final_data.tsv"
 train_suffix: ".train"
 dev_suffix: ".dev"
 test_suffix: ".test"
-max_seq_len: 50
+max_seq_len: 60
 
 sos: "<s>"
 eos: "</s>"
@@ -46,3 +47,4 @@ data_spec:
     control: False
     skip: False
     weight: 1
+

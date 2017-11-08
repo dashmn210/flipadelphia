@@ -80,7 +80,7 @@ def eval_performance(var, labels, preds, dataset):
             if not np.isnan(pred)])
         MSE = sklearn.metrics.mean_squared_error(labels, preds)
         r2 = sklearn.metrics.r2_score(labels, preds)
-        return { 'MSE': MSE, 'R^2': r2, 'stat': r2}
+        return { 'MSE': MSE, 'R^2': r2, 'stat': MSE}
 
 
 def evaluate(config, dataset, predictions, model_dir):

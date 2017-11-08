@@ -176,6 +176,7 @@ class Dataset(object):
             for level, idx in self.class_to_id_map[varname].items():
                 cols.append(one_hots[:, idx])
                 X_features.append('%s|%s' % (varname, level))
+
         X = np.column_stack(cols)
         return X, X_features
 
@@ -328,7 +329,6 @@ class Dataset(object):
                 if not os.path.exists(variable_path_nosplit):
                     os.system('cat %s | cut -f%d > %s' % (
                         data_prefix, i+1, variable_path_nosplit))
-
 
         return variable_paths, split_sizes, whole_data_paths
 

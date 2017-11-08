@@ -9,7 +9,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import numpy as np
 from src.models.abstract_model import Model
 import src.models.neural.tf_utils as tf_utils
-
+import src.msc.utils as utils
 import tf_utils
 
 # # # # global gradient reversal functions  # # # #
@@ -169,6 +169,12 @@ class Flipper:
         if self.params['attn_importance_strategy'] == 'mean':
             attn_scores = {k: np.mean(v) for k, v in attn_scores.items()}
         elif self.params['attn_importance_strategy'] == 'max':
+            attn_scores = {k: np.max(v) for k, v in attn_scores.items()}
+        elif self.params['attn_importance_strategy'] == 'standardized_mean':
+            attn_scores = {k: utils.standardize(v) for k, v in attn_scores.items()}
+            attn_scores = {k: np.max(v) for k, v in attn_scores.items()}
+        elif self.params['attn_importance_strategy'] == 'standardized_max':
+            attn_scores = {k: utils.standardize(v) for k, v in attn_scores.items()}
             attn_scores = {k: np.max(v) for k, v in attn_scores.items()}
 
         output_scores = {

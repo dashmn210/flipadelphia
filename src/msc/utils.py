@@ -18,6 +18,19 @@ class UnsortableOrderedDict(OrderedDict):
 
 yaml.add_representer(UnsortableOrderedDict, yaml.representer.SafeRepresenter.represent_dict)
 
+
+def standardize(arr):
+    """ standardize a np array arr """
+    return (arr - np.mean(arr)) / np.std(arr)
+
+def is_number(x):
+    try:
+        float(x)
+        return True
+    except:
+        return False
+
+
 def swap(a, i, j):
     tmp = a[i]
     a[i] = a[j]

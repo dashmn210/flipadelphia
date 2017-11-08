@@ -11,6 +11,7 @@ from collections import namedtuple, defaultdict
 import tensorflow as tf
 from tensorflow.python.framework import function
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+import src.msc.utils as utils
 
 from src.models.abstract_model import Model
 import tf_utils
@@ -226,6 +227,12 @@ class CausalNetwork:
         if self.params['attn_importance_strategy'] == 'mean':
             attn_scores = {k: np.mean(v) for k, v in attn_scores.items()}
         elif self.params['attn_importance_strategy'] == 'max':
+            attn_scores = {k: np.max(v) for k, v in attn_scores.items()}
+        elif self.params['attn_importance_strategy'] == 'standardized_mean':
+            attn_scores = {k: utils.standardize(v) for k, v in attn_scores.items()}
+            attn_scores = {k: np.max(v) for k, v in attn_scores.items()}
+        elif self.params['attn_importance_strategy'] == 'standardized_max':
+            attn_scores = {k: utils.standardize(v) for k, v in attn_scores.items()}
             attn_scores = {k: np.max(v) for k, v in attn_scores.items()}
 
         output_scores = {
