@@ -145,7 +145,7 @@ class Dataset(object):
 
 
     def y_chunk(self, target_name, target_level=None, start=0, end=None):
-        end = end or self.split_sizes[self.split]
+        end = min(end, self.split_sizes[self.split]) if end else self.split_sizes[self.split]
         # pull out the target for the chunk
         y = self.np_data[self.split][target_name][start:end].toarray()
         if target_level is not None:
@@ -156,7 +156,7 @@ class Dataset(object):
 
 
     def text_X_chunk(self, feature_subset=None, start=0, end=None):
-        end = end or self.split_sizes[self.split]
+        end = min(end, self.split_sizes[self.split]) if end else self.split_sizes[self.split]
         # start with all the text features for desired chunk
         X = self.np_data[self.split][self.input_varname()][start:end].toarray()
         X_features = self.ordered_features
@@ -169,6 +169,8 @@ class Dataset(object):
 
 
     def nontext_X_chunk(self, features, start=0, end=None):
+        end = min(end, self.split_sizes[self.split]) if end else self.split_sizes[self.split]
+
         X_features = []
         cols = []
         for varname in features:
