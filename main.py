@@ -148,7 +148,7 @@ def validate_config(config):
     return num_expts
 
 
-def validate_data(config):
+def validate_data(config, args):
     skipped_lines = 0
     data_spec = config.data_spec
 
@@ -187,9 +187,9 @@ def validate_data(config):
             out_file.write(l)
 
         out_file.close()
-
-    d['data_dir'] = out_data_dir
-    d['prefix'] = d['prefix'] + '.validated'
+    if not args.redo:
+        d['data_dir'] = out_data_dir
+        d['prefix'] = d['prefix'] + '.validated'
     return namedtuple("config", d.keys())(**d), skipped_lines
 
 
@@ -234,7 +234,7 @@ if __name__ == '__main__':
 
     print 'MAIN: validating data...'
     start = time.time()
-    config, skipped = validate_data(config)
+    config, skipped = validate_data(config, args)
     print '\t done. Took %.2fs, found %d invalid rows' % (
         time.time() - start, skipped)
 
