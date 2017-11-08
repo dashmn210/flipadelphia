@@ -100,6 +100,8 @@ class Dataset(object):
         for split, variables in self.data_files.items():
             for varname, filepath in variables.items():
                 var = self.get_variable(varname)
+                if var['skip']:
+                    continue
                 if var['type'] == 'continuous':
                     np_data[split][varname] = self.datafile_to_np(
                         datafile=filepath)
