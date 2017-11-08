@@ -153,12 +153,17 @@ def validate_data(config):
     data_spec = config.data_spec
 
     d = copy.deepcopy(dict(config._asdict()))
-    data_prefix = os.path.join(config.data_dir, config.prefix)
+    in_data_prefix = os.path.join(config.data_dir, config.prefix)
+    out_data_dir = os.path.join(config.working_dir, 'data')
+    out_data_prefix = os.path.join(out_data_dir, config.prefix)
+    if not os.path.exists(out_data_dir):
+        os.makedirs(out_data_dir)
+
     for split_suffix in [config.train_suffix, config.dev_suffix, config.test_suffix, '']:
-        in_path = data_prefix + split_suffix
+        in_path = in_data_prefix + split_suffix
         assert os.path.exists(in_path), 'Split %s doesnt exist' % in_path
 
-        out_path = data_prefix + '.validated' + split_suffix
+        out_path = out_data_prefix + '.validated' + split_suffix
         out_file = open(out_path, 'w')
 
         for l in open(in_path):
@@ -183,6 +188,7 @@ def validate_data(config):
 
         out_file.close()
 
+    d['data_dir'] = out_data_dir
     d['prefix'] = d['prefix'] + '.validated'
     return namedtuple("config", d.keys())(**d), skipped_lines
 
@@ -215,12 +221,6 @@ if __name__ == '__main__':
     args = process_command_line()
     config = utils.load_config(args.config)   
 
-    print 'MAIN: validating data...'
-    start = time.time()
-    config, skipped = validate_data(config)
-    print '\t done. Took %.2fs, found %d invalid rows' % (
-        time.time() - start, skipped)
-
     num_experiments = validate_config(config)
     if args.model is not None:
         num_experiments = 1
@@ -231,6 +231,12 @@ if __name__ == '__main__':
     set_seed(config.seed)
     if not os.path.exists(config.working_dir):
         os.makedirs(config.working_dir)
+
+    print 'MAIN: validating data...'
+    start = time.time()
+    config, skipped = validate_data(config)
+    print '\t done. Took %.2fs, found %d invalid rows' % (
+        time.time() - start, skipped)
 
     # use config to preprocess data
     start = time.time()
