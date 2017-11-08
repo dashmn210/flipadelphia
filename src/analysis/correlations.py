@@ -6,7 +6,12 @@ np.warnings.filterwarnings('ignore')
 
 
 def cramers_v(feature, text, targets, possible_labels):
-    """ chisq statistic for a single feature, given some text
+    """ feature: string
+        text: list( list(words) )
+        targets: list(string)
+        possible_labels: list(string)
+
+        chisq statistic for a single feature, given some text
         and target info (Y) and possible_labels (possible values for Y)
     """
     obs = np.zeros( (2, len(possible_labels)) )
@@ -30,7 +35,11 @@ def cramers_v(feature, text, targets, possible_labels):
 
 
 def pointwise_biserial(feature, text, targets):
-    """ pointwise biserial statistic
+    """ feature: string
+        text: list( list(words) )
+        targets: list(float)
+
+    pointwise biserial statistic
     https://en.wikipedia.org/wiki/Point-biserial_correlation_coefficient
     """
     s = np.std(targets)

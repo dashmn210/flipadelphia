@@ -76,6 +76,7 @@ class Dataset(object):
         num_examples = utils.file_len(datafile)
         num_features = len(feature_id_map) if feature_id_map else 1
         out = np.zeros((num_examples, num_features))
+
         for i, line in enumerate(open(datafile)):
             line = line.strip()
             if text_file:
@@ -100,7 +101,7 @@ class Dataset(object):
         for split, variables in self.data_files.items():
             for varname, filepath in variables.items():
                 var = self.get_variable(varname)
-                if var['skip'] and not var['type'] == 'text':
+                if not var['type'] == 'text' and var['skip']:
                     continue
                 if var['type'] == 'continuous':
                     np_data[split][varname] = self.datafile_to_np(
@@ -374,10 +375,18 @@ class Dataset(object):
             return dataset
 
         def continuous_dataset(file):
+            def is_number(x):
+                try:
+                    float(x)
+                    return True
+                except:
+                    return False
+
             dataset = tf.contrib.data.TextLineDataset(file)
             # apend 0 to start in case there's blank rows
-            dataset = dataset.map(lambda x: tf.string_to_number(
-                tf.string_join(inputs=[tf.convert_to_tensor("0"),x])))
+            dataset = dataset.map(
+                lambda x: tf.string_to_number(x) \
+                            if is_number(x) else tf.string_to_number('0'))
             return dataset
 
         def categorical_dataset(file, variable_name):
