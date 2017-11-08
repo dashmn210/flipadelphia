@@ -1,0 +1,49 @@
+
+########## DATA
+data_dir: "datasets/rakuten/"
+prefix: "descriptions.tsv"
+train_suffix: ".train"
+dev_suffix: ".dev"
+test_suffix: ".test"
+
+sos: "<s>"
+eos: "</s>"
+unk: "<unk>"
+
+
+# NOTE -- var names can't 
+#              1) overlap with features
+#              2) contain spaces
+#              3) contain dashes
+data_spec:
+  - name: "description"
+    type: "text"
+
+  - name: "log_sales"
+    type: "continuous"
+    control: False
+    skip: False
+    weight: 1
+
+  - name: "seller"
+    type: "categorical"
+    control: True
+    skip: False
+
+  - name: "price"
+    type: "continuous"
+    control: True
+    skip: False
+    weight: 1
+
+  - name: "???"
+    type: "categorical"
+    control: True
+    skip: True
+    weight: 1
+
+  - name: "product_id"
+    type: "categorical"
+    control: True
+    skip: True
+    weight: 1
