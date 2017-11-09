@@ -97,6 +97,9 @@ class Dataset(object):
 
 
     def _get_np_data(self):
+        """ TODO -- switch to 
+            http://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.CountVectorizer.html
+        """
         np_data = defaultdict(dict)
         for split, variables in self.data_files.items():
             for varname, filepath in variables.items():

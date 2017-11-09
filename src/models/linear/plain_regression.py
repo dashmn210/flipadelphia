@@ -64,7 +64,7 @@ class RegularizedRegression(regression_base.Regression):
             penalty=self.regularizor or 'none',
             alpha=self.lmbda,
             learning_rate='constant',
-            eta0=1.0)
+            eta0=0.001)
 
         for _ in tqdm(range(self.params['num_train_steps'])):
             Xi, yi, X_features = next(iterator)
@@ -90,7 +90,7 @@ class RegularizedRegression(regression_base.Regression):
             penalty=(self.regularizor or 'none'),
             alpha=self.lmbda,
             learning_rate='constant',
-            eta0=1.0)
+            eta0=0.001)
 
         for _ in tqdm(range(self.params['num_train_steps'])):
             Xi, yi, X_features = next(iterator)
