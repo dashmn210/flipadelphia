@@ -49,8 +49,8 @@ class CausalRegression:
                 self.iter[dataset.input_varname()][1])
             input_encoded = tf_utils.fc_tube(
                 inputs=tf.cast(input_vector, tf.float32),
-                num_outputs=1,
-                layers=1)
+                num_outputs=self.params['encoding_dim'],
+                layers=self.params['encoder_layers'])
         # TODO this is PAINFULLY hacky!!!
         cur_graph = tf.get_default_graph()
         self.feature_weights = cur_graph.get_tensor_by_name(
@@ -100,7 +100,9 @@ class CausalRegression:
                 reg = tf.contrib.layers.l2_regularizer(self.params['lambda'])
             else:
                 reg = tf.contrib.layers.l1_regularizer(self.params['lambda'])
-            reg_term = tf.contrib.layers.apply_regularization(reg, tf.trainable_variables())
+            reg_weights = tf.trainable_variables() \
+                if self.params['reg_type'] =='all' else [self.feature_weights]
+            reg_term = tf.contrib.layers.apply_regularization(reg, reg_weights)
         else:
             reg_term = 0
 
@@ -134,21 +136,21 @@ class CausalRegression:
             confound_preds, confound_loss = tf_utils.regressor(
                 inputs=confound_input,
                 labels=self.iter[response['name']],
-                layers=1,
-                hidden=-1,
+                layers=self.params['regression_layers_1'],
+                hidden=self.params['regression_hidden_1'],
                 dropout=0.0)
             confound_preds = tf.expand_dims(confound_preds, 1)
 
         # force this into [batch size, attn width + 1]
         final_input = tf.concat([confound_preds, x_input], axis=1)
-        final_input = tf.reshape(final_input, [-1, 2])
+        final_input = tf.reshape(final_input, [-1, self.params['encoding_dim'] + 1])
 
         with tf.variable_scope('final_pred'):
             final_preds, final_loss = tf_utils.regressor(
                 inputs=final_input,
                 labels=self.iter[response['name']],
-                layers=1,
-                hidden=-1,
+                layers=self.params['regression_layers_2'],
+                hidden=self.params['regression_hidden_2'],
                 dropout=0.0)
 
         return confound_preds, confound_loss, final_preds, final_loss
@@ -159,9 +161,9 @@ class CausalRegression:
             confound_preds, confound_loss = tf_utils.classifier(
                 inputs=confound_input,
                 labels=self.iter[response['name']],
-                layers=1,
+                layers=self.params['classification_layers_1'],
                 num_classes=self.dataset.num_levels(response['name']),
-                hidden=-1,
+                hidden=self.params['classification_hidden_1'],
                 dropout=0.0,
                 sparse_labels=True)
 
@@ -172,9 +174,9 @@ class CausalRegression:
             final_preds, final_loss = tf_utils.classifier(
                 inputs=final_input,
                 labels=self.iter[response['name']],
-                layers=1,
+                layers=self.params['classification_layers_1'],
                 num_classes=self.dataset.num_levels(response['name']),
-                hidden=-1,
+                hidden=self.params['classification_hidden_2'],
                 dropout=0.0,
                 sparse_labels=True)
 

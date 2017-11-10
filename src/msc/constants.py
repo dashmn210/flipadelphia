@@ -2,6 +2,7 @@ import sys
 sys.path.append('../..')
 
 from src.models.neural.tf_wrapper import TFFlipperWrapper
+from src.models.neural.tf_wrapper import TFBOWFlipperWrapper
 from src.models.neural.tf_wrapper import TFCausalRegressionWrapper
 from src.models.neural.tf_wrapper import TFCausalWrapper
 
@@ -13,6 +14,7 @@ from src.models.linear.double_regression import DoubleRegression
 
 MODEL_CLASSES = {
     'neural': TFFlipperWrapper,
+    'bow-neural': TFBOWFlipperWrapper,
     'causal-neural': TFCausalWrapper,
     'causal-regression': TFCausalRegressionWrapper,
     'mixed-regression': MixedRegression,

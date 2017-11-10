@@ -1,8 +1,8 @@
 ########## EXPERIMENT
-num_experiments: 2
+num_experiments: 10
 
 ########## DATA
-data_dir: "datasets/course_catalog/cleaned_start_time"
+data_dir: "datasets/course_catalog/cleaned"
 prefix: "courses.tsv"
 train_suffix: ".train"
 dev_suffix: ".dev"
@@ -209,7 +209,6 @@ data_spec:
 
 
 
-
 ########## MODELING
 seed: 3
 working_dir: "test_run"
@@ -229,7 +228,7 @@ vocab:
 model_spec:
   - type: "neural"
     name: "flip_1"
-    skip: False
+    skip: True
     params:
       attn_importance_strategy: 'mean'  #[mean, max]
       batch_size: 2
@@ -249,17 +248,47 @@ model_spec:
 
   - type: 'causal-regression'
     name: 'causal_1'
-    skip: False
+    skip: True
     params:
       batch_size: 128
       num_train_steps: 10
       learning_rate: 0.01
+      reg_type: ['bow', 'all'] # regularize bag of words only or everything
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.1         # 0 turns regularization off
+      encoder_layers: [1, 1, 2]
+      encoding_dim: [1, 8]
+      regression_layers_1: [1, 1, 2]
+      regression_hidden_1: [4, 8, 16]
+      regression_layers_2: [1, 2]
+      regression_hidden_2: [4, 8, 16]
+      classification_layers_1: [1, 1, 2]
+      classification_hidden_1: [4, 8, 16]
+      classification_layers_2: [1, 1, 2]
+      classification_hidden_2: [4, 8, 16]
+
+  - type: 'bow-neural'
+    name: 'bow-neural'
+    skip: False
+    params:
+      batch_size: 128
+      num_train_steps: 10
+      learning_rate: 0.001
+      reg_type: ['bow', 'all'] # regularize bag of words only or everything
+      regularizor: 'l2'   # [l1, l2]
+      lambda: 0.1         # 0 turns regularization off
+      encoder_layers: [1, 1, 2]
+      encoder_units: [1, 8]
+      classifier_layers: [1, 1, 2]
+      classifier_units: [1, 8, 16]
+      regressor_layers: [1, 1, 2]
+      regressor_units: [1, 8, 16]
+      gradient_clip: 5.0
+
 
   - type: "causal-neural"
     name: 'causal_neural_1'
-    skip: False
+    skip: True
     params:
       attn_importance_strategy: 'mean'  #[mean, max]
       batch_size: 128
@@ -285,7 +314,7 @@ model_spec:
 
   - type: "double-regression"
     name: 'double_1'
-    skip: False
+    skip: True
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off
@@ -295,7 +324,7 @@ model_spec:
 
   - type: "fixed-regression"
     name: 'fixed_1'
-    skip: False
+    skip: True
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off
@@ -304,7 +333,7 @@ model_spec:
 
   - type: "regression"
     name: 'regression_1'
-    skip: False
+    skip: True
     params:
       regularizor: 'l2'   # [l1, l2]
       lambda: 0.0         # 0 turns regularization off

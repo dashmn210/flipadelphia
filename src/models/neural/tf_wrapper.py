@@ -8,6 +8,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 from src.models.abstract_model import Model, Prediction
 import src.models.neural.tf_flipper as tf_flipper
+import src.models.neural.tf_bow_flipper as tf_bow_flipper
 import src.models.neural.tf_regression as tf_regression
 import src.models.neural.tf_causal as tf_causal
 import src.msc.utils as utils
@@ -140,6 +141,11 @@ class TFModelWrapper(Model):
         raise NotImplementedError
 
 
+class TFBOWFlipperWrapper(TFModelWrapper):
+    def __init__(self, config, params):
+        TFModelWrapper.__init__(self, config, params)
+
+        self.model_builder_class = tf_bow_flipper.BOWFlipper
 
 class TFFlipperWrapper(TFModelWrapper):
     def __init__(self, config, params):
