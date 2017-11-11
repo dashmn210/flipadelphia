@@ -122,7 +122,8 @@ def run_experiment(config, args, expt_id):
                 'model-type': model_description['type'],
                 'params': str(model_description['params']),
                 'correlation': evaluation['mu_corr'],
-                'performance': evaluation['mu_perf'],
+                'regression_performance': evaluation['mu_reg_perf'],
+                'fixed_performance': evaluation['mu_fixed_perf'],
                 'model_dir': model_dir,
                 'expt_id': expt_id
             })

@@ -3,6 +3,7 @@ import sys
 sys.path.append('../..')
 import src.msc.utils as utils
 from src.models.linear.plain_regression import RegularizedRegression
+from src.models.linear.fixed_regression import FixedRegression
 
 from correlations import cramers_v, pointwise_biserial
 import sklearn.metrics
@@ -11,23 +12,10 @@ import time
 
 def write_summary(evaluation, model_dir):
     """ evaluation: product of evaluator.evaluate()
+        TODO -- make more human readable lol
     """
-    bar = '=' * 40
-    s = bar + '\n'
-    s += 'PERFORMANCE:\n'
-    for response, metrics in evaluation['performance'].items():
-        s += '%s:\n' % response
-        if isinstance(metrics, dict):
-            s += '\n'.join('%s:\t%s' % (metric, val) for metric, val in metrics.items()) + '\n\n'
-        else: 
-            s += '%s\n\n' % metrics
-    s += bar + '\n\n\n\n'
-    s += 'CORRELATIONS:\n'
-    s += '\n'.join('%s:\t%s' % (k, v) for k, v in evaluation['correlations'].items()) + '\n\n'
-    s += bar + '\n'
-
     with open(os.path.join(model_dir, 'summary.txt'), 'w') as f:
-        f.write(s)
+        f.write(str(evaluation))
 
 
 def feature_correlation(var, dataset, features, input_text, labels):
@@ -53,18 +41,11 @@ def feature_correlation(var, dataset, features, input_text, labels):
         ])
 
 
-def eval_performance(var, labels, preds, dataset):
+def eval_performance(var, labels, regression_preds, fixed_preds, dataset):
     """ evaluate the performance of some predictions
         return {metric: value}
     """
-    if np.all(np.isnan(preds)):
-        return 'N/A (all nans)'
-
-    elif var['type'] == 'categorical':
-        # replace labels with their ids
-        labels = map(
-            lambda x: dataset.class_to_id_map[var['name']][x],
-            labels)
+    def eval_categorical(preds, label_ids):
         labels_hat = np.argmax(preds, axis=1)
         report = sklearn.metrics.classification_report(labels, labels_hat)
         f1 = sklearn.metrics.f1_score(labels, labels_hat, average='weighted')
@@ -73,14 +54,31 @@ def eval_performance(var, labels, preds, dataset):
             labels=sorted(dataset.id_to_class_map[var['name']].keys()))
         return {'report': report, 'xenropy': xentropy, 'stat': f1}
 
-    else:
-        # filter out nans
-        labels, preds = zip(*[
-            (label, pred) for label, pred in zip(labels, preds) \
-            if not np.isnan(pred)])
+    def eval_continuous(preds, labels):
         MSE = sklearn.metrics.mean_squared_error(labels, preds)
         r2 = sklearn.metrics.r2_score(labels, preds)
         return { 'MSE': MSE, 'R^2': r2, 'stat': MSE}
+
+
+    if np.all(np.isnan(regression_preds)) or np.all(np.isnan(fixed_preds)):
+        return 'N/A (all nans)'
+
+    elif var['type'] == 'categorical':
+        # replace labels with their ids
+        labels = map(
+            lambda x: dataset.class_to_id_map[var['name']][x],
+            labels)
+        reg_eval = eval_categorical(regression_preds, labels)
+        fixed_eval = eval_categorical(fixed_preds, labels)
+
+    else:
+        # filter out nans
+        labels, regression_preds, fixed_preds = zip(*[
+            (label, p1, p2) for label, p1, p2 in zip(labels, regression_preds, fixed_preds) \
+            if not np.isnan(p1) and not np.isnan(p2)])
+        reg_eval = eval_continuous(regression_preds, labels)
+        fixed_eval = eval_continuous(fixed_preds, labels)
+    return {'regression': reg_eval, 'fixed': fixed_eval}
 
 
 def evaluate(config, dataset, predictions, model_dir):
@@ -116,8 +114,18 @@ def evaluate(config, dataset, predictions, model_dir):
     dataset.set_active_split(config.train_suffix)
     m.train(dataset, '', features=features)
     dataset.set_active_split(config.test_suffix)
-    print 'EVALUATOR: inference on test...'
-    feature_predictions = m.inference(dataset, '')
+    print 'EVALUATOR: linear inference on test...'
+    regression_predictions = m.inference(dataset, '')
+
+    print 'EVALUATOR: running fixed model with selected features'
+    m = FixedRegression(config, {'batch_size': 8, 'num_train_steps': 1000}, intercept=False)
+    dataset.set_active_split(config.train_suffix)
+    m.train(dataset, '', features=features)
+    dataset.set_active_split(config.test_suffix)
+    print 'EVALUATOR: fixed inference on test...'
+    fixed_predictions = m.inference(dataset, '')
+
+
 
     # now evaluate the selected features, both in terms of
     #  correlation with confounds and ability to predict response
@@ -138,21 +146,25 @@ def evaluate(config, dataset, predictions, model_dir):
             print '\t Done. took %.2fs' % (time.time() - start)
 
         else:
-            assert var['name'] in feature_predictions.scores
-            preds = feature_predictions.scores[var['name']]
-            assert len(preds) == len(labels)
+            regression_preds = regression_predictions.scores[var['name']]
+            fixed_preds = fixed_predictions.scores[var['name']]
+            assert len(regression_preds) == len(labels)
+            assert len(fixed_preds) == len(labels)
 
             performance[var['name']] = eval_performance(
                 var=var,
                 labels=labels,
-                preds=preds,
+                regression_preds=regression_preds,
+                fixed_preds=fixed_preds,
                 dataset=dataset)
 
     mean_correlation = np.mean(correlations.values())
-    mean_performance = np.mean([d['stat'] for d in performance.values()])
+    mean_reg_performance = np.mean([d['regression']['stat'] for d in performance.values()])
+    mean_fixed_performance = np.mean([d['fixed']['stat'] for d in performance.values()])
     return {'correlations': correlations, 
             'performance': performance, 
             'mu_corr': mean_correlation, 
-            'mu_perf': mean_performance}
+            'mu_reg_perf': mean_reg_performance,
+            'mu_fixed_perf': mean_fixed_performance}
 
 
