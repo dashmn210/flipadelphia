@@ -8,11 +8,9 @@ from collections import namedtuple, defaultdict
 import tensorflow as tf
 from tensorflow.python.framework import function
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
-
-
-
-
-
+import time
+import src.msc.utils as utils
+import numpy as np
 
 TFModel = namedtuple("Model", ('graph', 'model', 'iterator'))
 
@@ -97,11 +95,17 @@ def build_rnn_cells(layers=1, units=256, dropout=0.0):
 
 
 def rnn_encode(source, source_len, vocab_size, embedding_size, 
-                                        layers, units, dropout):
+                                    layers, units, dropout, glove_matrix=None):
     with tf.variable_scope('embedding'):
-        E = tf.get_variable(
-            name='E',
-            shape=[vocab_size, embedding_size])
+        if glove_matrix is not None:
+            E = tf.get_variable(
+                name='E',
+                shape=glove_matrix.shape,
+                initializer=tf.constant_initializer(glove_matrix))
+        else:
+            E = tf.get_variable(
+                name='E',
+                shape=[vocab_size, embedding_size])
         source_embedded = tf.nn.embedding_lookup(E, source)
 
     if layers == 0:
@@ -151,6 +155,30 @@ def attention(states, seq_lens, layers=1, units=128, dropout=0.0):
 
     return scores_normalized, context
 
+
+
+def get_glove(dataset, glove_dir=os.getcwd() + '/datasets/glove/glove.pkl'):
+    """ - preinitialize a glove embedding matrix with pre-trained vectors
+             tokens without glove counterparts are randomly initialized
+        - matrix is of shape [vocab, size]
+    """
+    def xavier(vec_size, num_vecs):
+        epsilon = np.sqrt(6.0) / np.sqrt(vec_size + num_vecs)
+        return np.random.uniform(low=-epsilon, high=epsilon, size=(vec_size,))
+
+    start = time.time()
+    print 'TF_UTILS: reading pickled glove vecs from', glove_dir
+    glove_vecs = utils.depickle(glove_dir)
+
+    vec_len = len(glove_vecs['be'])
+    num_vecs = dataset.vocab_size
+
+    embeddings = []
+    for tok in dataset.ordered_features:
+            embeddings.append(glove_vecs.get(tok) if tok in glove_vecs else xavier(vec_len, num_vecs))
+    embeddings = np.array(embeddings)
+    print '\tdone. took %.2fs' % (time.time() - start)
+    return embeddings
 
 
 

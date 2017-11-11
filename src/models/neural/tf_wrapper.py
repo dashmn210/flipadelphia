@@ -13,8 +13,6 @@ import src.models.neural.tf_regression as tf_regression
 import src.models.neural.tf_causal as tf_causal
 import src.msc.utils as utils
 
-import tf_utils
-
 import numpy as np
 
 

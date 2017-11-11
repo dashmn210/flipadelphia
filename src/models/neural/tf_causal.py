@@ -112,7 +112,8 @@ class CausalNetwork:
                 embedding_size=self.params['embedding_size'],
                 layers=self.params['encoder_layers'],
                 units=self.params['encoder_units'],
-                dropout=self.dropout)
+                dropout=self.dropout,
+                glove_matrix=tf_utils.get_glove(self.dataset) if self.params['use_glove'] else None)
         with tf.variable_scope('attention'):
             attn_scores, attn_context = tf_utils.attention(
                 states=rnn_outputs,

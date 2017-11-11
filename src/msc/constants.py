@@ -22,3 +22,4 @@ MODEL_CLASSES = {
     'regression': RegularizedRegression,
     'double-regression': DoubleRegression,
 }
+

@@ -65,7 +65,8 @@ class Flipper:
                 embedding_size=self.params['embedding_size'],
                 layers=self.params['encoder_layers'],
                 units=self.params['encoder_units'],
-                dropout=self.dropout)
+                dropout=self.dropout,
+                glove_matrix=tf_utils.get_glove(dataset) if self.params['use_glove'] else None)
 
         with tf.variable_scope('attention'):
             self.attn_scores, attn_context = tf_utils.attention(
